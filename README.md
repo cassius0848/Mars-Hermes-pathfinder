@@ -79,6 +79,16 @@ Python 3.11+、NumPy、SciPy、Pandas、Rasterio、PyProj、NetworkX（或自定
 
 初期避免复杂 Agent 框架，确保系统轻量、可测试，并能在普通笔记本上运行。
 
+### 快速开始
+
+```bash
+pip install -r requirements.txt
+PYTHONPATH=src pytest
+streamlit run app/streamlit_app.py
+```
+
+当前 Streamlit 页面使用 `synthetic-demo` 数据。官方资源发布后，将 `app/streamlit_app.py` 中的数据加载器替换为 `load_raster(...)` 或新的官方数据适配器即可。
+
 ### MVP
 
 1. 加载真实 Mars DEM；官方数据未发布前使用标记清晰的合成数据；
@@ -179,6 +189,16 @@ mars-pathfinder-ai/
 Python 3.11+, NumPy, SciPy, Pandas, Rasterio, PyProj, NetworkX (or custom search), Streamlit, Plotly, and Pytest. DeepSeek or another model API is optional.
 
 Avoid complex Agent frameworks in the initial implementation so the system remains lightweight, testable, and laptop-friendly.
+
+### Quick Start
+
+```bash
+pip install -r requirements.txt
+PYTHONPATH=src pytest
+streamlit run app/streamlit_app.py
+```
+
+The current Streamlit page uses `synthetic-demo` data. When official resources are released, replace the loader in `app/streamlit_app.py` with `load_raster(...)` or a new official-data adapter.
 
 ### MVP Scope
 
