@@ -21,20 +21,24 @@ def _neighbors(point: Point, shape: tuple[int, int]):
 def shortest_path(cost_grid: np.ndarray, start: Point, goal: Point, *, use_astar: bool = True) -> tuple[list[Point], float]:
     """Find a least-cost path on a positive grid.
 
-    The edge cost is the average of the current and next cell costs, scaled by
-    the geometric distance between cells. Infinite cells are impassable.
+    The A* heuristic is scaled by the minimum finite cell cost so it remains
+    admissible for mission cost surfaces whose cells may cost less than 1.
     """
 
     costs = np.asarray(cost_grid, dtype=float)
     if costs.ndim != 2:
         raise ValueError("cost_grid must be two-dimensional")
+    finite_costs = costs[np.isfinite(costs)]
+    if finite_costs.size == 0 or np.any(finite_costs <= 0):
+        raise ValueError("cost_grid must contain positive finite costs")
     for point in (start, goal):
         if not (0 <= point[0] < costs.shape[0] and 0 <= point[1] < costs.shape[1]):
             raise ValueError(f"point outside grid: {point}")
         if not np.isfinite(costs[point]):
             raise ValueError(f"point is impassable: {point}")
 
-    heuristic: Heuristic = lambda a, b: hypot(a[0] - b[0], a[1] - b[1])
+    minimum_cost = float(np.min(finite_costs))
+    heuristic: Heuristic = lambda a, b: hypot(a[0] - b[0], a[1] - b[1]) * minimum_cost
     frontier: list[tuple[float, float, Point]] = [(0.0, 0.0, start)]
     distances = {start: 0.0}
     previous: dict[Point, Point] = {}
