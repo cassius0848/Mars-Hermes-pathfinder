@@ -156,6 +156,10 @@ streamlit run app/streamlit_app.py
 
 当前界面可以在 Jezero 主区域和团队提供的 Mars Trek 书签区域之间切换，使用真实 MOLA DEM 样本，并可显示 Perseverance Sol 1934 SHERLOC_WATSON 表面图像、Curiosity Mount Sharp 路线动画和 USGS Jezero 地质单元摘要；天气和辐射在尚未选定官方产品时使用中性无数据代价，不作为观测值。官方产品确认后，继续增加数据适配器，将数据转换为上述模型，再调整风险层、科学目标和可视化，不需要重写路径搜索核心。
 
+### Hawksbill Gap 研究包
+
+队友的 `docs/jezero-research/` 归档已经接入 Streamlit 的研究包模式。选择 `Hawksbill Gap research package` 后，应用读取真实的 2 m HiRISE DTM、派生坡度、配套正射图、THEMIS 区域热红外、USGS SIM 3464 局部地质和 Perseverance/PDS 科学证据点。归档路线只用于对照，实时路线仍由当前 A* 规划器重新计算。MEDA 作为时间序列证据显示，不会被复制成虚假的空间天气栅格。
+
 ### MVP 与开发路线
 
 1. 接入三类以上真实数据并完成来源登记；

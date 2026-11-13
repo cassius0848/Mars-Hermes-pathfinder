@@ -52,3 +52,16 @@ For the real-data Streamlit path, the cost configuration is explicit:
 
 This prevents unavailable environment layers from silently influencing the route
 while ensuring the real terrain and geology-derived target drive the planner.
+
+
+## Hawksbill Gap research package
+
+The teammate archive under `docs/jezero-research/` is now an optional real-data
+mode in Streamlit. It consumes the local 2 m HiRISE DTM, derived slope, aligned
+orth-up orthophoto, THEMIS regional context, USGS local geology, and the PDS /
+Perseverance evidence points. The archived route preview remains a validation
+reference; the live route is recomputed by the current planner.
+
+MEDA samples are summarized in the research mode as time-series evidence and are
+not broadcast to every pixel or used as a fake spatial weather grid. Weather and radiation weights stay neutral
+until an appropriate spatial-temporal model is implemented.

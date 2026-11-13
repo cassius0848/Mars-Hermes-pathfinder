@@ -27,7 +27,8 @@ from mars_pathfinder.data.loaders import (  # noqa: E402
     load_synthetic_mission,
     science_targets_from_vector,
 )
-from mars_pathfinder.models import EVAState, MissionConstraints  # noqa: E402
+from mars_pathfinder.data.research import load_hawksbill_gap_package  # noqa: E402
+from mars_pathfinder.models import EVAState, MissionConstraints, ScienceTarget  # noqa: E402
 from mars_pathfinder.routing.search import shortest_path  # noqa: E402
 from mars_pathfinder.terrain.costs import build_eva_cost  # noqa: E402
 from mars_pathfinder.terrain.derivatives import slope_degrees  # noqa: E402
@@ -47,27 +48,46 @@ jezero_sample = PROJECT_ROOT / "data" / "raw" / "jezero_mola_256.tif"
 bookmarked_sample = PROJECT_ROOT / "data" / "raw" / "mars_trek_views" / "view_-92_87_-16_32_mola_256.tif"
 geology_path = PROJECT_ROOT / "data" / "raw" / "usgs" / "jezero_geologic_units_100m.geojson"
 optical_path = PROJECT_ROOT / "data" / "raw" / "mars_trek" / "jezero_viking_mdim21_512.jpg"
+research_root = PROJECT_ROOT / "docs" / "jezero-research"
+research_photo_path = research_root / "raw" / "perseverance-sol518-mastcam-z.png"
 
 with st.sidebar:
     st.header("Mission settings")
-    study_area = st.selectbox("Study area", ["Jezero (primary)", "Mars Trek bookmarked view"])
+    study_area = st.selectbox("Study area", ["Hawksbill Gap research package", "Jezero (primary)", "Mars Trek bookmarked view"])
 
 selected_sample = bookmarked_sample if study_area == "Mars Trek bookmarked view" else jezero_sample
 selected_bbox = (-93.0, -16.8, -92.0, -15.8) if study_area == "Mars Trek bookmarked view" else (77.0, 18.0, 78.0, 19.0)
 
-if selected_sample.exists():
+if study_area == "Hawksbill Gap research package" and research_root.exists():
+    # Research mode consumes the teammate's measured local package directly.
+    # 研究包模式直接读取队友取得的真实局部数据。
+    research_package = load_hawksbill_gap_package(research_root)
+    terrain = research_package.terrain
+    slope = research_package.slope
+    geology = research_package.geology
+    targets = research_package.science_targets
+    research_optical = research_package.optical_rgb
+    research_thermal = research_package.thermal
+    start = research_package.base_point
+    selected_sample = research_root / "derived" / "jezero-elevation-local-2m.tif"
+    has_official_environment_layers = False
+    weather = np.zeros(terrain.shape, dtype=float)
+    radiation = np.zeros(terrain.shape, dtype=float)
+    data_caption = "REAL Hawksbill Gap package · HiRISE DTM + USGS geology + THEMIS context"
+elif selected_sample.exists():
     # Real-data mode: do not create the synthetic mission fixture here.
     # 真实数据模式：这里不再创建合成任务 fixture。
+    research_package = None
     terrain = load_mars_trek_mola_sample(selected_sample, bbox=selected_bbox)
+    slope = slope_degrees(terrain)
     has_official_environment_layers = False
+    research_optical = None
+    research_thermal = None
     if study_area == "Jezero (primary)" and geology_path.exists():
         geology = load_geojson_layer(geology_path, name="USGS Jezero geologic units", source="USGS SIM 3464")
         targets = science_targets_from_vector(geology, selected_bbox, terrain.shape)
     else:
         geology = None
-        # This is a user-selected map waypoint, not a synthetic observation.
-        # 这是用户选择的地图航点，不是虚构的科学观测。
-        from mars_pathfinder.models import ScienceTarget
         targets = [ScienceTarget(
             "mars-trek-waypoint",
             "Mars Trek bookmarked waypoint",
@@ -80,22 +100,26 @@ if selected_sample.exists():
     # 当前视图没有选定官方天气/辐射层，因此使用中性数组，绝不虚构观测。
     weather = np.zeros(terrain.shape, dtype=float)
     radiation = np.zeros(terrain.shape, dtype=float)
+    start = (10, 10)
     data_caption = f"REAL NASA/USGS data · {study_area} · weather/radiation unavailable"
 else:
     # Synthetic mode exists only as a development fallback and is labeled below.
     # 合成模式只作为开发 fallback，并在界面中明确标记。
+    research_package = None
     terrain, layers, targets = load_synthetic_mission()
     geology = None
+    slope = slope_degrees(terrain)
     weather = layers["weather_demo"].values
     radiation = layers["radiation_demo"].values
     has_official_environment_layers = False
+    research_optical = None
+    research_thermal = None
+    start = (2, 2)
     data_caption = "SYNTHETIC DEVELOPMENT FIXTURE — no official DEM available"
 
 if not targets:
     st.error("No science targets are available for this study area.")
     st.stop()
-
-slope = slope_degrees(terrain)
 
 with st.sidebar:
     target_name = st.selectbox("Science target", [target.name for target in targets])
@@ -104,7 +128,9 @@ with st.sidebar:
     reserve = st.slider("Return reserve", 0.10, 0.50, 0.25, 0.05)
     max_slope = st.slider("Maximum slope (degrees)", 5, 30, 18)
     display_options = ["Elevation", "Slope", "Weather risk", "Radiation risk"]
-    if study_area == "Jezero (primary)" and optical_path.exists():
+    if research_package is not None:
+        display_options.extend(["HiRISE local orthophoto", "THEMIS thermal context"])
+    elif study_area == "Jezero (primary)" and optical_path.exists():
         display_options.append("Viking optical context")
     display_layer = st.selectbox("Map layer", display_options)
 
@@ -113,7 +139,6 @@ st.caption(f"Local Martian EVA mission planner — {data_caption}")
 
 # The base point is a mission-planning input, not an observed rover location.
 # 基地位置是任务规划输入，不应被描述成真实火星车观测位置。
-start = (10, 10) if selected_sample.exists() else (2, 2)
 goal = selected_target.location
 science = np.zeros(terrain.shape, dtype=float)
 science[goal] = selected_target.science_value
@@ -156,7 +181,21 @@ layer_values = {
 left, right = st.columns([3, 2])
 with left:
     route_rows, route_cols = zip(*path)
-    if display_layer == "Viking optical context" and optical_path.exists():
+    if display_layer == "HiRISE local orthophoto" and research_optical is not None:
+        # The orthophoto is a real HiRISE product aligned to the local DTM package.
+        # 该正射图来自真实 HiRISE 产品，与局部 DTM 数据包对齐。
+        figure = go.Figure(go.Image(z=research_optical))
+        scale = research_optical.shape[0] / terrain.shape[0]
+        figure.add_trace(go.Scatter(x=[col * scale for col in route_cols], y=[row * scale for row in route_rows], mode="lines", name="EVA route", line={"color": "red", "width": 3}))
+        figure.add_trace(go.Scatter(x=[start[1] * scale], y=[start[0] * scale], mode="markers", name="Base", marker={"color": "white", "size": 10}))
+        figure.add_trace(go.Scatter(x=[goal[1] * scale], y=[goal[0] * scale], mode="markers", name="Science target", marker={"color": "yellow", "size": 12}))
+        figure.update_layout(title="Real HiRISE orthophoto — Hawksbill Gap", yaxis_autorange="reversed")
+    elif display_layer == "THEMIS thermal context" and research_thermal is not None:
+        # THEMIS is regional context at 100 m/pixel; do not pretend it is route-resolution.
+        # THEMIS 是 100 m 区域背景，不能伪装成米级路线图层。
+        figure = go.Figure(go.Heatmap(z=research_thermal, colorbar_title="THEMIS DN"))
+        figure.update_layout(title="Real THEMIS thermal context — regional scale", yaxis_autorange="reversed")
+    elif display_layer == "Viking optical context" and optical_path.exists():
         # The optical export shares the Jezero bbox, so grid coordinates scale directly.
         # 光学图与 MOLA 使用同一 Jezero 范围，可直接按网格比例叠加路线。
         optical = np.asarray(Image.open(optical_path).convert("RGB"))
@@ -188,8 +227,22 @@ with right:
     if not has_official_environment_layers:
         st.info("Weather and radiation have no selected official layer; their weights are 0 and they are not presented as observations.")
 
+if research_package is not None:
+    with st.expander("Hawksbill Gap research validation"):
+        route_names = [feature.get("properties", {}).get("name", "Unnamed") for feature in research_package.route_preview.get("features", [])]
+        st.metric("Archived route candidates", len(route_names))
+        st.caption("Sources: HiRISE DTM/orthophoto · THEMIS · USGS SIM 3464 · Perseverance/PDS")
+        st.write(", ".join(route_names) if route_names else "No archived route preview")
+        st.json(research_package.meda_summary)
+        st.caption("MEDA values are real Sol 518 time-series probes; they are context only, not a spatial risk raster.")
+
 # Evidence assets are shown with provenance and are never treated as DEM layers.
 # 证据素材始终显示溯源信息，不会被误当作 DEM 图层。
+if research_photo_path.exists():
+    with st.expander("Research-package surface evidence — Perseverance Sol 518"):
+        st.image(str(research_photo_path), caption="Real Perseverance Mastcam-Z image · Sol 518")
+        st.caption("Source and provenance: docs/jezero-research/raw/perseverance-sol518.html")
+
 image_metadata_path = PROJECT_ROOT / "data" / "raw" / "perseverance" / "sol1934_sample.json"
 image_evidence = load_surface_image_evidence(image_metadata_path) if image_metadata_path.exists() else None
 if image_evidence is not None:
