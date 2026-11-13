@@ -172,6 +172,8 @@ streamlit run app/streamlit_app.py
 
 合成数据只允许用于单元测试和界面 fallback，必须带有 `synthetic-demo` 标记，不能混入未来 AI 训练集。完整规则见 [`docs/data-policy.md`](docs/data-policy.md)。
 
+当前真实路线权重为：MOLA 地形 `1.0`、USGS 科学目标 `0.5`；天气和辐射在没有官方产品时均为 `0.0`。
+
 ### 协作原则
 
 - 模块通过稳定的数据模型和函数接口协作；
@@ -321,6 +323,8 @@ The current UI can switch between the primary Jezero area and the supplied Mars 
 The primary planner must be driven by documented NASA / USGS products. Real MOLA elevation, Viking MDIM21 optical imagery, USGS SIM 3464 geology, a Perseverance image, and the Curiosity route reference are already integrated. Weather and radiation use neutral no-data costs until official products are selected; the system never invents observations.
 
 Synthetic data is limited to unit tests and UI fallback, must carry the `synthetic-demo` label, and must not enter a future AI training set. See [`docs/data-policy.md`](docs/data-policy.md).
+
+Current real-route weights are explicit: MOLA terrain `1.0`, USGS science target `0.5`, and weather/radiation `0.0` until official products are selected.
 
 ### Collaboration Rules
 

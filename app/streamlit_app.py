@@ -56,25 +56,31 @@ selected_sample = bookmarked_sample if study_area == "Mars Trek bookmarked view"
 selected_bbox = (-93.0, -16.8, -92.0, -15.8) if study_area == "Mars Trek bookmarked view" else (77.0, 18.0, 78.0, 19.0)
 
 if selected_sample.exists():
-    # Real-data mode: terrain and (for Jezero) science targets come from NASA/USGS.
-    # 真实数据模式：地形和 Jezero 科学目标来自 NASA/USGS。
-    terrain, layers, fixture_targets = load_synthetic_mission((256, 256))
+    # Real-data mode: do not create the synthetic mission fixture here.
+    # 真实数据模式：这里不再创建合成任务 fixture。
     terrain = load_mars_trek_mola_sample(selected_sample, bbox=selected_bbox)
-    real_environment_layers = False
+    has_official_environment_layers = False
     if study_area == "Jezero (primary)" and geology_path.exists():
         geology = load_geojson_layer(geology_path, name="USGS Jezero geologic units", source="USGS SIM 3464")
         targets = science_targets_from_vector(geology, selected_bbox, terrain.shape)
     else:
         geology = None
-        targets = [
-            replace(fixture_targets[0], location=(40, 40), rationale="Development waypoint for the alternate Mars Trek terrain sample.", source="synthetic-demo"),
-            replace(fixture_targets[1], location=(30, 70), rationale="Development waypoint for the alternate Mars Trek terrain sample.", source="synthetic-demo"),
-        ]
+        # This is a user-selected map waypoint, not a synthetic observation.
+        # 这是用户选择的地图航点，不是虚构的科学观测。
+        from mars_pathfinder.models import ScienceTarget
+        targets = [ScienceTarget(
+            "mars-trek-waypoint",
+            "Mars Trek bookmarked waypoint",
+            (40, 40),
+            0.0,
+            "User-provided Mars Trek bookmark; no official science target layer selected.",
+            "user-provided Mars Trek bookmark",
+        )]
     # No official weather or radiation layer has been selected for these views.
     # 当前视图没有选定官方天气/辐射层，因此使用中性数组，绝不虚构观测。
     weather = np.zeros(terrain.shape, dtype=float)
     radiation = np.zeros(terrain.shape, dtype=float)
-    data_caption = f"NASA Mars Trek MOLA DEM · {study_area} · weather/radiation unavailable"
+    data_caption = f"REAL NASA/USGS data · {study_area} · weather/radiation unavailable"
 else:
     # Synthetic mode exists only as a development fallback and is labeled below.
     # 合成模式只作为开发 fallback，并在界面中明确标记。
@@ -82,8 +88,8 @@ else:
     geology = None
     weather = layers["weather_demo"].values
     radiation = layers["radiation_demo"].values
-    real_environment_layers = False
-    data_caption = "Synthetic development fixture — no official DEM available"
+    has_official_environment_layers = False
+    data_caption = "SYNTHETIC DEVELOPMENT FIXTURE — no official DEM available"
 
 if not targets:
     st.error("No science targets are available for this study area.")
@@ -118,6 +124,14 @@ cost_grid = build_eva_cost(
     weather_risk=weather,
     radiation_risk=radiation,
     science_value=science,
+    # Real terrain and USGS target evidence drive the current planner.
+    # 当前规划器由真实地形和 USGS 科学目标证据驱动。
+    terrain_weight=1.0,
+    science_weight=0.5,
+    # No official weather/radiation layers are loaded yet, so their weights are zero.
+    # 尚未加载官方天气/辐射层，因此权重明确为 0。
+    weather_weight=0.0 if not has_official_environment_layers else 1.0,
+    radiation_weight=0.0 if not has_official_environment_layers else 1.0,
     max_slope_deg=float(max_slope),
 )
 
@@ -171,8 +185,8 @@ with right:
     else:
         st.warning("Route exceeds the current EVA resource reserve")
     st.caption(f"Science target: {selected_target.rationale} Source: {selected_target.source}")
-    if not real_environment_layers:
-        st.info("Weather and radiation have no selected official layer; they are shown with neutral cost and are not presented as observations.")
+    if not has_official_environment_layers:
+        st.info("Weather and radiation have no selected official layer; their weights are 0 and they are not presented as observations.")
 
 # Evidence assets are shown with provenance and are never treated as DEM layers.
 # 证据素材始终显示溯源信息，不会被误当作 DEM 图层。

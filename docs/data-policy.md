@@ -40,3 +40,15 @@ metrics.
 Every derived layer must retain its source, transformation, CRS, resolution,
 units, nodata behavior, and limitations. Large source archives stay outside Git;
 small reproducible samples and their download scripts may be committed.
+
+## Current route-weight audit
+
+For the real-data Streamlit path, the cost configuration is explicit:
+
+- MOLA terrain / slope: weight `1.0`;
+- USGS-derived science target: weight `0.5` at the selected target cell;
+- weather: weight `0.0` until an official weather layer is selected;
+- radiation: weight `0.0` until an official radiation layer is selected.
+
+This prevents unavailable environment layers from silently influencing the route
+while ensuring the real terrain and geology-derived target drive the planner.
