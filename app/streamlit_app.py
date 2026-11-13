@@ -227,6 +227,7 @@ with right:
     st.subheader("Mission report")
     st.metric("Route distance", f"{report['distance_m']:.0f} m")
     st.metric("Estimated EVA time", f"{report['estimated_time_h']:.2f} h")
+    st.caption(f"Walk {report['walk_time_h']:.2f} h · science stops {report['science_stop_time_h']:.2f} h")
     st.metric("Maximum slope", f"{report['max_slope_deg']:.1f}°")
     st.metric("Planning cost", f"{planning_cost:.1f}")
     st.caption(f"Closed-loop legs: {len(segments)} · {mission_scope}")

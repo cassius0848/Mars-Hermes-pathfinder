@@ -73,6 +73,11 @@ class ScienceTarget:
     science_value: float
     rationale: str
     source: str
+    stop_duration_min: float = 0.0
+
+    def __post_init__(self) -> None:
+        if self.stop_duration_min < 0:
+            raise ValueError("stop_duration_min must be non-negative")
 
 
 @dataclass(frozen=True)

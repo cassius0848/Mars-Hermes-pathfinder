@@ -141,6 +141,7 @@ def load_hawksbill_gap_package(root: str | Path) -> ResearchPackage:
                 f"at {modeled_lonlat[0]:.6f}°E, {modeled_lonlat[1]:.6f}°N."
             ),
             source="NASA PDS / docs/jezero-research",
+            stop_duration_min=12.0,
         ))
     route_preview = json.loads((derived / "jezero-route-preview.json").read_text(encoding="utf-8"))
     meda_summary = {

@@ -178,6 +178,7 @@ streamlit run app/streamlit_app.py
 
 当前真实路线权重为：MOLA 地形 `1.0`、USGS 科学目标 `0.5`；天气和辐射在没有官方产品时均为 `0.0`。
 路线规划现在按闭环执行：基地 → 按任务顺序的科学目标 → 基地，EVA 时间和返航储备覆盖完整往返。
+科学停留时间现在计入 EVA 总预算；NASA EVA 资源参考见 [`docs/eva-resource-sources.md`](docs/eva-resource-sources.md)。
 
 ### 协作原则
 

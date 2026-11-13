@@ -27,3 +27,16 @@ def test_eva_route_reports_target_and_resource_status():
     assert targets[0].target_id in report["target_ids"]
     assert report["distance_m"] > 0
     assert isinstance(report["safety_ok"], bool)
+    assert report["science_stop_time_h"] == 0.0
+
+
+def test_science_stop_time_is_included_in_eva_budget():
+    from mars_pathfinder.models import ScienceTarget, TerrainGrid
+
+    terrain = TerrainGrid(np.zeros((3, 3)), cell_size_m=1.0)
+    slope = np.zeros((3, 3))
+    target = ScienceTarget("target", "target", (1, 1), 1.0, "test", "test", stop_duration_min=30)
+    report = evaluate_eva_route([(0, 0), (1, 1), (0, 0)], terrain, slope, EVAState(remaining_time_h=1), MissionConstraints(speed_m_per_h=3600), [target])
+    assert report["walk_time_h"] > 0
+    assert report["science_stop_time_h"] == 0.5
+    assert report["estimated_time_h"] == report["walk_time_h"] + 0.5
