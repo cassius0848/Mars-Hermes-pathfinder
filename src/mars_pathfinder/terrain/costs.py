@@ -13,6 +13,7 @@ def build_eva_cost(
     weather_risk: np.ndarray | None = None,
     radiation_risk: np.ndarray | None = None,
     science_value: np.ndarray | None = None,
+    obstacle_mask: np.ndarray | None = None,
     max_slope_deg: float = 18.0,
     max_weather_risk: float = 0.85,
     max_radiation_risk: float = 0.85,
@@ -24,7 +25,8 @@ def build_eva_cost(
     """Build a positive cost grid and encode safety limits as infinity.
 
     构造正值代价网格，并将安全阈值编码为 infinity。science_value 只影响
-    已有科学目标的规划偏好，不代表真实测量值。
+    已有科学目标的规划偏好，不代表真实测量值。obstacle_mask 是外部障碍或
+    人工禁行区掩膜，True 像元永远不可通行。
     """
 
     slope = np.asarray(slope, dtype=float)
@@ -45,6 +47,12 @@ def build_eva_cost(
     weather = layer_or_zero(weather_risk)
     radiation = layer_or_zero(radiation_risk)
     science = np.clip(layer_or_zero(science_value), 0, None)
+    if obstacle_mask is None:
+        obstacles = np.zeros(shape, dtype=bool)
+    else:
+        obstacles = np.asarray(obstacle_mask, dtype=bool)
+        if obstacles.shape != shape:
+            raise ValueError("obstacle_mask must share the slope grid shape")
     base = terrain_weight * (1.0 + np.nan_to_num(slope, nan=np.inf) / max_slope_deg)
     cost = base * (1.0 + weather_weight * weather + radiation_weight * radiation)
     cost = cost - science_weight * science
@@ -56,5 +64,6 @@ def build_eva_cost(
         | (weather > max_weather_risk)
         | ~np.isfinite(radiation)
         | (radiation > max_radiation_risk)
+        | obstacles
     )
     return np.where(blocked, np.inf, cost)

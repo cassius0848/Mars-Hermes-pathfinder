@@ -58,3 +58,30 @@ def test_diagonal_corner_cutting_is_blocked():
         assert "no traversable route" in str(error)
     else:
         raise AssertionError("diagonal corner cutting was not blocked")
+
+
+def test_obstacle_mask_forces_a_detour():
+    """External obstacle masks must block cells and preserve a detour."""
+
+    from mars_pathfinder.terrain.costs import build_eva_cost
+
+    slope = np.zeros((5, 5), dtype=float)
+    obstacles = np.zeros((5, 5), dtype=bool)
+    obstacles[2, 1:4] = True
+    costs = build_eva_cost(slope, obstacle_mask=obstacles, max_slope_deg=18)
+    path, _ = shortest_path(costs, (2, 0), (2, 4))
+    assert all(not obstacles[point] for point in path)
+
+
+def test_blocked_endpoint_is_rejected():
+    from mars_pathfinder.terrain.costs import build_eva_cost
+
+    obstacles = np.zeros((3, 3), dtype=bool)
+    obstacles[1, 1] = True
+    costs = build_eva_cost(np.zeros((3, 3)), obstacle_mask=obstacles)
+    try:
+        shortest_path(costs, (0, 0), (1, 1))
+    except ValueError as error:
+        assert "impassable" in str(error)
+    else:
+        raise AssertionError("blocked endpoint was accepted")
