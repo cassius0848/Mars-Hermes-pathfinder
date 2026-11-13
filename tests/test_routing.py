@@ -34,3 +34,13 @@ def test_synthetic_terrain_has_valid_slope_costs():
     assert slope.shape == terrain.shape
     assert cost.shape == terrain.shape
     assert np.isfinite(cost).any()
+
+
+def test_closed_loop_returns_to_base():
+    from mars_pathfinder.routing.mission import closed_loop_route
+
+    costs = np.ones((8, 8), dtype=float)
+    path, total, segments = closed_loop_route(costs, (0, 0), [(7, 7)])
+    assert path[0] == path[-1] == (0, 0)
+    assert len(segments) == 2
+    assert total > 0

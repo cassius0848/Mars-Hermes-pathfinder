@@ -191,7 +191,11 @@ def load_mars_trek_mola_sample(
         # 服务导出单位是度，这里换算为米供坡度计算使用。
         mars_radius_m = 3_389_500.0
         cell_size_m = abs(bbox[3] - bbox[1]) * np.pi * mars_radius_m / 180.0 / elevation.shape[0]
-        crs = dataset.crs.to_string() if dataset.crs else "EPSG:104905"
+        # GDAL may label the Mars Trek authority as ESRI:104905; keep the
+        # project-wide canonical label for reproducible metadata.
+        # GDAL 可能返回 ESRI:104905，这里统一为项目规范的 EPSG:104905。
+        crs_text = dataset.crs.to_string() if dataset.crs else "EPSG:104905"
+        crs = "EPSG:104905" if "104905" in crs_text else crs_text
     return TerrainGrid(elevation, cell_size_m=cell_size_m, crs=crs, source=str(path))
 
 

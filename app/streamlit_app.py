@@ -29,7 +29,7 @@ from mars_pathfinder.data.loaders import (  # noqa: E402
 )
 from mars_pathfinder.data.research import load_hawksbill_gap_package  # noqa: E402
 from mars_pathfinder.models import EVAState, MissionConstraints, ScienceTarget  # noqa: E402
-from mars_pathfinder.routing.search import shortest_path  # noqa: E402
+from mars_pathfinder.routing.mission import closed_loop_route  # noqa: E402
 from mars_pathfinder.terrain.costs import build_eva_cost  # noqa: E402
 from mars_pathfinder.terrain.derivatives import slope_degrees  # noqa: E402
 
@@ -124,6 +124,11 @@ if not targets:
 with st.sidebar:
     target_name = st.selectbox("Science target", [target.name for target in targets])
     selected_target = next(target for target in targets if target.name == target_name)
+    scope_options = ["Selected target round trip"]
+    if len(targets) > 1:
+        scope_options.insert(0, "All targets in listed order")
+    mission_scope = st.selectbox("Mission scope", scope_options)
+    mission_targets = targets if mission_scope == "All targets in listed order" else [selected_target]
     eva_hours = st.slider("EVA duration (hours)", 4.0, 24.0, 12.0, 1.0)
     reserve = st.slider("Return reserve", 0.10, 0.50, 0.25, 0.05)
     max_slope = st.slider("Maximum slope (degrees)", 5, 30, 18)
@@ -141,7 +146,8 @@ st.caption(f"Local Martian EVA mission planner — {data_caption}")
 # 基地位置是任务规划输入，不应被描述成真实火星车观测位置。
 goal = selected_target.location
 science = np.zeros(terrain.shape, dtype=float)
-science[goal] = selected_target.science_value
+for target in mission_targets:
+    science[target.location] = target.science_value
 # Hard slope limits are encoded as impassable cells before route search.
 # 先把硬性坡度阈值编码为不可通行，再进行路线搜索。
 cost_grid = build_eva_cost(
@@ -161,12 +167,14 @@ cost_grid = build_eva_cost(
 )
 
 try:
-    # A* computes the candidate route; EVA evaluation checks time and reserves.
-    # A* 负责寻找候选路线，EVA 评估负责检查时间和资源储备。
-    path, planning_cost = shortest_path(cost_grid, start, goal)
+    # Plan a complete closed loop; EVA checks include the return leg.
+    # 规划完整闭环，EVA 时间和资源检查包含返航段。
+    path, planning_cost, segments = closed_loop_route(
+        cost_grid, start, [target.location for target in mission_targets]
+    )
     eva = EVAState(remaining_time_h=eva_hours, reserve_fraction=reserve)
     constraints = MissionConstraints(max_slope_deg=float(max_slope))
-    report = evaluate_eva_route(path, terrain, slope, eva, constraints, targets)
+    report = evaluate_eva_route(path, terrain, slope, eva, constraints, mission_targets)
 except ValueError as exc:
     st.error(f"No safe route: {exc}")
     st.stop()
@@ -219,11 +227,13 @@ with right:
     st.metric("Estimated EVA time", f"{report['estimated_time_h']:.2f} h")
     st.metric("Maximum slope", f"{report['max_slope_deg']:.1f}°")
     st.metric("Planning cost", f"{planning_cost:.1f}")
+    st.caption(f"Closed-loop legs: {len(segments)} · {mission_scope}")
     if report["safety_ok"]:
         st.success("Resource reserve and route-time checks passed")
     else:
         st.warning("Route exceeds the current EVA resource reserve")
-    st.caption(f"Science target: {selected_target.rationale} Source: {selected_target.source}")
+    st.caption("Targets: " + ", ".join(target.name for target in mission_targets))
+    st.caption("Sources: " + ", ".join(sorted({target.source for target in mission_targets})))
     if not has_official_environment_layers:
         st.info("Weather and radiation have no selected official layer; their weights are 0 and they are not presented as observations.")
 

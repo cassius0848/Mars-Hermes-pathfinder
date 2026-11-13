@@ -122,13 +122,24 @@ def load_hawksbill_gap_package(root: str | Path) -> ResearchPackage:
     geology = load_geojson_layer(derived / "jezero-geology-local.json", name="Hawksbill Gap USGS geology", source="USGS SIM 3464", crs=LOCAL_CRS)
     validation = json.loads((derived / "validation.json").read_text(encoding="utf-8"))
     targets = []
-    for name, lonlat in validation["evidence_lonlat"].items():
+    # Route goals use the archived modeled waypoints, while the evidence lon/lat
+    # remains in the rationale. This preserves the documented 13–17 m offset and
+    # avoids silently routing to an observation pixel that may exceed the slope cap.
+    # 路线目标使用归档的模拟航点，证据坐标保留在说明中，避免把 13–17 m 偏移
+    # 隐藏起来，也避免直接把可能超出坡度阈值的观测像元当作可行终点。
+    modeled_names = ["A", "B"]
+    for (name, evidence_lonlat), modeled_name in zip(validation["evidence_lonlat"].items(), modeled_names):
+        modeled_lonlat = validation["modeled_waypoints_lonlat"][modeled_name]
         targets.append(ScienceTarget(
             target_id=f"hawksbill-{name.lower().replace(' ', '-')}",
             name=name,
-            location=_lonlat_to_local(tuple(lonlat), terrain.shape),
+            location=_lonlat_to_local(tuple(modeled_lonlat), terrain.shape),
             science_value=1.0,
-            rationale=f"Real Perseverance / PDS evidence point near {lonlat[0]:.6f}°E, {lonlat[1]:.6f}°N.",
+            rationale=(
+                f"Real Perseverance / PDS evidence near {evidence_lonlat[0]:.6f}°E, "
+                f"{evidence_lonlat[1]:.6f}°N; modeled route waypoint {modeled_name} "
+                f"at {modeled_lonlat[0]:.6f}°E, {modeled_lonlat[1]:.6f}°N."
+            ),
             source="NASA PDS / docs/jezero-research",
         ))
     route_preview = json.loads((derived / "jezero-route-preview.json").read_text(encoding="utf-8"))

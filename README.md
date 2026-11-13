@@ -177,6 +177,7 @@ streamlit run app/streamlit_app.py
 合成数据只允许用于单元测试和界面 fallback，必须带有 `synthetic-demo` 标记，不能混入未来 AI 训练集。完整规则见 [`docs/data-policy.md`](docs/data-policy.md)。
 
 当前真实路线权重为：MOLA 地形 `1.0`、USGS 科学目标 `0.5`；天气和辐射在没有官方产品时均为 `0.0`。
+路线规划现在按闭环执行：基地 → 按任务顺序的科学目标 → 基地，EVA 时间和返航储备覆盖完整往返。
 
 ### 协作原则
 
@@ -329,6 +330,7 @@ The primary planner must be driven by documented NASA / USGS products. Real MOLA
 Synthetic data is limited to unit tests and UI fallback, must carry the `synthetic-demo` label, and must not enter a future AI training set. See [`docs/data-policy.md`](docs/data-policy.md).
 
 Current real-route weights are explicit: MOLA terrain `1.0`, USGS science target `0.5`, and weather/radiation `0.0` until official products are selected.
+Route planning is closed-loop: base → ordered science targets → base, with EVA time and return reserve evaluated over the full loop.
 
 ### Collaboration Rules
 
