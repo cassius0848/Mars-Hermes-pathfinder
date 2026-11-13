@@ -1,0 +1,106 @@
+{
+  "planning_grid": [
+    260,
+    260
+  ],
+  "grid_spacing_m": 2,
+  "valid_fraction": 1.0,
+  "elevation_range_m": [
+    -2542.031494140625,
+    -2464.451904296875
+  ],
+  "simulated_constraints": {
+    "max_slope_deg": 18,
+    "available_min": 55,
+    "speed_m_per_min": 15,
+    "stops_min": [
+      12,
+      12
+    ],
+    "reserve_min": 8
+  },
+  "evidence_lonlat": {
+    "Swift Run": [
+      77.40617078,
+      18.458931
+    ],
+    "Hazeltop": [
+      77.40588851,
+      18.45863707
+    ]
+  },
+  "modeled_waypoints_lonlat": {
+    "base": [
+      77.40306539425416,
+      18.457264752387363
+    ],
+    "A": [
+      77.40640907019554,
+      18.458918093795432
+    ],
+    "B": [
+      77.40562650141949,
+      18.458783129029527
+    ]
+  },
+  "evidence_pixel_dtm_m": {
+    "Swift Run": -2509.50390625,
+    "Hazeltop": -2514.520263671875
+  },
+  "observation_stop_offset_m": {
+    "Swift Run": 13.42,
+    "Hazeltop": 17.09
+  },
+  "routes": {
+    "Shortest constrained": {
+      "distance_m": 582.68,
+      "max_cell_slope_deg": 17.66,
+      "ascent_m": 20.62,
+      "segments_m": [
+        288.02,
+        47.31,
+        247.34
+      ],
+      "planned_minutes": 62.85,
+      "margin_after_reserve_minutes": -15.85,
+      "margin_at_80_min_after_reserve_minutes": 9.15
+    },
+    "Slope-penalized": {
+      "distance_m": 616.9,
+      "max_cell_slope_deg": 16.81,
+      "ascent_m": 20.46,
+      "segments_m": [
+        300.31,
+        53.46,
+        263.14
+      ],
+      "planned_minutes": 65.13,
+      "margin_after_reserve_minutes": -18.13,
+      "margin_at_80_min_after_reserve_minutes": 6.87
+    }
+  },
+  "single_stop_shortest": {
+    "Swift Run": {
+      "distance_m": 576.05,
+      "max_cell_slope_deg": 17.66,
+      "ascent_m": 21.12,
+      "segments_m": [
+        288.02,
+        288.02
+      ],
+      "planned_minutes": 50.4,
+      "margin_after_reserve_minutes": -3.4
+    },
+    "Hazeltop": {
+      "distance_m": 494.68,
+      "max_cell_slope_deg": 17.66,
+      "ascent_m": 18.39,
+      "segments_m": [
+        247.34,
+        247.34
+      ],
+      "planned_minutes": 44.98,
+      "margin_after_reserve_minutes": 2.02
+    }
+  }
+}
