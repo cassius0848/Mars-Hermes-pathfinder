@@ -181,6 +181,10 @@ streamlit run app/streamlit_app.py
 科学停留时间现在计入 EVA 总预算；NASA EVA 资源参考见 [`docs/eva-resource-sources.md`](docs/eva-resource-sources.md)。
 未配置有来源的代谢率和资源容量时，系统会显示 `resource model unconfigured`，不会宣称生命支持安全。
 
+### 验证与 CI
+
+项目包含 GitHub Actions 测试工作流。每次推送或 Pull Request 会安装固定依赖并运行完整 `pytest` 套件；研究包测试会验证真实 DTM、USGS 目标、闭环路线和配准不确定性。
+
 ### 协作原则
 
 - 模块通过稳定的数据模型和函数接口协作；
@@ -333,6 +337,10 @@ Synthetic data is limited to unit tests and UI fallback, must carry the `synthet
 
 Current real-route weights are explicit: MOLA terrain `1.0`, USGS science target `0.5`, and weather/radiation `0.0` until official products are selected.
 Route planning is closed-loop: base → ordered science targets → base, with EVA time and return reserve evaluated over the full loop.
+
+### Validation and CI
+
+GitHub Actions installs the declared dependencies and runs the full `pytest` suite on pushes and pull requests. Research-package tests cover the real DTM, USGS targets, closed-loop routes, and alignment uncertainty.
 
 ### Collaboration Rules
 

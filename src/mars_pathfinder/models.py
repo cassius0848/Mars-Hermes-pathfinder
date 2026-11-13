@@ -74,10 +74,11 @@ class ScienceTarget:
     rationale: str
     source: str
     stop_duration_min: float = 0.0
+    position_uncertainty_m: float = 0.0
 
     def __post_init__(self) -> None:
-        if self.stop_duration_min < 0:
-            raise ValueError("stop_duration_min must be non-negative")
+        if self.stop_duration_min < 0 or self.position_uncertainty_m < 0:
+            raise ValueError("stop duration and position uncertainty must be non-negative")
 
 
 @dataclass(frozen=True)

@@ -31,7 +31,7 @@ from mars_pathfinder.data.research import load_hawksbill_gap_package  # noqa: E4
 from mars_pathfinder.ai.context_builder import build_mission_context  # noqa: E402
 from mars_pathfinder.ai.provider import MockProvider  # noqa: E402
 from mars_pathfinder.models import EVAState, MissionConstraints, ScienceTarget  # noqa: E402
-from mars_pathfinder.routing.mission import closed_loop_route  # noqa: E402
+from mars_pathfinder.routing.candidates import generate_candidates, pareto_filter, select_recommended  # noqa: E402
 from mars_pathfinder.terrain.costs import build_eva_cost  # noqa: E402
 from mars_pathfinder.terrain.derivatives import slope_degrees  # noqa: E402
 
@@ -169,14 +169,22 @@ cost_grid = build_eva_cost(
 )
 
 try:
-    # Plan a complete closed loop; EVA checks include the return leg.
-    # 规划完整闭环，EVA 时间和资源检查包含返航段。
-    path, planning_cost, segments = closed_loop_route(
-        cost_grid, start, [target.location for target in mission_targets]
-    )
+    # Generate forward, reverse, and single-stop candidates before choosing one.
+    # 先生成正序、反序和单站候选，再选择路线。
     eva = EVAState(remaining_time_h=eva_hours, reserve_fraction=reserve)
     constraints = MissionConstraints(max_slope_deg=float(max_slope))
-    report = evaluate_eva_route(path, terrain, slope, eva, constraints, mission_targets)
+    candidates = generate_candidates(cost_grid, start, mission_targets, terrain, slope, eva, constraints)
+    pareto_candidates = pareto_filter(candidates)
+    recommended = select_recommended(candidates)
+    route_ids = [candidate.route_id for candidate in candidates]
+    selected_route_id = st.sidebar.selectbox(
+        "Route candidate", route_ids, index=route_ids.index(recommended.route_id)
+    )
+    selected_candidate = next(candidate for candidate in candidates if candidate.route_id == selected_route_id)
+    path = selected_candidate.path
+    planning_cost = selected_candidate.planning_cost
+    segments = selected_candidate.segments
+    report = selected_candidate.report
 except ValueError as exc:
     st.error(f"No safe route: {exc}")
     st.stop()
@@ -231,6 +239,7 @@ with right:
     st.metric("Maximum slope", f"{report['max_slope_deg']:.1f}°")
     st.metric("Planning cost", f"{planning_cost:.1f}")
     st.caption(f"Closed-loop legs: {len(segments)} · {mission_scope}")
+    st.caption(f"Pareto candidates: {len(pareto_candidates)} / all candidates: {len(candidates)}")
     if report["safety_ok"]:
         st.success("Time and configured resource checks passed")
     elif report["resource_status"] == "unconfigured":
@@ -238,6 +247,8 @@ with right:
     else:
         st.warning("Route exceeds the configured EVA resource reserve")
     st.caption("Targets: " + ", ".join(target.name for target in mission_targets))
+    if report["alignment_review_required"]:
+        st.warning(f"Target alignment requires review; recorded uncertainty up to {report['max_position_uncertainty_m']:.1f} m")
     st.caption("Sources: " + ", ".join(sorted({target.source for target in mission_targets})))
     if not has_official_environment_layers:
         st.info("Weather and radiation have no selected official layer; their weights are 0 and they are not presented as observations.")

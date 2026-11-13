@@ -45,6 +45,7 @@ def evaluate_eva_route(
         resource_available_kj = eva.resource_budget_kj * (1.0 - eva.reserve_fraction)
         resource_reserve_ok = resource_used_kj <= resource_available_kj
     target_ids = [target.target_id for target in visited_targets]
+    max_position_uncertainty = max((target.position_uncertainty_m for target in visited_targets), default=0.0)
     return {
         "distance_m": route_distance,
         "walk_time_h": walk_time,
@@ -58,5 +59,7 @@ def evaluate_eva_route(
         "resource_available_kj": resource_available_kj,
         "resource_reserve_ok": resource_reserve_ok,
         "target_ids": target_ids,
+        "max_position_uncertainty_m": max_position_uncertainty,
+        "alignment_review_required": max_position_uncertainty > 0.0,
         "safety_ok": route_time <= eva.remaining_time_h and resource_reserve_ok,
     }

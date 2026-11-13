@@ -128,6 +128,7 @@ def load_hawksbill_gap_package(root: str | Path) -> ResearchPackage:
     # 路线目标使用归档的模拟航点，证据坐标保留在说明中，避免把 13–17 m 偏移
     # 隐藏起来，也避免直接把可能超出坡度阈值的观测像元当作可行终点。
     modeled_names = ["A", "B"]
+    offsets = validation.get("observation_stop_offset_m", {})
     for (name, evidence_lonlat), modeled_name in zip(validation["evidence_lonlat"].items(), modeled_names):
         modeled_lonlat = validation["modeled_waypoints_lonlat"][modeled_name]
         targets.append(ScienceTarget(
@@ -142,6 +143,7 @@ def load_hawksbill_gap_package(root: str | Path) -> ResearchPackage:
             ),
             source="NASA PDS / docs/jezero-research",
             stop_duration_min=12.0,
+            position_uncertainty_m=float(offsets.get(name, 0.0)),
         ))
     route_preview = json.loads((derived / "jezero-route-preview.json").read_text(encoding="utf-8"))
     meda_summary = {

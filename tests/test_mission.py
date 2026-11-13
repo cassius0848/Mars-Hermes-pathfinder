@@ -29,6 +29,7 @@ def test_eva_route_reports_target_and_resource_status():
     assert isinstance(report["safety_ok"], bool)
     assert report["science_stop_time_h"] == 0.0
     assert report["resource_status"] == "unconfigured"
+    assert report["alignment_review_required"] is False
     assert report["safety_ok"] is False
 
 
@@ -37,11 +38,13 @@ def test_science_stop_time_is_included_in_eva_budget():
 
     terrain = TerrainGrid(np.zeros((3, 3)), cell_size_m=1.0)
     slope = np.zeros((3, 3))
-    target = ScienceTarget("target", "target", (1, 1), 1.0, "test", "test", stop_duration_min=30)
+    target = ScienceTarget("target", "target", (1, 1), 1.0, "test", "test", stop_duration_min=30, position_uncertainty_m=12.0)
     report = evaluate_eva_route([(0, 0), (1, 1), (0, 0)], terrain, slope, EVAState(remaining_time_h=1), MissionConstraints(speed_m_per_h=3600), [target])
     assert report["walk_time_h"] > 0
     assert report["science_stop_time_h"] == 0.5
     assert report["estimated_time_h"] == report["walk_time_h"] + 0.5
+    assert report["alignment_review_required"] is True
+    assert report["max_position_uncertainty_m"] == 12.0
 
 
 def test_configured_resource_model_is_checked_with_units():
