@@ -78,6 +78,22 @@ class SurfaceImageEvidence:
 
 
 @dataclass(frozen=True)
+class RouteReference:
+    """A cited mission route asset used for context and design reference."""
+
+    reference_id: str
+    title: str
+    local_path: str
+    url: str
+    asset_url: str
+    mission: str
+    description: str
+    data_sources: list[str]
+    attribution: str
+    role: str
+
+
+@dataclass(frozen=True)
 class EVAState:
     """Current crew and suit-resource state for a surface excursion."""
 

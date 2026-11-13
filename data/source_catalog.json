@@ -62,6 +62,6 @@
       "UX inspiration"
     ],
     "url": "https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/",
-    "integration": "Use as a cited reference example. The page is not a live navigation feed."
+    "integration": "The NASA route animation is stored in data/raw/references/ with metadata and shown as historical context; it is not used as a live navigation path."
   }
 ]

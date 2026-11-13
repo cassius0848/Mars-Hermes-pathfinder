@@ -5,7 +5,14 @@ from pathlib import Path
 
 import numpy as np
 
-from mars_pathfinder.models import MapLayer, ScienceTarget, SurfaceImageEvidence, TerrainGrid
+from mars_pathfinder.models import MapLayer, RouteReference, ScienceTarget, SurfaceImageEvidence, TerrainGrid
+
+
+def load_route_reference(metadata_path: str | Path) -> RouteReference:
+    """Load a cited historical mission-route asset."""
+
+    metadata = json.loads(Path(metadata_path).read_text())
+    return RouteReference(**metadata)
 
 
 def load_surface_image_evidence(metadata_path: str | Path) -> SurfaceImageEvidence:

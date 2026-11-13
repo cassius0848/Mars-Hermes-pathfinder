@@ -1,0 +1,12 @@
+{
+  "reference_id": "curiosity-mount-sharp-proposed-path",
+  "title": "Curiosity's Proposed Path up Mount Sharp",
+  "local_path": "data/raw/references/curiosity_mount_sharp_path.gif",
+  "url": "https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/",
+  "asset_url": "https://assets.science.nasa.gov/content/dam/science/psd/mars/downloadable_items/4/42763_PIA23179-combo-rev_main.gif",
+  "mission": "Curiosity / Mars Science Laboratory",
+  "description": "NASA route animation showing a proposed Curiosity path up lower Mount Sharp.",
+  "data_sources": ["HiRISE", "CRISM", "CTX", "HRSC"],
+  "attribution": "NASA/JPL-Caltech/ESA/University of Arizona/JHUAPL/MSSS/USGS Astrogeology Science Center",
+  "role": "historical multi-mission route reference; not a live EVA navigation path"
+}

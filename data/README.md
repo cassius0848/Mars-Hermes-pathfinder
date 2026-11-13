@@ -27,3 +27,10 @@ are selected and documented.
 NASA Mars 2020 raw-image page. Its Sol, instrument, image ID, source URL, and
 attribution are stored in the adjacent JSON metadata. It is used as visual
 evidence in the Streamlit route report, not as a georeferenced raster layer.
+
+## Curiosity route reference
+
+`raw/references/curiosity_mount_sharp_path.gif` is NASA's 12-frame proposed-route
+animation for Curiosity's climb up lower Mount Sharp. Its metadata records the
+HiRISE, CRISM, CTX, and HRSC sources and attribution. The app shows it as
+historical mission context, not as a live astronaut navigation path.

@@ -118,7 +118,7 @@ AI 是任务助手，不是未经验证的导航器：
 - Perseverance Sol 1934 SHERLOC_WATSON 图像：已保存为路线节点的表面证据样本；
 - [USGS Astrogeology Mars Maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars)：地质和制图参考；
 - [Perseverance Raw Images](https://mars.nasa.gov/mars2020/multimedia/raw-images/)：科学目标和路线节点的表面图像证据；
-- [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/)：多任务数据叠加和路线叙事参考。
+- [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/)：已保存 NASA 路线动画，作为多任务数据叠加和路线叙事参考。
 
 详细接入顺序、数据边界和元数据要求见 [`docs/data-sources.md`](docs/data-sources.md)。
 
@@ -153,7 +153,7 @@ PYTHONPATH=src pytest
 streamlit run app/streamlit_app.py
 ```
 
-当前界面已使用 NASA Mars Trek 的真实 MOLA DEM 样本，并可显示 Perseverance Sol 1934 SHERLOC_WATSON 表面图像；天气和辐射仍是明确标记的合成 fixture。官方产品确认后，继续增加数据适配器，将数据转换为上述模型，再调整风险层、科学目标和可视化，不需要重写路径搜索核心。
+当前界面已使用 NASA Mars Trek 的真实 MOLA DEM 样本，并可显示 Perseverance Sol 1934 SHERLOC_WATSON 表面图像和 Curiosity Mount Sharp 路线动画；天气和辐射仍是明确标记的合成 fixture。官方产品确认后，继续增加数据适配器，将数据转换为上述模型，再调整风险层、科学目标和可视化，不需要重写路径搜索核心。
 
 ### MVP 与开发路线
 
@@ -261,7 +261,7 @@ The released resource links are cataloged in [`data/source_catalog.json`](data/s
 - A Perseverance Sol 1934 SHERLOC_WATSON image, stored as surface evidence for route waypoints;
 - [USGS Astrogeology Mars Maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) for geologic and cartographic context;
 - [Perseverance Raw Images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) for surface-view evidence at targets and waypoints;
-- [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) as a cited multi-mission route reference.
+- [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) as a downloaded NASA route animation and cited multi-mission reference.
 
 See [`docs/data-sources.md`](docs/data-sources.md) for adapter order, provenance, and metadata requirements.
 
@@ -296,7 +296,7 @@ PYTHONPATH=src pytest
 streamlit run app/streamlit_app.py
 ```
 
-The current UI uses a real NASA Mars Trek MOLA DEM sample and can display a Perseverance Sol 1934 SHERLOC_WATSON surface image; weather and radiation remain clearly labeled synthetic fixtures. Add adapters for confirmed official products, then adjust hazard layers, science targets, and visualizations without rewriting the search core.
+The current UI uses a real NASA Mars Trek MOLA DEM sample and can display a Perseverance Sol 1934 SHERLOC_WATSON surface image plus the Curiosity Mount Sharp route animation; weather and radiation remain clearly labeled synthetic fixtures. Add adapters for confirmed official products, then adjust hazard layers, science targets, and visualizations without rewriting the search core.
 
 ### MVP and Roadmap
 

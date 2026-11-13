@@ -16,7 +16,7 @@ PROJECT_ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from mars_pathfinder.analysis.mission import evaluate_eva_route  # noqa: E402
-from mars_pathfinder.data.loaders import load_mars_trek_mola_sample, load_surface_image_evidence, load_synthetic_mission  # noqa: E402
+from mars_pathfinder.data.loaders import load_mars_trek_mola_sample, load_route_reference, load_surface_image_evidence, load_synthetic_mission  # noqa: E402
 from mars_pathfinder.models import EVAState, MissionConstraints  # noqa: E402
 from mars_pathfinder.routing.search import shortest_path  # noqa: E402
 from mars_pathfinder.terrain.costs import build_eva_cost  # noqa: E402
@@ -35,6 +35,8 @@ st.caption(f"Local Martian EVA mission planner — {data_caption}")
 
 image_metadata_path = PROJECT_ROOT / "data" / "raw" / "perseverance" / "sol1934_sample.json"
 image_evidence = load_surface_image_evidence(image_metadata_path) if image_metadata_path.exists() else None
+route_reference_path = PROJECT_ROOT / "data" / "raw" / "references" / "curiosity_mount_sharp_path.json"
+route_reference = load_route_reference(route_reference_path) if route_reference_path.exists() else None
 
 mola_sample = PROJECT_ROOT / "data" / "raw" / "jezero_mola_256.tif"
 if mola_sample.exists():
@@ -115,3 +117,11 @@ if image_evidence is not None:
         st.image(str(PROJECT_ROOT / image_evidence.local_path), caption=f"Sol {image_evidence.sol} · {image_evidence.instrument} · {image_evidence.attribution}")
         st.caption(f"Image ID: {image_evidence.image_id}")
         st.markdown(f"[Open original NASA image]({image_evidence.url}) · [Open image page]({image_evidence.page_url})")
+
+if route_reference is not None:
+    with st.expander("Historical route reference — Curiosity Mount Sharp"):
+        st.image(str(PROJECT_ROOT / route_reference.local_path), caption=route_reference.title)
+        st.caption(route_reference.description)
+        st.caption(f"Data sources: {', '.join(route_reference.data_sources)}")
+        st.caption(route_reference.attribution)
+        st.markdown(f"[Open NASA reference page]({route_reference.url}) · [Open original asset]({route_reference.asset_url})")
