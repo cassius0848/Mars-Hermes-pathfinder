@@ -5,7 +5,18 @@ from pathlib import Path
 
 import numpy as np
 
-from mars_pathfinder.models import MapLayer, RouteReference, ScienceTarget, SurfaceImageEvidence, TerrainGrid
+from mars_pathfinder.models import MapLayer, RouteReference, ScienceTarget, SurfaceImageEvidence, TerrainGrid, VectorLayer
+
+
+def load_geojson_layer(path: str | Path, *, name: str, source: str, crs: str = "EPSG:4326") -> VectorLayer:
+    """Load a GeoJSON feature collection without requiring geopandas."""
+
+    payload = json.loads(Path(path).read_text())
+    features = payload.get("features", [])
+    geometry_type = "unknown"
+    if features and features[0].get("geometry"):
+        geometry_type = features[0]["geometry"].get("type", "unknown")
+    return VectorLayer(name=name, geometry_type=geometry_type, features=features, crs=crs, source=source)
 
 
 def load_route_reference(metadata_path: str | Path) -> RouteReference:

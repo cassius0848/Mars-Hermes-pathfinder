@@ -16,7 +16,7 @@ PROJECT_ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from mars_pathfinder.analysis.mission import evaluate_eva_route  # noqa: E402
-from mars_pathfinder.data.loaders import load_mars_trek_mola_sample, load_route_reference, load_surface_image_evidence, load_synthetic_mission  # noqa: E402
+from mars_pathfinder.data.loaders import load_geojson_layer, load_mars_trek_mola_sample, load_route_reference, load_surface_image_evidence, load_synthetic_mission  # noqa: E402
 from mars_pathfinder.models import EVAState, MissionConstraints  # noqa: E402
 from mars_pathfinder.routing.search import shortest_path  # noqa: E402
 from mars_pathfinder.terrain.costs import build_eva_cost  # noqa: E402
@@ -37,6 +37,8 @@ image_metadata_path = PROJECT_ROOT / "data" / "raw" / "perseverance" / "sol1934_
 image_evidence = load_surface_image_evidence(image_metadata_path) if image_metadata_path.exists() else None
 route_reference_path = PROJECT_ROOT / "data" / "raw" / "references" / "curiosity_mount_sharp_path.json"
 route_reference = load_route_reference(route_reference_path) if route_reference_path.exists() else None
+geology_path = PROJECT_ROOT / "data" / "raw" / "usgs" / "jezero_geologic_units_100m.geojson"
+geology = load_geojson_layer(geology_path, name="USGS Jezero geologic units", source="USGS SIM 3464") if geology_path.exists() else None
 
 mola_sample = PROJECT_ROOT / "data" / "raw" / "jezero_mola_256.tif"
 if mola_sample.exists():
@@ -125,3 +127,11 @@ if route_reference is not None:
         st.caption(f"Data sources: {', '.join(route_reference.data_sources)}")
         st.caption(route_reference.attribution)
         st.markdown(f"[Open NASA reference page]({route_reference.url}) · [Open original asset]({route_reference.asset_url})")
+
+if geology is not None:
+    with st.expander("USGS Jezero geology context"):
+        unit_names = sorted({feature.get("properties", {}).get("name", "Unknown") for feature in geology.features})
+        st.metric("Mapped geologic units", len(unit_names))
+        st.caption(f"{len(geology.features)} simplified polygon features · {geology.crs}")
+        st.write(", ".join(unit_names[:12]) + (" …" if len(unit_names) > 12 else ""))
+        st.markdown("[Open USGS SIM 3464](https://doi.org/10.3133/sim3464)")

@@ -52,9 +52,15 @@ Jezero-area window (`77–78°E`, `18–19°N`, EPSG:104905). The loader convert
 Mars Trek geographic spacing to approximate meters for slope calculation. This
 is a development sample, not a complete high-resolution mission map.
 
-The current demo combines this real DEM, a Perseverance Sol 1934
-SHERLOC_WATSON surface image, and the Curiosity Mount Sharp route animation
-with synthetic weather and radiation fixtures.
+The current demo combines this real DEM, the USGS Jezero geologic-unit vector
+layer, a Perseverance Sol 1934 SHERLOC_WATSON surface image, and the Curiosity
+Mount Sharp route animation with synthetic weather and radiation fixtures.
 The image is displayed as waypoint evidence, not treated as a georeferenced
 raster layer. The synthetic fixtures remain clearly labeled and are not NASA
 measurements.
+
+
+The USGS layer is a simplified GeoJSON export of SIM 3464. It is currently used
+for geologic context and science-target evidence. A later step can rasterize
+selected units onto the MOLA grid if the team defines a scientifically justified
+traversability or science-value mapping.

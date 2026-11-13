@@ -1,0 +1,15 @@
+{
+  "name": "Geologic Map of Jezero Crater and the Nili Planum Region",
+  "product": "USGS Scientific Investigations Map 3464",
+  "authors": "Sun and Stack (2020)",
+  "source_page": "https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars",
+  "publication": "https://doi.org/10.3133/sim3464",
+  "feature_service": "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer",
+  "layer": "Geologic Units (layer 8)",
+  "download_query": "outSR=4326&maxAllowableOffset=100",
+  "output": "GeoJSON",
+  "feature_count": 1308,
+  "geometry_simplification": "100 meters in the source projected coordinate system",
+  "role": "Jezero geologic context and science-target evidence; not yet converted into a route-cost raster",
+  "attribution": "Sun, V.Z., and Stack, K.M., 2020, USGS SIM 3464"
+}

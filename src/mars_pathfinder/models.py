@@ -78,6 +78,17 @@ class SurfaceImageEvidence:
 
 
 @dataclass(frozen=True)
+class VectorLayer:
+    """A vector map layer loaded from a GeoJSON feature collection."""
+
+    name: str
+    geometry_type: str
+    features: list[dict]
+    crs: str
+    source: str
+
+
+@dataclass(frozen=True)
 class RouteReference:
     """A cited mission route asset used for context and design reference."""
 

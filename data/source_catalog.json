@@ -29,14 +29,14 @@
     "id": "usgs-mars-maps",
     "name": "USGS Astrogeology Interactive Mars Maps",
     "category": "geology-and-topography",
-    "role": "Geologic and cartographic reference layers",
+    "role": "USGS Jezero geologic context and cartographic reference",
     "supports": [
-      "geologic context",
-      "map products",
-      "planetary cartography"
+      "geologic units",
+      "science-target context",
+      "map products"
     ],
     "url": "https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars",
-    "integration": "Use as a reference for geologic units and available map services; preserve product attribution and CRS metadata."
+    "integration": "USGS SIM 3464 Jezero geologic-unit polygons are stored as a simplified GeoJSON layer in data/raw/usgs/ and summarized in the Streamlit app."
   },
   {
     "id": "perseverance-raw-images",
