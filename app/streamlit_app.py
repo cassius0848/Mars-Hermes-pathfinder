@@ -3,6 +3,7 @@
 Run with: streamlit run app/streamlit_app.py
 """
 
+import json
 import sys
 from pathlib import Path
 
@@ -10,7 +11,8 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
-sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
+PROJECT_ROOT = Path(__file__).parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from mars_pathfinder.analysis.mission import evaluate_eva_route  # noqa: E402
 from mars_pathfinder.data.loaders import load_synthetic_mission  # noqa: E402
@@ -21,6 +23,12 @@ from mars_pathfinder.terrain.derivatives import slope_degrees  # noqa: E402
 
 
 st.set_page_config(page_title="Mars Pathfinder AI — EVA Planner", layout="wide")
+
+with st.sidebar.expander("NASA / mission resources", expanded=False):
+    catalog = json.loads((PROJECT_ROOT / "data" / "source_catalog.json").read_text())
+    for source in catalog:
+        st.markdown(f"**[{source["name"]}]({source["url"]})**  ")
+        st.caption(source["role"])
 st.title("Mars Pathfinder AI")
 st.caption("Local Martian EVA mission planner — synthetic fixture, not NASA observation data")
 
