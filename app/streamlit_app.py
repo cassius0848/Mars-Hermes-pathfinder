@@ -28,6 +28,8 @@ from mars_pathfinder.data.loaders import (  # noqa: E402
     science_targets_from_vector,
 )
 from mars_pathfinder.data.research import load_hawksbill_gap_package  # noqa: E402
+from mars_pathfinder.ai.context_builder import build_mission_context  # noqa: E402
+from mars_pathfinder.ai.provider import MockProvider  # noqa: E402
 from mars_pathfinder.models import EVAState, MissionConstraints, ScienceTarget  # noqa: E402
 from mars_pathfinder.routing.mission import closed_loop_route  # noqa: E402
 from mars_pathfinder.terrain.costs import build_eva_cost  # noqa: E402
@@ -236,6 +238,27 @@ with right:
     st.caption("Sources: " + ", ".join(sorted({target.source for target in mission_targets})))
     if not has_official_environment_layers:
         st.info("Weather and radiation have no selected official layer; their weights are 0 and they are not presented as observations.")
+
+with st.expander("Offline mission assistant (MockProvider)"):
+    # This provider is deterministic and does not call DeepSeek yet.
+    # 当前 provider 是确定性的离线模拟器，尚未调用 DeepSeek。
+    ai_context = build_mission_context(
+        mission_id=study_area,
+        data_mode="real" if research_package is not None or selected_sample.exists() else "synthetic",
+        constraints={"eva_hours": eva_hours, "reserve_fraction": reserve, "max_slope_deg": max_slope},
+        targets=[{"id": target.target_id, "name": target.name, "source": target.source} for target in mission_targets],
+        route_candidates=[{
+            "route_id": "current-closed-loop",
+            "planning_cost": float(planning_cost),
+            "distance_m": report["distance_m"],
+            "estimated_time_h": report["estimated_time_h"],
+            "safety_ok": report["safety_ok"],
+        }],
+        data_sources=sorted({target.source for target in mission_targets}),
+        missing_data=["official spatial weather layer", "official spatial radiation layer"],
+    )
+    recommendation = MockProvider().recommend(ai_context)
+    st.json(recommendation.to_dict())
 
 if research_package is not None:
     with st.expander("Hawksbill Gap research validation"):
