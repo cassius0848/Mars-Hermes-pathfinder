@@ -145,6 +145,9 @@ class EVAState:
     battery_fraction: float = 1.0
     payload_kg: float = 20.0
     reserve_fraction: float = 0.25
+    metabolic_rate_kj_h: float | None = None
+    resource_budget_kj: float | None = None
+    resource_source: str = "unconfigured"
 
     def __post_init__(self) -> None:
         if self.crew_size < 1 or self.remaining_time_h <= 0 or self.payload_kg < 0:
@@ -152,6 +155,12 @@ class EVAState:
         for value in (self.life_support_fraction, self.battery_fraction, self.reserve_fraction):
             if not 0 <= value <= 1:
                 raise ValueError("resource fractions must be between 0 and 1")
+        if (self.metabolic_rate_kj_h is None) != (self.resource_budget_kj is None):
+            raise ValueError("metabolic rate and resource budget must be configured together")
+        if self.metabolic_rate_kj_h is not None and self.metabolic_rate_kj_h <= 0:
+            raise ValueError("metabolic_rate_kj_h must be positive")
+        if self.resource_budget_kj is not None and self.resource_budget_kj <= 0:
+            raise ValueError("resource_budget_kj must be positive")
 
 
 @dataclass(frozen=True)

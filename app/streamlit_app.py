@@ -232,9 +232,11 @@ with right:
     st.metric("Planning cost", f"{planning_cost:.1f}")
     st.caption(f"Closed-loop legs: {len(segments)} · {mission_scope}")
     if report["safety_ok"]:
-        st.success("Resource reserve and route-time checks passed")
+        st.success("Time and configured resource checks passed")
+    elif report["resource_status"] == "unconfigured":
+        st.warning("Route geometry and time are available, but the EVA resource model is not configured")
     else:
-        st.warning("Route exceeds the current EVA resource reserve")
+        st.warning("Route exceeds the configured EVA resource reserve")
     st.caption("Targets: " + ", ".join(target.name for target in mission_targets))
     st.caption("Sources: " + ", ".join(sorted({target.source for target in mission_targets})))
     if not has_official_environment_layers:

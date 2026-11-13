@@ -32,10 +32,18 @@ def evaluate_eva_route(
     science_stop_time = sum(target.stop_duration_min for target in visited_targets) / 60.0
     route_time = walk_time + science_stop_time
     route_slopes = [float(slope[p]) for p in path[1:]]
-    # This is an explicitly labeled planning proxy, not a flight-qualified
-    # life-support model. 这是演示用资源代理，不是飞行级生命支持模型。
-    energy_fraction = min(1.0, route_time / max(eva.remaining_time_h, 1e-9) * 0.5 + eva.payload_kg / 2000.0)
-    remaining_after = min(eva.life_support_fraction, eva.battery_fraction) - energy_fraction
+    if eva.metabolic_rate_kj_h is None:
+        # Unknown is intentionally not treated as safe.
+        # 未配置资源模型时不能把路线标记为安全。
+        resource_status = "unconfigured"
+        resource_used_kj = None
+        resource_available_kj = None
+        resource_reserve_ok = False
+    else:
+        resource_status = "configured"
+        resource_used_kj = route_time * eva.metabolic_rate_kj_h * eva.crew_size
+        resource_available_kj = eva.resource_budget_kj * (1.0 - eva.reserve_fraction)
+        resource_reserve_ok = resource_used_kj <= resource_available_kj
     target_ids = [target.target_id for target in visited_targets]
     return {
         "distance_m": route_distance,
@@ -44,8 +52,11 @@ def evaluate_eva_route(
         "estimated_time_h": route_time,
         "mean_slope_deg": float(np.nanmean(route_slopes)),
         "max_slope_deg": float(np.nanmax(route_slopes)),
-        "estimated_resource_use": energy_fraction,
-        "resource_reserve_ok": remaining_after >= eva.reserve_fraction,
+        "resource_status": resource_status,
+        "resource_source": eva.resource_source,
+        "resource_used_kj": resource_used_kj,
+        "resource_available_kj": resource_available_kj,
+        "resource_reserve_ok": resource_reserve_ok,
         "target_ids": target_ids,
-        "safety_ok": route_time <= eva.remaining_time_h and remaining_after >= eva.reserve_fraction,
+        "safety_ok": route_time <= eva.remaining_time_h and resource_reserve_ok,
     }

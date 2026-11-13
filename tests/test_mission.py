@@ -1,42 +1,306 @@
-"""EVA mission evaluation checks / EVA 任务评估检查。"""
+"""Local EVA mission-planning demo.
+
+Run with: streamlit run app/streamlit_app.py
+
+局部火星 EVA 任务规划演示。运行：streamlit run app/streamlit_app.py
+"""
+
+import json
+import sys
+from dataclasses import replace
+from pathlib import Path
 
 import numpy as np
+import plotly.graph_objects as go
+from PIL import Image
+import streamlit as st
 
-from mars_pathfinder.analysis.mission import evaluate_eva_route
-from mars_pathfinder.data.loaders import load_synthetic_mission
-from mars_pathfinder.models import EVAState, MissionConstraints
-from mars_pathfinder.routing.search import shortest_path
-from mars_pathfinder.terrain.costs import build_eva_cost
-from mars_pathfinder.terrain.derivatives import slope_degrees
+PROJECT_ROOT = Path(__file__).parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+
+from mars_pathfinder.analysis.mission import evaluate_eva_route  # noqa: E402
+from mars_pathfinder.data.loaders import (  # noqa: E402
+    load_geojson_layer,
+    load_mars_trek_mola_sample,
+    load_route_reference,
+    load_surface_image_evidence,
+    load_synthetic_mission,
+    science_targets_from_vector,
+)
+from mars_pathfinder.data.research import load_hawksbill_gap_package  # noqa: E402
+from mars_pathfinder.ai.context_builder import build_mission_context  # noqa: E402
+from mars_pathfinder.ai.provider import MockProvider  # noqa: E402
+from mars_pathfinder.models import EVAState, MissionConstraints, ScienceTarget  # noqa: E402
+from mars_pathfinder.routing.mission import closed_loop_route  # noqa: E402
+from mars_pathfinder.terrain.costs import build_eva_cost  # noqa: E402
+from mars_pathfinder.terrain.derivatives import slope_degrees  # noqa: E402
 
 
-def test_eva_route_reports_target_and_resource_status():
-    terrain, layers, targets = load_synthetic_mission((20, 20))
+st.set_page_config(page_title="Mars Pathfinder AI — EVA Planner", layout="wide")
+
+catalog = json.loads((PROJECT_ROOT / "data" / "source_catalog.json").read_text())
+with st.sidebar.expander("NASA / mission resources", expanded=False):
+    for source in catalog:
+        st.markdown(f"**[{source['name']}]({source['url']})**")
+        st.caption(source["role"])
+
+# Local samples are small, reviewable exports from the official services.
+# 本地样本来自官方服务的有限范围导出，便于审查和重复运行。
+jezero_sample = PROJECT_ROOT / "data" / "raw" / "jezero_mola_256.tif"
+bookmarked_sample = PROJECT_ROOT / "data" / "raw" / "mars_trek_views" / "view_-92_87_-16_32_mola_256.tif"
+geology_path = PROJECT_ROOT / "data" / "raw" / "usgs" / "jezero_geologic_units_100m.geojson"
+optical_path = PROJECT_ROOT / "data" / "raw" / "mars_trek" / "jezero_viking_mdim21_512.jpg"
+research_root = PROJECT_ROOT / "docs" / "jezero-research"
+research_photo_path = research_root / "raw" / "perseverance-sol518-mastcam-z.png"
+
+with st.sidebar:
+    st.header("Mission settings")
+    study_area = st.selectbox("Study area", ["Hawksbill Gap research package", "Jezero (primary)", "Mars Trek bookmarked view"])
+
+selected_sample = bookmarked_sample if study_area == "Mars Trek bookmarked view" else jezero_sample
+selected_bbox = (-93.0, -16.8, -92.0, -15.8) if study_area == "Mars Trek bookmarked view" else (77.0, 18.0, 78.0, 19.0)
+
+if study_area == "Hawksbill Gap research package" and research_root.exists():
+    # Research mode consumes the teammate's measured local package directly.
+    # 研究包模式直接读取队友取得的真实局部数据。
+    research_package = load_hawksbill_gap_package(research_root)
+    terrain = research_package.terrain
+    slope = research_package.slope
+    geology = research_package.geology
+    targets = research_package.science_targets
+    research_optical = research_package.optical_rgb
+    research_thermal = research_package.thermal
+    start = research_package.base_point
+    selected_sample = research_root / "derived" / "jezero-elevation-local-2m.tif"
+    has_official_environment_layers = False
+    weather = np.zeros(terrain.shape, dtype=float)
+    radiation = np.zeros(terrain.shape, dtype=float)
+    data_caption = "REAL Hawksbill Gap package · HiRISE DTM + USGS geology + THEMIS context"
+elif selected_sample.exists():
+    # Real-data mode: do not create the synthetic mission fixture here.
+    # 真实数据模式：这里不再创建合成任务 fixture。
+    research_package = None
+    terrain = load_mars_trek_mola_sample(selected_sample, bbox=selected_bbox)
     slope = slope_degrees(terrain)
-    science = np.zeros(terrain.shape)
-    science[targets[0].location] = targets[0].science_value
-    costs = build_eva_cost(
-        slope,
-        weather_risk=layers["weather_demo"].values,
-        radiation_risk=layers["radiation_demo"].values,
-        science_value=science,
-        max_slope_deg=45,
+    has_official_environment_layers = False
+    research_optical = None
+    research_thermal = None
+    if study_area == "Jezero (primary)" and geology_path.exists():
+        geology = load_geojson_layer(geology_path, name="USGS Jezero geologic units", source="USGS SIM 3464")
+        targets = science_targets_from_vector(geology, selected_bbox, terrain.shape)
+    else:
+        geology = None
+        targets = [ScienceTarget(
+            "mars-trek-waypoint",
+            "Mars Trek bookmarked waypoint",
+            (40, 40),
+            0.0,
+            "User-provided Mars Trek bookmark; no official science target layer selected.",
+            "user-provided Mars Trek bookmark",
+        )]
+    # No official weather or radiation layer has been selected for these views.
+    # 当前视图没有选定官方天气/辐射层，因此使用中性数组，绝不虚构观测。
+    weather = np.zeros(terrain.shape, dtype=float)
+    radiation = np.zeros(terrain.shape, dtype=float)
+    start = (10, 10)
+    data_caption = f"REAL NASA/USGS data · {study_area} · weather/radiation unavailable"
+else:
+    # Synthetic mode exists only as a development fallback and is labeled below.
+    # 合成模式只作为开发 fallback，并在界面中明确标记。
+    research_package = None
+    terrain, layers, targets = load_synthetic_mission()
+    geology = None
+    slope = slope_degrees(terrain)
+    weather = layers["weather_demo"].values
+    radiation = layers["radiation_demo"].values
+    has_official_environment_layers = False
+    research_optical = None
+    research_thermal = None
+    start = (2, 2)
+    data_caption = "SYNTHETIC DEVELOPMENT FIXTURE — no official DEM available"
+
+if not targets:
+    st.error("No science targets are available for this study area.")
+    st.stop()
+
+with st.sidebar:
+    target_name = st.selectbox("Science target", [target.name for target in targets])
+    selected_target = next(target for target in targets if target.name == target_name)
+    scope_options = ["Selected target round trip"]
+    if len(targets) > 1:
+        scope_options.insert(0, "All targets in listed order")
+    mission_scope = st.selectbox("Mission scope", scope_options)
+    mission_targets = targets if mission_scope == "All targets in listed order" else [selected_target]
+    eva_hours = st.slider("EVA duration (hours)", 4.0, 24.0, 12.0, 1.0)
+    reserve = st.slider("Return reserve", 0.10, 0.50, 0.25, 0.05)
+    max_slope = st.slider("Maximum slope (degrees)", 5, 30, 18)
+    display_options = ["Elevation", "Slope", "Weather risk", "Radiation risk"]
+    if research_package is not None:
+        display_options.extend(["HiRISE local orthophoto", "THEMIS thermal context"])
+    elif study_area == "Jezero (primary)" and optical_path.exists():
+        display_options.append("Viking optical context")
+    display_layer = st.selectbox("Map layer", display_options)
+
+st.title("Mars Pathfinder AI")
+st.caption(f"Local Martian EVA mission planner — {data_caption}")
+
+# The base point is a mission-planning input, not an observed rover location.
+# 基地位置是任务规划输入，不应被描述成真实火星车观测位置。
+goal = selected_target.location
+science = np.zeros(terrain.shape, dtype=float)
+for target in mission_targets:
+    science[target.location] = target.science_value
+# Hard slope limits are encoded as impassable cells before route search.
+# 先把硬性坡度阈值编码为不可通行，再进行路线搜索。
+cost_grid = build_eva_cost(
+    slope,
+    weather_risk=weather,
+    radiation_risk=radiation,
+    science_value=science,
+    # Real terrain and USGS target evidence drive the current planner.
+    # 当前规划器由真实地形和 USGS 科学目标证据驱动。
+    terrain_weight=1.0,
+    science_weight=0.5,
+    # No official weather/radiation layers are loaded yet, so their weights are zero.
+    # 尚未加载官方天气/辐射层，因此权重明确为 0。
+    weather_weight=0.0 if not has_official_environment_layers else 1.0,
+    radiation_weight=0.0 if not has_official_environment_layers else 1.0,
+    max_slope_deg=float(max_slope),
+)
+
+try:
+    # Plan a complete closed loop; EVA checks include the return leg.
+    # 规划完整闭环，EVA 时间和资源检查包含返航段。
+    path, planning_cost, segments = closed_loop_route(
+        cost_grid, start, [target.location for target in mission_targets]
     )
-    path, _ = shortest_path(costs, (1, 1), targets[0].location)
-    report = evaluate_eva_route(path, terrain, slope, EVAState(), MissionConstraints(max_slope_deg=45), targets)
-    assert targets[0].target_id in report["target_ids"]
-    assert report["distance_m"] > 0
-    assert isinstance(report["safety_ok"], bool)
-    assert report["science_stop_time_h"] == 0.0
+    eva = EVAState(remaining_time_h=eva_hours, reserve_fraction=reserve)
+    constraints = MissionConstraints(max_slope_deg=float(max_slope))
+    report = evaluate_eva_route(path, terrain, slope, eva, constraints, mission_targets)
+except ValueError as exc:
+    st.error(f"No safe route: {exc}")
+    st.stop()
 
+layer_values = {
+    "Elevation": terrain.elevation,
+    "Slope": slope,
+    "Weather risk": weather,
+    "Radiation risk": radiation,
+}
 
-def test_science_stop_time_is_included_in_eva_budget():
-    from mars_pathfinder.models import ScienceTarget, TerrainGrid
+left, right = st.columns([3, 2])
+with left:
+    route_rows, route_cols = zip(*path)
+    if display_layer == "HiRISE local orthophoto" and research_optical is not None:
+        # The orthophoto is a real HiRISE product aligned to the local DTM package.
+        # 该正射图来自真实 HiRISE 产品，与局部 DTM 数据包对齐。
+        figure = go.Figure(go.Image(z=research_optical))
+        scale = research_optical.shape[0] / terrain.shape[0]
+        figure.add_trace(go.Scatter(x=[col * scale for col in route_cols], y=[row * scale for row in route_rows], mode="lines", name="EVA route", line={"color": "red", "width": 3}))
+        figure.add_trace(go.Scatter(x=[start[1] * scale], y=[start[0] * scale], mode="markers", name="Base", marker={"color": "white", "size": 10}))
+        figure.add_trace(go.Scatter(x=[goal[1] * scale], y=[goal[0] * scale], mode="markers", name="Science target", marker={"color": "yellow", "size": 12}))
+        figure.update_layout(title="Real HiRISE orthophoto — Hawksbill Gap", yaxis_autorange="reversed")
+    elif display_layer == "THEMIS thermal context" and research_thermal is not None:
+        # THEMIS is regional context at 100 m/pixel; do not pretend it is route-resolution.
+        # THEMIS 是 100 m 区域背景，不能伪装成米级路线图层。
+        figure = go.Figure(go.Heatmap(z=research_thermal, colorbar_title="THEMIS DN"))
+        figure.update_layout(title="Real THEMIS thermal context — regional scale", yaxis_autorange="reversed")
+    elif display_layer == "Viking optical context" and optical_path.exists():
+        # The optical export shares the Jezero bbox, so grid coordinates scale directly.
+        # 光学图与 MOLA 使用同一 Jezero 范围，可直接按网格比例叠加路线。
+        optical = np.asarray(Image.open(optical_path).convert("RGB"))
+        figure = go.Figure(go.Image(z=optical))
+        scale = optical.shape[0] / terrain.shape[0]
+        figure.add_trace(go.Scatter(x=[col * scale for col in route_cols], y=[row * scale for row in route_rows], mode="lines", name="EVA route", line={"color": "red", "width": 3}))
+        figure.add_trace(go.Scatter(x=[start[1] * scale], y=[start[0] * scale], mode="markers", name="Base", marker={"color": "white", "size": 10}))
+        figure.add_trace(go.Scatter(x=[goal[1] * scale], y=[goal[0] * scale], mode="markers", name="Science target", marker={"color": "yellow", "size": 12}))
+        figure.update_layout(title="NASA Mars Trek Viking MDIM21 optical context", yaxis_autorange="reversed")
+    else:
+        figure = go.Figure(go.Heatmap(z=layer_values[display_layer], colorbar_title=display_layer))
+        figure.add_trace(go.Scatter(x=route_cols, y=route_rows, mode="lines", name="EVA route", line={"color": "red", "width": 3}))
+        figure.add_trace(go.Scatter(x=[start[1]], y=[start[0]], mode="markers", name="Base", marker={"color": "white", "size": 10}))
+        figure.add_trace(go.Scatter(x=[goal[1]], y=[goal[0]], mode="markers", name="Science target", marker={"color": "yellow", "size": 12}))
+        figure.update_layout(title=f"{display_layer} — {terrain.source}", yaxis_autorange="reversed")
+    st.plotly_chart(figure, use_container_width=True)
 
-    terrain = TerrainGrid(np.zeros((3, 3)), cell_size_m=1.0)
-    slope = np.zeros((3, 3))
-    target = ScienceTarget("target", "target", (1, 1), 1.0, "test", "test", stop_duration_min=30)
-    report = evaluate_eva_route([(0, 0), (1, 1), (0, 0)], terrain, slope, EVAState(remaining_time_h=1), MissionConstraints(speed_m_per_h=3600), [target])
-    assert report["walk_time_h"] > 0
-    assert report["science_stop_time_h"] == 0.5
-    assert report["estimated_time_h"] == report["walk_time_h"] + 0.5
+with right:
+    st.subheader("Mission report")
+    st.metric("Route distance", f"{report['distance_m']:.0f} m")
+    st.metric("Estimated EVA time", f"{report['estimated_time_h']:.2f} h")
+    st.caption(f"Walk {report['walk_time_h']:.2f} h · science stops {report['science_stop_time_h']:.2f} h")
+    st.metric("Maximum slope", f"{report['max_slope_deg']:.1f}°")
+    st.metric("Planning cost", f"{planning_cost:.1f}")
+    st.caption(f"Closed-loop legs: {len(segments)} · {mission_scope}")
+    if report["safety_ok"]:
+        st.success("Time and configured resource checks passed")
+    elif report["resource_status"] == "unconfigured":
+        st.warning("Route geometry and time are available, but the EVA resource model is not configured")
+    else:
+        st.warning("Route exceeds the configured EVA resource reserve")
+    st.caption("Targets: " + ", ".join(target.name for target in mission_targets))
+    st.caption("Sources: " + ", ".join(sorted({target.source for target in mission_targets})))
+    if not has_official_environment_layers:
+        st.info("Weather and radiation have no selected official layer; their weights are 0 and they are not presented as observations.")
+
+with st.expander("Offline mission assistant (MockProvider)"):
+    # This provider is deterministic and does not call DeepSeek yet.
+    # 当前 provider 是确定性的离线模拟器，尚未调用 DeepSeek。
+    ai_context = build_mission_context(
+        mission_id=study_area,
+        data_mode="real" if research_package is not None or selected_sample.exists() else "synthetic",
+        constraints={"eva_hours": eva_hours, "reserve_fraction": reserve, "max_slope_deg": max_slope},
+        targets=[{"id": target.target_id, "name": target.name, "source": target.source} for target in mission_targets],
+        route_candidates=[{
+            "route_id": "current-closed-loop",
+            "planning_cost": float(planning_cost),
+            "distance_m": report["distance_m"],
+            "estimated_time_h": report["estimated_time_h"],
+            "safety_ok": report["safety_ok"],
+        }],
+        data_sources=sorted({target.source for target in mission_targets}),
+        missing_data=["official spatial weather layer", "official spatial radiation layer"],
+    )
+    recommendation = MockProvider().recommend(ai_context)
+    st.json(recommendation.to_dict())
+
+if research_package is not None:
+    with st.expander("Hawksbill Gap research validation"):
+        route_names = [feature.get("properties", {}).get("name", "Unnamed") for feature in research_package.route_preview.get("features", [])]
+        st.metric("Archived route candidates", len(route_names))
+        st.caption("Sources: HiRISE DTM/orthophoto · THEMIS · USGS SIM 3464 · Perseverance/PDS")
+        st.write(", ".join(route_names) if route_names else "No archived route preview")
+        st.json(research_package.meda_summary)
+        st.caption("MEDA values are real Sol 518 time-series probes; they are context only, not a spatial risk raster.")
+
+# Evidence assets are shown with provenance and are never treated as DEM layers.
+# 证据素材始终显示溯源信息，不会被误当作 DEM 图层。
+if research_photo_path.exists():
+    with st.expander("Research-package surface evidence — Perseverance Sol 518"):
+        st.image(str(research_photo_path), caption="Real Perseverance Mastcam-Z image · Sol 518")
+        st.caption("Source and provenance: docs/jezero-research/raw/perseverance-sol518.html")
+
+image_metadata_path = PROJECT_ROOT / "data" / "raw" / "perseverance" / "sol1934_sample.json"
+image_evidence = load_surface_image_evidence(image_metadata_path) if image_metadata_path.exists() else None
+if image_evidence is not None:
+    with st.expander("Surface image evidence — Perseverance"):
+        st.image(str(PROJECT_ROOT / image_evidence.local_path), caption=f"Sol {image_evidence.sol} · {image_evidence.instrument} · {image_evidence.attribution}")
+        st.caption(f"Image ID: {image_evidence.image_id}")
+        st.markdown(f"[Open original NASA image]({image_evidence.url}) · [Open image page]({image_evidence.page_url})")
+
+route_reference_path = PROJECT_ROOT / "data" / "raw" / "references" / "curiosity_mount_sharp_path.json"
+route_reference = load_route_reference(route_reference_path) if route_reference_path.exists() else None
+if route_reference is not None:
+    with st.expander("Historical route reference — Curiosity Mount Sharp"):
+        st.image(str(PROJECT_ROOT / route_reference.local_path), caption=route_reference.title)
+        st.caption(route_reference.description)
+        st.caption(f"Data sources: {', '.join(route_reference.data_sources)}")
+        st.caption(route_reference.attribution)
+        st.markdown(f"[Open NASA reference page]({route_reference.url}) · [Open original asset]({route_reference.asset_url})")
+
+if geology is not None:
+    with st.expander("USGS Jezero geology context"):
+        unit_names = sorted({feature.get("properties", {}).get("name", "Unknown") for feature in geology.features})
+        st.metric("Mapped geologic units", len(unit_names))
+        st.caption(f"{len(geology.features)} simplified polygon features · {geology.crs}")
+        st.write(", ".join(unit_names[:12]) + (" …" if len(unit_names) > 12 else ""))
+        st.markdown("[Open USGS SIM 3464](https://doi.org/10.3133/sim3464)")

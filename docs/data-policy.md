@@ -65,3 +65,13 @@ reference; the live route is recomputed by the current planner.
 MEDA samples are summarized in the research mode as time-series evidence and are
 not broadcast to every pixel or used as a fake spatial weather grid. Weather and radiation weights stay neutral
 until an appropriate spatial-temporal model is implemented.
+
+
+## EVA resource model status
+
+The planner no longer converts route time into an unlabeled resource fraction. It
+reports the route and science-stop time, then marks resource safety as
+`unconfigured` unless both a metabolic rate and a mission resource budget with
+units and source are supplied. NASA EVA references are recorded in
+`docs/eva-resource-sources.md`; heritage values are not treated as Mars suit
+requirements.

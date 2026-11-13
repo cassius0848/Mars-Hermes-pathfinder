@@ -39,5 +39,6 @@ def test_hawksbill_targets_support_closed_loop_planning():
     path, _, _ = closed_loop_route(cost, package.base_point, [target.location for target in package.science_targets])
     report = evaluate_eva_route(path, package.terrain, package.slope, EVAState(remaining_time_h=24), MissionConstraints(max_slope_deg=18), package.science_targets)
     assert path[0] == path[-1] == package.base_point
-    assert report['safety_ok']
+    assert report['resource_status'] == 'unconfigured'
+    assert report['safety_ok'] is False
     assert set(report['target_ids']) == {target.target_id for target in package.science_targets}
