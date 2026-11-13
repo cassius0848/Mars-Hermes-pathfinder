@@ -1,3 +1,5 @@
+"""Routing algorithm checks / 路线算法检查。"""
+
 import numpy as np
 
 from mars_pathfinder.routing.search import shortest_path
@@ -16,6 +18,8 @@ def test_dijkstra_and_astar_reach_goal():
 
 
 def test_impassable_cells_are_avoided():
+    # The only crossing is the explicit opening at (2, 2).
+    # 只有显式设置的 (2, 2) 缺口可以穿过障碍带。
     costs = np.ones((5, 5), dtype=float)
     costs[2, :] = np.inf
     costs[2, 2] = 1.0

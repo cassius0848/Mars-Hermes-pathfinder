@@ -1,4 +1,4 @@
-"""Grid-based Dijkstra and A* search."""
+"""Grid-based Dijkstra and A* search / 网格 Dijkstra 与 A* 搜索。"""
 
 from heapq import heappop, heappush
 from math import hypot
@@ -11,6 +11,10 @@ Heuristic = Callable[[Point, Point], float]
 
 
 def _neighbors(point: Point, shape: tuple[int, int]):
+    """Yield valid 8-connected neighbors and their geometric step distance.
+
+    返回八邻域中的有效邻居及几何步长。
+    """
     row, col = point
     for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)):
         nr, nc = row + dr, col + dc
@@ -20,6 +24,8 @@ def _neighbors(point: Point, shape: tuple[int, int]):
 
 def shortest_path(cost_grid: np.ndarray, start: Point, goal: Point, *, use_astar: bool = True) -> tuple[list[Point], float]:
     """Find a least-cost path on a positive grid.
+
+    在正值代价网格中寻找最小代价路径。
 
     The A* heuristic is scaled by the minimum finite cell cost so it remains
     admissible for mission cost surfaces whose cells may cost less than 1.
@@ -39,6 +45,8 @@ def shortest_path(cost_grid: np.ndarray, start: Point, goal: Point, *, use_astar
 
     minimum_cost = float(np.min(finite_costs))
     heuristic: Heuristic = lambda a, b: hypot(a[0] - b[0], a[1] - b[1]) * minimum_cost
+    # Queue entries are (estimated_total_cost, known_cost, point).
+    # 队列元素为（估计总成本、已知成本、网格点）。
     frontier: list[tuple[float, float, Point]] = [(0.0, 0.0, start)]
     distances = {start: 0.0}
     previous: dict[Point, Point] = {}
@@ -57,6 +65,8 @@ def shortest_path(cost_grid: np.ndarray, start: Point, goal: Point, *, use_astar
             if candidate < distances.get(neighbor, np.inf):
                 distances[neighbor] = candidate
                 previous[neighbor] = current
+                # The minimum-cell-cost scaling keeps A* admissible.
+                # 使用最小像元代价缩放，保证 A* 启发式不高估。
                 estimate = heuristic(neighbor, goal) if use_astar else 0.0
                 heappush(frontier, (candidate + estimate, candidate, neighbor))
 

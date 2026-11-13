@@ -1,4 +1,7 @@
-"""EVA-level route validation and mission reporting."""
+"""EVA-level route validation and mission reporting.
+
+EVA 级路线验证与任务报告；这里负责资源和返航检查，不重新搜索路径。
+"""
 
 import math
 
@@ -15,7 +18,10 @@ def evaluate_eva_route(
     constraints: MissionConstraints,
     targets: list[ScienceTarget] | None = None,
 ) -> dict[str, object]:
-    """Return route metrics and explicit safety checks for an EVA plan."""
+    """Return route metrics and explicit safety checks for an EVA plan.
+
+    返回距离、时间、坡度、资源余量、科学目标和安全状态。
+    """
 
     if len(path) < 2:
         raise ValueError("an EVA route needs at least a start and destination")
@@ -23,6 +29,8 @@ def evaluate_eva_route(
     route_distance = float(sum(distances))
     route_time = route_distance / constraints.speed_m_per_h
     route_slopes = [float(slope[p]) for p in path[1:]]
+    # This is an explicitly labeled planning proxy, not a flight-qualified
+    # life-support model. 这是演示用资源代理，不是飞行级生命支持模型。
     energy_fraction = min(1.0, route_time / max(eva.remaining_time_h, 1e-9) * 0.5 + eva.payload_kg / 2000.0)
     remaining_after = min(eva.life_support_fraction, eva.battery_fraction) - energy_fraction
     target_ids = [target.target_id for target in (targets or []) if target.location in path]

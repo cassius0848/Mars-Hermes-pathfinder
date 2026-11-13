@@ -3,6 +3,9 @@
 This script intentionally downloads a bounded MOLA subset instead of a global
 raster. Large science products should remain outside Git and be referenced by
 metadata in data/raw/.
+
+下载可复现的小型火星资源样本。脚本只下载有限范围的 MOLA 子集，避免将
+全球大文件提交到 Git；大型科学产品应通过元数据引用。
 """
 
 from __future__ import annotations
@@ -17,6 +20,8 @@ BBOX = (77.0, 18.0, 78.0, 19.0)  # Jezero-area development window, EPSG:104905
 
 
 def download_mola(output: Path, size: int = 256) -> None:
+    # The bounded export keeps the sample reviewable and fast to download.
+    # 有限范围导出便于审查，也能快速下载和测试。
     query = (
         f"?bbox={BBOX[0]},{BBOX[1]},{BBOX[2]},{BBOX[3]}"
         f"&bboxSR=104905&imageSR=104905&size={size},{size}"

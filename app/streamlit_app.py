@@ -1,6 +1,8 @@
 """Local EVA mission-planning demo.
 
 Run with: streamlit run app/streamlit_app.py
+
+局部火星 EVA 任务规划演示。运行：streamlit run app/streamlit_app.py
 """
 
 import json
@@ -39,6 +41,8 @@ with st.sidebar.expander("NASA / mission resources", expanded=False):
         st.markdown(f"**[{source['name']}]({source['url']})**")
         st.caption(source["role"])
 
+# Local samples are small, reviewable exports from the official services.
+# 本地样本来自官方服务的有限范围导出，便于审查和重复运行。
 jezero_sample = PROJECT_ROOT / "data" / "raw" / "jezero_mola_256.tif"
 bookmarked_sample = PROJECT_ROOT / "data" / "raw" / "mars_trek_views" / "view_-92_87_-16_32_mola_256.tif"
 geology_path = PROJECT_ROOT / "data" / "raw" / "usgs" / "jezero_geologic_units_100m.geojson"
@@ -52,6 +56,8 @@ selected_sample = bookmarked_sample if study_area == "Mars Trek bookmarked view"
 selected_bbox = (-93.0, -16.8, -92.0, -15.8) if study_area == "Mars Trek bookmarked view" else (77.0, 18.0, 78.0, 19.0)
 
 if selected_sample.exists():
+    # Real-data mode: terrain and (for Jezero) science targets come from NASA/USGS.
+    # 真实数据模式：地形和 Jezero 科学目标来自 NASA/USGS。
     terrain, layers, fixture_targets = load_synthetic_mission((256, 256))
     terrain = load_mars_trek_mola_sample(selected_sample, bbox=selected_bbox)
     real_environment_layers = False
@@ -65,11 +71,13 @@ if selected_sample.exists():
             replace(fixture_targets[1], location=(30, 70), rationale="Development waypoint for the alternate Mars Trek terrain sample.", source="synthetic-demo"),
         ]
     # No official weather or radiation layer has been selected for these views.
-    # Use neutral arrays rather than inventing observations.
+    # 当前视图没有选定官方天气/辐射层，因此使用中性数组，绝不虚构观测。
     weather = np.zeros(terrain.shape, dtype=float)
     radiation = np.zeros(terrain.shape, dtype=float)
     data_caption = f"NASA Mars Trek MOLA DEM · {study_area} · weather/radiation unavailable"
 else:
+    # Synthetic mode exists only as a development fallback and is labeled below.
+    # 合成模式只作为开发 fallback，并在界面中明确标记。
     terrain, layers, targets = load_synthetic_mission()
     geology = None
     weather = layers["weather_demo"].values
@@ -97,10 +105,14 @@ with st.sidebar:
 st.title("Mars Pathfinder AI")
 st.caption(f"Local Martian EVA mission planner — {data_caption}")
 
+# The base point is a mission-planning input, not an observed rover location.
+# 基地位置是任务规划输入，不应被描述成真实火星车观测位置。
 start = (10, 10) if selected_sample.exists() else (2, 2)
 goal = selected_target.location
 science = np.zeros(terrain.shape, dtype=float)
 science[goal] = selected_target.science_value
+# Hard slope limits are encoded as impassable cells before route search.
+# 先把硬性坡度阈值编码为不可通行，再进行路线搜索。
 cost_grid = build_eva_cost(
     slope,
     weather_risk=weather,
@@ -110,6 +122,8 @@ cost_grid = build_eva_cost(
 )
 
 try:
+    # A* computes the candidate route; EVA evaluation checks time and reserves.
+    # A* 负责寻找候选路线，EVA 评估负责检查时间和资源储备。
     path, planning_cost = shortest_path(cost_grid, start, goal)
     eva = EVAState(remaining_time_h=eva_hours, reserve_fraction=reserve)
     constraints = MissionConstraints(max_slope_deg=float(max_slope))
@@ -129,6 +143,8 @@ left, right = st.columns([3, 2])
 with left:
     route_rows, route_cols = zip(*path)
     if display_layer == "Viking optical context" and optical_path.exists():
+        # The optical export shares the Jezero bbox, so grid coordinates scale directly.
+        # 光学图与 MOLA 使用同一 Jezero 范围，可直接按网格比例叠加路线。
         optical = np.asarray(Image.open(optical_path).convert("RGB"))
         figure = go.Figure(go.Image(z=optical))
         scale = optical.shape[0] / terrain.shape[0]
@@ -158,6 +174,8 @@ with right:
     if not real_environment_layers:
         st.info("Weather and radiation have no selected official layer; they are shown with neutral cost and are not presented as observations.")
 
+# Evidence assets are shown with provenance and are never treated as DEM layers.
+# 证据素材始终显示溯源信息，不会被误当作 DEM 图层。
 image_metadata_path = PROJECT_ROOT / "data" / "raw" / "perseverance" / "sol1934_sample.json"
 image_evidence = load_surface_image_evidence(image_metadata_path) if image_metadata_path.exists() else None
 if image_evidence is not None:

@@ -1,4 +1,8 @@
-"""Mission cost surfaces for terrain, weather, radiation, and science value."""
+"""Mission cost surfaces for terrain, weather, radiation, and science value.
+
+任务代价面：融合地形、天气、辐射和科学价值；缺失环境数据应传入中性层，
+不得用未经标注的合成观测替代真实数据。
+"""
 
 import numpy as np
 
@@ -17,7 +21,11 @@ def build_eva_cost(
     radiation_weight: float = 1.0,
     science_weight: float = 0.35,
 ) -> np.ndarray:
-    """Build a positive cost grid and encode safety limits as infinity."""
+    """Build a positive cost grid and encode safety limits as infinity.
+
+    构造正值代价网格，并将安全阈值编码为 infinity。science_value 只影响
+    已有科学目标的规划偏好，不代表真实测量值。
+    """
 
     slope = np.asarray(slope, dtype=float)
     if max_slope_deg <= 0:
@@ -25,6 +33,8 @@ def build_eva_cost(
     shape = slope.shape
 
     def layer_or_zero(layer: np.ndarray | None) -> np.ndarray:
+        # A missing official layer is neutral, not synthetic risk data.
+        # 缺少官方图层时使用中性代价，而不是虚构风险。
         if layer is None:
             return np.zeros(shape, dtype=float)
         values = np.asarray(layer, dtype=float)

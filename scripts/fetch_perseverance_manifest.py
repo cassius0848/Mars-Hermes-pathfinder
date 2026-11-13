@@ -3,6 +3,9 @@
 The gallery currently exposes many browse images. This script records their
 public URLs and Sol/camera information without downloading the full archive.
 Use the manifest to select only the images needed for science waypoints.
+
+从 NASA Perseverance 原始图像页建立溯源清单。清单只记录公开 URL、Sol 和
+相机信息，按需下载科学节点图像，避免下载整个图像档案。
 """
 
 from __future__ import annotations

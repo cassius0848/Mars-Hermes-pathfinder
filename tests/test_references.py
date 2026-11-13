@@ -1,3 +1,5 @@
+"""Reference-asset provenance checks / 参考素材溯源检查。"""
+
 from pathlib import Path
 
 from mars_pathfinder.data.loaders import load_route_reference

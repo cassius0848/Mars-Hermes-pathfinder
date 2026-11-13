@@ -1,4 +1,7 @@
-"""Route metrics shared by the UI and reporting layers."""
+"""Route metrics shared by the UI and reporting layers.
+
+供界面和报告层复用的路线指标计算。
+"""
 
 import math
 
@@ -8,7 +11,10 @@ from mars_pathfinder.models import TerrainGrid
 
 
 def route_metrics(path: list[tuple[int, int]], terrain: TerrainGrid, slope: np.ndarray) -> dict[str, float]:
-    """Compute interpretable metrics for a grid route."""
+    """Compute interpretable metrics for a grid route.
+
+    计算距离、平均坡度、最大坡度和可解释的能耗代理指标。
+    """
 
     if len(path) < 2:
         return {"distance_m": 0.0, "mean_slope_deg": 0.0, "max_slope_deg": 0.0, "energy_units": 0.0}

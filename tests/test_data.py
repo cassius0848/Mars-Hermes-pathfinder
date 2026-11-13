@@ -1,3 +1,5 @@
+"""Data adapter checks / 数据适配器检查。"""
+
 from pathlib import Path
 
 from mars_pathfinder.data.loaders import load_mars_trek_mola_sample, load_surface_image_evidence
@@ -27,6 +29,7 @@ def test_mars_trek_bookmarked_sample_is_loadable():
 
 
 def test_viking_optical_sample_is_loadable():
+    """Verify the real optical export dimensions / 验证真实光学样本尺寸。"""
     from PIL import Image
 
     image = Image.open(Path('data/raw/mars_trek/jezero_viking_mdim21_512.jpg'))

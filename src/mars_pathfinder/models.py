@@ -1,4 +1,8 @@
-"""Shared models for local Martian EVA mission planning."""
+"""Shared models for local Martian EVA mission planning.
+
+共享模型：所有官方数据适配器都应转换到这些结构，避免上层代码依赖
+具体 NASA / USGS 文件格式。
+"""
 
 from dataclasses import dataclass, field
 from typing import Optional
@@ -10,7 +14,10 @@ Point = tuple[int, int]
 
 @dataclass(frozen=True)
 class TerrainGrid:
-    """Normalized elevation grid; elevation values are meters."""
+    """Normalized elevation grid; elevation values are meters.
+
+    标准化高程网格；高程单位为米，NaN 表示缺失值。
+    """
 
     elevation: np.ndarray
     cell_size_m: float = 1.0
@@ -32,10 +39,14 @@ class TerrainGrid:
 
 @dataclass(frozen=True)
 class MapLayer:
-    """A geospatial layer with provenance and an explicit data category."""
+    """A geospatial layer with provenance and an explicit data category.
+
+    带有来源和类别的数据层；类别用于区分 optical、terrain、weather 等。
+    """
 
     name: str
-    category: str  # optical, thermal, spectral, terrain, radiation, weather, chemical
+    # optical / thermal / spectral / terrain / radiation / weather / chemical
+    category: str
     values: np.ndarray
     units: str
     source: str
@@ -51,7 +62,10 @@ class MapLayer:
 
 @dataclass(frozen=True)
 class ScienceTarget:
-    """A science stop supported by an observation or dataset."""
+    """A science stop supported by an observation or dataset.
+
+    由观测或数据集支持的科学停留点；source 必须能追溯到原始记录。
+    """
 
     target_id: str
     name: str
@@ -63,7 +77,10 @@ class ScienceTarget:
 
 @dataclass(frozen=True)
 class SurfaceImageEvidence:
-    """A surface image with mission provenance for a waypoint or target."""
+    """A surface image with mission provenance for a waypoint or target.
+
+    带任务溯源信息的表面图像，用于路线节点或科学目标证据展示。
+    """
 
     image_id: str
     local_path: str
@@ -79,7 +96,10 @@ class SurfaceImageEvidence:
 
 @dataclass(frozen=True)
 class VectorLayer:
-    """A vector map layer loaded from a GeoJSON feature collection."""
+    """A vector map layer loaded from a GeoJSON feature collection.
+
+    从 GeoJSON 要素集合加载的矢量图层，例如 USGS 地质单元。
+    """
 
     name: str
     geometry_type: str
@@ -90,7 +110,10 @@ class VectorLayer:
 
 @dataclass(frozen=True)
 class RouteReference:
-    """A cited mission route asset used for context and design reference."""
+    """A cited mission route asset used for context and design reference.
+
+    有出处的历史任务路线素材，只用于背景和交互设计参考。
+    """
 
     reference_id: str
     title: str
@@ -106,7 +129,10 @@ class RouteReference:
 
 @dataclass(frozen=True)
 class EVAState:
-    """Current crew and suit-resource state for a surface excursion."""
+    """Current crew and suit-resource state for a surface excursion.
+
+    当前宇航员与宇航服资源状态；这些约束用于返航和安全检查。
+    """
 
     crew_size: int = 2
     remaining_time_h: float = 6.0
@@ -125,7 +151,10 @@ class EVAState:
 
 @dataclass(frozen=True)
 class MissionConstraints:
-    """Safety and mobility limits used by the planner."""
+    """Safety and mobility limits used by the planner.
+
+    规划器使用的安全与移动能力限制；硬约束不能由 AI 权重绕过。
+    """
 
     max_slope_deg: float = 18.0
     max_weather_risk: float = 0.85

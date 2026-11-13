@@ -1,3 +1,5 @@
+"""EVA mission evaluation checks / EVA 任务评估检查。"""
+
 import numpy as np
 
 from mars_pathfinder.analysis.mission import evaluate_eva_route

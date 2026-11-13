@@ -1,3 +1,5 @@
+"""USGS geology adapter checks / USGS 地质适配器检查。"""
+
 from pathlib import Path
 
 from mars_pathfinder.data.loaders import load_geojson_layer
@@ -15,6 +17,7 @@ def test_usgs_jezero_geology_layer_is_loadable():
 
 
 def test_usgs_units_generate_real_science_target():
+    """Targets must retain the USGS source / 科学目标必须保留 USGS 来源。"""
     from mars_pathfinder.data.loaders import science_targets_from_vector
 
     layer = load_geojson_layer(
