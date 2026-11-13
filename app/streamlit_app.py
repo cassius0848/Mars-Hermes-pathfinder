@@ -38,17 +38,24 @@ image_evidence = load_surface_image_evidence(image_metadata_path) if image_metad
 route_reference_path = PROJECT_ROOT / "data" / "raw" / "references" / "curiosity_mount_sharp_path.json"
 route_reference = load_route_reference(route_reference_path) if route_reference_path.exists() else None
 geology_path = PROJECT_ROOT / "data" / "raw" / "usgs" / "jezero_geologic_units_100m.geojson"
-geology = load_geojson_layer(geology_path, name="USGS Jezero geologic units", source="USGS SIM 3464") if geology_path.exists() else None
+geology = load_geojson_layer(geology_path, name="USGS Jezero geologic units", source="USGS SIM 3464") if geology_path.exists() and study_area == "Jezero (primary)" else None
 
-mola_sample = PROJECT_ROOT / "data" / "raw" / "jezero_mola_256.tif"
-if mola_sample.exists():
+jezero_sample = PROJECT_ROOT / "data" / "raw" / "jezero_mola_256.tif"
+bookmarked_sample = PROJECT_ROOT / "data" / "raw" / "mars_trek_views" / "view_-92_87_-16_32_mola_256.tif"
+with st.sidebar:
+    st.header("Mission settings")
+    study_area = st.selectbox("Study area", ["Jezero (primary)", "Mars Trek bookmarked view"])
+
+selected_sample = bookmarked_sample if study_area == "Mars Trek bookmarked view" else jezero_sample
+if selected_sample.exists():
     terrain, layers, targets = load_synthetic_mission((256, 256))
-    terrain = load_mars_trek_mola_sample(mola_sample)
+    bbox = (-93.0, -16.8, -92.0, -15.8) if study_area == "Mars Trek bookmarked view" else (77.0, 18.0, 78.0, 19.0)
+    terrain = load_mars_trek_mola_sample(selected_sample, bbox=bbox)
     targets = [
         replace(targets[0], location=(40, 40)),
         replace(targets[1], location=(30, 70)),
     ]
-    data_caption = "NASA Mars Trek MOLA DEM + synthetic weather/radiation fixture"
+    data_caption = f"NASA Mars Trek MOLA DEM · {study_area} + synthetic weather/radiation fixture"
 else:
     terrain, layers, targets = load_synthetic_mission()
     data_caption = "Synthetic DEM + synthetic weather/radiation fixture"
@@ -57,14 +64,13 @@ weather = layers["weather_demo"].values
 radiation = layers["radiation_demo"].values
 
 with st.sidebar:
-    st.header("Mission settings")
     target_name = st.selectbox("Science target", [target.name for target in targets])
     selected_target = next(target for target in targets if target.name == target_name)
     reserve = st.slider("Return reserve", 0.10, 0.50, 0.25, 0.05)
     max_slope = st.slider("Maximum slope (degrees)", 5, 30, 18)
     display_layer = st.selectbox("Map layer", ["Elevation", "Slope", "Weather risk", "Radiation risk"])
 
-start = (10, 10) if mola_sample.exists() else (2, 2)
+start = (10, 10) if selected_sample.exists() else (2, 2)
 goal = selected_target.location
 science = np.zeros(terrain.shape, dtype=float)
 science[goal] = selected_target.science_value

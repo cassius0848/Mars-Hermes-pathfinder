@@ -15,3 +15,12 @@ def test_perseverance_evidence_has_provenance():
     assert evidence.sol == 1934
     assert evidence.instrument == 'SHERLOC_WATSON'
     assert evidence.local_path.endswith('.jpg')
+
+
+def test_mars_trek_bookmarked_sample_is_loadable():
+    terrain = load_mars_trek_mola_sample(
+        Path('data/raw/mars_trek_views/view_-92_87_-16_32_mola_256.tif'),
+        bbox=(-93.0, -16.8, -92.0, -15.8),
+    )
+    assert terrain.shape == (256, 256)
+    assert terrain.crs == 'EPSG:104905'

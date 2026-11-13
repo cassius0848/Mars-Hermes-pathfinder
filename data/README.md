@@ -42,3 +42,11 @@ of the 1:75,000 USGS SIM 3464 Jezero and Nili Planum geologic map. It contains
 1,308 polygon features and selected unit attributes. The simplified layer is
 used for science-target context and is not yet rasterized into the route cost
 surface.
+
+## Mars Trek bookmarked view
+
+`raw/mars_trek_views/view_-92_87_-16_32_mola_256.tif` is a bounded MOLA
+export around the center of the supplied Mars Trek bookmark. The metadata keeps
+the original view URL and export bounds. It is an optional study area; Jezero
+remains the primary region because the USGS geology and Perseverance evidence
+currently align with Jezero.

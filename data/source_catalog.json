@@ -13,6 +13,19 @@
     "integration": "Use the portal and its documented service endpoints to identify the local study area and layer products."
   },
   {
+    "id": "mars-trek-bookmarked-view",
+    "name": "NASA Mars Trek bookmarked view (-92.87, -16.32)",
+    "category": "optional-study-area",
+    "role": "Optional alternate MOLA study area supplied by the team",
+    "supports": [
+      "alternate terrain",
+      "bookmark reproducibility",
+      "MOLA slope analysis"
+    ],
+    "url": "https://trek.nasa.gov/mars/#v=0.1&x=-92.87000360685576&y=-16.318730130228616&z=2&p=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A104905&d=&locale=&b=mars&e=-223.73914179067953%2C-95.2445099079813%2C37.99913457696802%2C62.607049647524065&sfz=&w=",
+    "integration": "A bounded MOLA DEM sample around the bookmarked center is stored in data/raw/mars_trek_views/ and is selectable in the Streamlit demo; Jezero remains the primary region."
+  },
+  {
     "id": "mars-trek-mola-dem",
     "name": "NASA Mars Trek MOLA ImageServer",
     "category": "terrain-dem",

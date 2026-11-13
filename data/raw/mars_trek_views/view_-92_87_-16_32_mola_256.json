@@ -1,0 +1,12 @@
+{
+  "name": "Mars Trek bookmarked view MOLA DEM sample",
+  "source": "NASA Mars Trek MOLA ImageServer",
+  "source_view_url": "https://trek.nasa.gov/mars/#v=0.1&x=-92.87000360685576&y=-16.318730130228616&z=2&p=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A104905&d=&locale=&b=mars&e=-223.73914179067953%2C-95.2445099079813%2C37.99913457696802%2C62.607049647524065&sfz=&w=",
+  "export_url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/mola128_mola64_merge_90Nto90S_SimpleC_clon0/ImageServer/exportImage",
+  "center": [-92.87000360685576, -16.318730130228616],
+  "bbox": [-93.0, -16.8, -92.0, -15.8],
+  "bbox_crs": "EPSG:104905",
+  "image_size": [256, 256],
+  "elevation_units": "meters",
+  "purpose": "optional Mars Trek bookmarked study area; Jezero remains the primary project region"
+}

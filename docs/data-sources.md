@@ -64,3 +64,9 @@ The USGS layer is a simplified GeoJSON export of SIM 3464. It is currently used
 for geologic context and science-target evidence. A later step can rasterize
 selected units onto the MOLA grid if the team defines a scientifically justified
 traversability or science-value mapping.
+
+
+The supplied Mars Trek bookmark is represented by a second bounded MOLA sample
+under `data/raw/mars_trek_views/`. The Streamlit demo can switch to it for terrain
+experiments, but the current USGS geology and surface-image evidence remain
+associated with the primary Jezero area.
