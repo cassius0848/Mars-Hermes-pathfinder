@@ -52,6 +52,8 @@ Jezero-area window (`77–78°E`, `18–19°N`, EPSG:104905). The loader convert
 Mars Trek geographic spacing to approximate meters for slope calculation. This
 is a development sample, not a complete high-resolution mission map.
 
-The current demo combines this real DEM with synthetic weather and radiation
-fixtures so the route pipeline can run end-to-end without implying that those
-fixtures are NASA measurements.
+The current demo combines this real DEM and a Perseverance Sol 1934
+SHERLOC_WATSON surface image with synthetic weather and radiation fixtures.
+The image is displayed as waypoint evidence, not treated as a georeferenced
+raster layer. The synthetic fixtures remain clearly labeled and are not NASA
+measurements.

@@ -20,3 +20,10 @@ python scripts/fetch_resources.py
 The Streamlit demo uses this real DEM when the file is present. Weather and
 radiation layers remain explicitly synthetic until matching official products
 are selected and documented.
+
+## Perseverance surface evidence
+
+`raw/perseverance/sol1934_sample.jpg` is a 480×480 browse image linked from the
+NASA Mars 2020 raw-image page. Its Sol, instrument, image ID, source URL, and
+attribution are stored in the adjacent JSON metadata. It is used as visual
+evidence in the Streamlit route report, not as a georeferenced raster layer.

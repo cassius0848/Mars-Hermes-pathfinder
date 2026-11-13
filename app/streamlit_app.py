@@ -16,7 +16,7 @@ PROJECT_ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from mars_pathfinder.analysis.mission import evaluate_eva_route  # noqa: E402
-from mars_pathfinder.data.loaders import load_mars_trek_mola_sample, load_synthetic_mission  # noqa: E402
+from mars_pathfinder.data.loaders import load_mars_trek_mola_sample, load_surface_image_evidence, load_synthetic_mission  # noqa: E402
 from mars_pathfinder.models import EVAState, MissionConstraints  # noqa: E402
 from mars_pathfinder.routing.search import shortest_path  # noqa: E402
 from mars_pathfinder.terrain.costs import build_eva_cost  # noqa: E402
@@ -32,6 +32,9 @@ with st.sidebar.expander("NASA / mission resources", expanded=False):
         st.caption(source["role"])
 st.title("Mars Pathfinder AI")
 st.caption(f"Local Martian EVA mission planner — {data_caption}")
+
+image_metadata_path = PROJECT_ROOT / "data" / "raw" / "perseverance" / "sol1934_sample.json"
+image_evidence = load_surface_image_evidence(image_metadata_path) if image_metadata_path.exists() else None
 
 mola_sample = PROJECT_ROOT / "data" / "raw" / "jezero_mola_256.tif"
 if mola_sample.exists():
@@ -106,3 +109,9 @@ with right:
     else:
         st.warning("Route exceeds the current EVA resource reserve")
     st.caption(f"Science target: {selected_target.rationale} Source: {selected_target.source}")
+
+if image_evidence is not None:
+    with st.expander("Surface image evidence — Perseverance"):
+        st.image(str(PROJECT_ROOT / image_evidence.local_path), caption=f"Sol {image_evidence.sol} · {image_evidence.instrument} · {image_evidence.attribution}")
+        st.caption(f"Image ID: {image_evidence.image_id}")
+        st.markdown(f"[Open original NASA image]({image_evidence.url}) · [Open image page]({image_evidence.page_url})")

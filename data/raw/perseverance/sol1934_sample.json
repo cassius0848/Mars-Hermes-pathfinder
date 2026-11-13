@@ -1,0 +1,12 @@
+{
+  "image_id": "SIF_1934_0838664054_968EBY_N0894246SRLC08062_0000LMJ01_1200",
+  "local_path": "data/raw/perseverance/sol1934_sample.jpg",
+  "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01934/ids/edr/browse/shrlc/SIF_1934_0838664054_968EBY_N0894246SRLC08062_0000LMJ01_1200.jpg",
+  "page_url": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+  "mission": "Mars 2020 Perseverance",
+  "instrument": "SHERLOC_WATSON",
+  "sol": 1934,
+  "image_size_px": [480, 480],
+  "role": "surface-view evidence for route waypoints and science targets",
+  "attribution": "NASA/JPL-Caltech"
+}

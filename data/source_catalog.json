@@ -49,7 +49,7 @@
       "science evidence"
     ],
     "url": "https://mars.nasa.gov/mars2020/multimedia/raw-images/",
-    "integration": "Link or cache selected images with sol, camera, image ID, location, and NASA/JPL attribution. Do not treat the gallery page as a georeferenced raster layer."
+    "integration": "A Sol 1934 SHERLOC_WATSON browse image is stored in data/raw/perseverance/ with provenance metadata; additional images should be selected with Sol, camera, image ID, and location."
   },
   {
     "id": "curiosity-mount-sharp-path",

@@ -62,6 +62,22 @@ class ScienceTarget:
 
 
 @dataclass(frozen=True)
+class SurfaceImageEvidence:
+    """A surface image with mission provenance for a waypoint or target."""
+
+    image_id: str
+    local_path: str
+    url: str
+    page_url: str
+    mission: str
+    instrument: str
+    sol: int
+    attribution: str
+    image_size_px: tuple[int, int] | None = None
+    role: str = ""
+
+
+@dataclass(frozen=True)
 class EVAState:
     """Current crew and suit-resource state for a surface excursion."""
 

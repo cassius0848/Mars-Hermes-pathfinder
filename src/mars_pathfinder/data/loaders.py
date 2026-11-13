@@ -1,10 +1,18 @@
 """Data loaders and a synthetic mission fixture for development."""
 
+import json
 from pathlib import Path
 
 import numpy as np
 
-from mars_pathfinder.models import MapLayer, ScienceTarget, TerrainGrid
+from mars_pathfinder.models import MapLayer, ScienceTarget, SurfaceImageEvidence, TerrainGrid
+
+
+def load_surface_image_evidence(metadata_path: str | Path) -> SurfaceImageEvidence:
+    """Load image provenance exported from the Perseverance raw-image page."""
+
+    metadata = json.loads(Path(metadata_path).read_text())
+    return SurfaceImageEvidence(**metadata)
 
 
 def load_synthetic_terrain(shape: tuple[int, int] = (50, 50), seed: int = 7) -> TerrainGrid:
