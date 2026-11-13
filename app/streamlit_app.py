@@ -5,6 +5,7 @@ Run with: streamlit run app/streamlit_app.py
 
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -15,7 +16,7 @@ PROJECT_ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from mars_pathfinder.analysis.mission import evaluate_eva_route  # noqa: E402
-from mars_pathfinder.data.loaders import load_synthetic_mission  # noqa: E402
+from mars_pathfinder.data.loaders import load_mars_trek_mola_sample, load_synthetic_mission  # noqa: E402
 from mars_pathfinder.models import EVAState, MissionConstraints  # noqa: E402
 from mars_pathfinder.routing.search import shortest_path  # noqa: E402
 from mars_pathfinder.terrain.costs import build_eva_cost  # noqa: E402
@@ -30,9 +31,20 @@ with st.sidebar.expander("NASA / mission resources", expanded=False):
         st.markdown(f"**[{source["name"]}]({source["url"]})**  ")
         st.caption(source["role"])
 st.title("Mars Pathfinder AI")
-st.caption("Local Martian EVA mission planner — synthetic fixture, not NASA observation data")
+st.caption(f"Local Martian EVA mission planner — {data_caption}")
 
-terrain, layers, targets = load_synthetic_mission()
+mola_sample = PROJECT_ROOT / "data" / "raw" / "jezero_mola_256.tif"
+if mola_sample.exists():
+    terrain, layers, targets = load_synthetic_mission((256, 256))
+    terrain = load_mars_trek_mola_sample(mola_sample)
+    targets = [
+        replace(targets[0], location=(40, 40)),
+        replace(targets[1], location=(30, 70)),
+    ]
+    data_caption = "NASA Mars Trek MOLA DEM + synthetic weather/radiation fixture"
+else:
+    terrain, layers, targets = load_synthetic_mission()
+    data_caption = "Synthetic DEM + synthetic weather/radiation fixture"
 slope = slope_degrees(terrain)
 weather = layers["weather_demo"].values
 radiation = layers["radiation_demo"].values
@@ -45,7 +57,7 @@ with st.sidebar:
     max_slope = st.slider("Maximum slope (degrees)", 5, 30, 18)
     display_layer = st.selectbox("Map layer", ["Elevation", "Slope", "Weather risk", "Radiation risk"])
 
-start = (2, 2)
+start = (10, 10) if mola_sample.exists() else (2, 2)
 goal = selected_target.location
 science = np.zeros(terrain.shape, dtype=float)
 science[goal] = selected_target.science_value

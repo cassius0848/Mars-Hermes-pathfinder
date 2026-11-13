@@ -1,0 +1,12 @@
+{
+  "name": "Jezero MOLA DEM sample",
+  "source": "NASA Mars Trek MOLA ImageServer",
+  "source_url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/mola128_mola64_merge_90Nto90S_SimpleC_clon0/ImageServer",
+  "export_url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/mola128_mola64_merge_90Nto90S_SimpleC_clon0/ImageServer/exportImage",
+  "bbox": [77.0, 18.0, 78.0, 19.0],
+  "bbox_crs": "EPSG:104905",
+  "image_size": [256, 256],
+  "elevation_units": "meters",
+  "nodata": null,
+  "purpose": "small development sample for the local EVA planner; not a complete science product"
+}

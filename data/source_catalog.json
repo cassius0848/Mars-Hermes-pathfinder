@@ -4,16 +4,37 @@
     "name": "NASA Mars Trek",
     "category": "planetary-map",
     "role": "Primary planetary map and layer-discovery portal",
-    "supports": ["context map", "terrain and imagery discovery", "coordinate inspection"],
+    "supports": [
+      "context map",
+      "terrain and imagery discovery",
+      "coordinate inspection"
+    ],
     "url": "https://trek.nasa.gov/mars/",
     "integration": "Use the portal and its documented service endpoints to identify the local study area and layer products."
+  },
+  {
+    "id": "mars-trek-mola-dem",
+    "name": "NASA Mars Trek MOLA ImageServer",
+    "category": "terrain-dem",
+    "role": "Real elevation data for the Jezero development sample",
+    "supports": [
+      "elevation",
+      "slope",
+      "local route planning"
+    ],
+    "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/mola128_mola64_merge_90Nto90S_SimpleC_clon0/ImageServer",
+    "integration": "A bounded 256x256 GeoTIFF sample is stored in data/raw/jezero_mola_256.tif; scripts/fetch_resources.py can reproduce it."
   },
   {
     "id": "usgs-mars-maps",
     "name": "USGS Astrogeology Interactive Mars Maps",
     "category": "geology-and-topography",
     "role": "Geologic and cartographic reference layers",
-    "supports": ["geologic context", "map products", "planetary cartography"],
+    "supports": [
+      "geologic context",
+      "map products",
+      "planetary cartography"
+    ],
     "url": "https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars",
     "integration": "Use as a reference for geologic units and available map services; preserve product attribution and CRS metadata."
   },
@@ -22,7 +43,11 @@
     "name": "NASA Mars 2020 Perseverance Raw Images",
     "category": "optical-and-surface-view",
     "role": "Surface-view evidence for science targets and route waypoints",
-    "supports": ["arrival previews", "surface texture", "science evidence"],
+    "supports": [
+      "arrival previews",
+      "surface texture",
+      "science evidence"
+    ],
     "url": "https://mars.nasa.gov/mars2020/multimedia/raw-images/",
     "integration": "Link or cache selected images with sol, camera, image ID, location, and NASA/JPL attribution. Do not treat the gallery page as a georeferenced raster layer."
   },
@@ -31,7 +56,11 @@
     "name": "Curiosity Proposed Path up Mount Sharp",
     "category": "mission-route-reference",
     "role": "Reference for combining mission routes with multiple science layers",
-    "supports": ["route storytelling", "multi-mission context", "UX inspiration"],
+    "supports": [
+      "route storytelling",
+      "multi-mission context",
+      "UX inspiration"
+    ],
     "url": "https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/",
     "integration": "Use as a cited reference example. The page is not a live navigation feed."
   },
@@ -40,7 +69,11 @@
     "name": "NASA Earthdata Worldview",
     "category": "earth-observation-portal",
     "role": "Earth observation and analog-data discovery portal",
-    "supports": ["Earth analogs", "data-portal patterns", "time-aware visualization"],
+    "supports": [
+      "Earth analogs",
+      "data-portal patterns",
+      "time-aware visualization"
+    ],
     "url": "https://worldview.earthdata.nasa.gov/",
     "integration": "Treat as an Earth-data portal unless a specific Mars-compatible product is confirmed; do not present Earth layers as Mars observations."
   }

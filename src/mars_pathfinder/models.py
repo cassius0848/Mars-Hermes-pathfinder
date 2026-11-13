@@ -87,7 +87,7 @@ class MissionConstraints:
     max_slope_deg: float = 18.0
     max_weather_risk: float = 0.85
     max_radiation_risk: float = 0.85
-    speed_m_per_h: float = 120.0
+    speed_m_per_h: float = 3000.0
 
     def __post_init__(self) -> None:
         if self.max_slope_deg <= 0 or self.speed_m_per_h <= 0:

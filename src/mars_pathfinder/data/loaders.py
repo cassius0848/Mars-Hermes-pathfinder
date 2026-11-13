@@ -43,6 +43,39 @@ def load_synthetic_mission(shape: tuple[int, int] = (50, 50)) -> tuple[TerrainGr
     return terrain, layers, targets
 
 
+def load_mars_trek_mola_sample(
+    path: str | Path, bbox: tuple[float, float, float, float] = (77.0, 18.0, 78.0, 19.0)
+) -> TerrainGrid:
+    """Load the bounded MOLA TIFF exported from NASA Mars Trek.
+
+    The Mars Trek service uses EPSG:104905 for this geographic export. When
+    rasterio is unavailable, Pillow can still read the sample TIFF; the local
+    Mars ground spacing is approximated from the latitude span.
+    """
+
+    path = Path(path)
+    try:
+        import rasterio
+    except ImportError:
+        from PIL import Image
+
+        with Image.open(path) as image:
+            elevation = np.asarray(image, dtype=float)
+        mars_radius_m = 3_389_500.0
+        cell_size_m = abs(bbox[3] - bbox[1]) * np.pi * mars_radius_m / 180.0 / elevation.shape[0]
+        return TerrainGrid(elevation, cell_size_m=cell_size_m, crs="EPSG:104905", source=str(path))
+
+    with rasterio.open(path) as dataset:
+        elevation = dataset.read(1).astype(float)
+        if dataset.nodata is not None:
+            elevation[elevation == dataset.nodata] = np.nan
+        # The service export is in degrees; convert latitude spacing to meters.
+        mars_radius_m = 3_389_500.0
+        cell_size_m = abs(bbox[3] - bbox[1]) * np.pi * mars_radius_m / 180.0 / elevation.shape[0]
+        crs = dataset.crs.to_string() if dataset.crs else "EPSG:104905"
+    return TerrainGrid(elevation, cell_size_m=cell_size_m, crs=crs, source=str(path))
+
+
 def load_raster(path: str | Path) -> TerrainGrid:
     """Load a single-band elevation GeoTIFF into the common terrain model."""
 

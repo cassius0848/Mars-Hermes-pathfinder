@@ -114,6 +114,7 @@ AI 是任务助手，不是未经验证的导航器：
 项目已将本次发布的资源入口登记在 [`data/source_catalog.json`](data/source_catalog.json)，并在界面侧栏提供链接。它们的作用不同：
 
 - [NASA Mars Trek](https://trek.nasa.gov/mars/)：局部区域、坐标和行星图层发现；
+- NASA Mars Trek MOLA ImageServer：已接入 Jezero 附近 256×256 高程样本，用于真实坡度和路线计算；
 - [USGS Astrogeology Mars Maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars)：地质和制图参考；
 - [Perseverance Raw Images](https://mars.nasa.gov/mars2020/multimedia/raw-images/)：科学目标和路线节点的表面图像证据；
 - [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/)：多任务数据叠加和路线叙事参考；
@@ -152,7 +153,7 @@ PYTHONPATH=src pytest
 streamlit run app/streamlit_app.py
 ```
 
-当前界面使用明确标记的合成任务数据。官方资源发布后，优先增加数据适配器，将数据转换为上述模型，再调整风险层、科学目标和可视化，不需要重写路径搜索核心。
+当前界面已使用 NASA Mars Trek 的真实 MOLA DEM 样本；天气和辐射仍是明确标记的合成 fixture。官方产品确认后，继续增加数据适配器，将数据转换为上述模型，再调整风险层、科学目标和可视化，不需要重写路径搜索核心。
 
 ### MVP 与开发路线
 
@@ -256,6 +257,7 @@ Do not train a full Agent initially. Real Martian mission data is limited, and s
 The released resource links are cataloged in [`data/source_catalog.json`](data/source_catalog.json) and shown in the Streamlit sidebar. They have different roles:
 
 - [NASA Mars Trek](https://trek.nasa.gov/mars/) for local-area, coordinate, and planetary-layer discovery;
+- NASA Mars Trek MOLA ImageServer, already integrated as a bounded 256×256 Jezero elevation sample;
 - [USGS Astrogeology Mars Maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) for geologic and cartographic context;
 - [Perseverance Raw Images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) for surface-view evidence at targets and waypoints;
 - [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) as a cited multi-mission route reference;
@@ -294,7 +296,7 @@ PYTHONPATH=src pytest
 streamlit run app/streamlit_app.py
 ```
 
-The current UI uses clearly labeled synthetic mission data. When official resources arrive, add adapters that return the shared models, then adjust hazard layers, science targets, and visualizations without rewriting the search core.
+The current UI uses a real NASA Mars Trek MOLA DEM sample; weather and radiation remain clearly labeled synthetic fixtures. Add adapters for confirmed official products, then adjust hazard layers, science targets, and visualizations without rewriting the search core.
 
 ### MVP and Roadmap
 

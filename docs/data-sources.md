@@ -8,8 +8,10 @@ that distinction.
 ## Priority order
 
 1. **NASA Mars Trek** — use to identify the local study area, coordinate context,
-   and candidate planetary layers. Prefer documented WMTS/WMS or downloadable
-   products over scraping the interactive page.
+   and candidate planetary layers. The project now uses the public MOLA
+   `ImageServer/exportImage` endpoint to fetch a bounded Jezero DEM sample.
+   Prefer documented WMTS/WMS or downloadable products over scraping the
+   interactive page.
 2. **USGS Astrogeology Mars maps** — use for geologic units and cartographic
    context. Record product name, CRS, resolution, and attribution for every layer.
 3. **Perseverance raw images** — use selected surface images as evidence cards at
@@ -45,3 +47,14 @@ Every adapter should return or write metadata containing:
 Large raw files belong in `data/raw/` and should not be committed to Git. The
 Streamlit UI can link to the original NASA or USGS record while displaying a
 small processed subset locally.
+
+## Current real-data integration
+
+The first real layer is a 256×256 MOLA elevation export covering a bounded
+Jezero-area window (`77–78°E`, `18–19°N`, EPSG:104905). The loader converts the
+Mars Trek geographic spacing to approximate meters for slope calculation. This
+is a development sample, not a complete high-resolution mission map.
+
+The current demo combines this real DEM with synthetic weather and radiation
+fixtures so the route pipeline can run end-to-end without implying that those
+fixtures are NASA measurements.
