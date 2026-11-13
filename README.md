@@ -117,8 +117,7 @@ AI 是任务助手，不是未经验证的导航器：
 - NASA Mars Trek MOLA ImageServer：已接入 Jezero 附近 256×256 高程样本，用于真实坡度和路线计算；
 - [USGS Astrogeology Mars Maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars)：地质和制图参考；
 - [Perseverance Raw Images](https://mars.nasa.gov/mars2020/multimedia/raw-images/)：科学目标和路线节点的表面图像证据；
-- [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/)：多任务数据叠加和路线叙事参考；
-- [Earthdata Worldview](https://worldview.earthdata.nasa.gov/)：地球观测与类比区域入口，不能直接当作火星观测层。
+- [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/)：多任务数据叠加和路线叙事参考。
 
 详细接入顺序、数据边界和元数据要求见 [`docs/data-sources.md`](docs/data-sources.md)。
 
@@ -260,8 +259,7 @@ The released resource links are cataloged in [`data/source_catalog.json`](data/s
 - NASA Mars Trek MOLA ImageServer, already integrated as a bounded 256×256 Jezero elevation sample;
 - [USGS Astrogeology Mars Maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) for geologic and cartographic context;
 - [Perseverance Raw Images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) for surface-view evidence at targets and waypoints;
-- [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) as a cited multi-mission route reference;
-- [Earthdata Worldview](https://worldview.earthdata.nasa.gov/) for Earth observation and analog discovery, not automatically as a Mars layer.
+- [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) as a cited multi-mission route reference.
 
 See [`docs/data-sources.md`](docs/data-sources.md) for adapter order, provenance, and metadata requirements.
 

@@ -21,9 +21,6 @@ that distinction.
 4. **Curiosity Mount Sharp route** — use as a cited multi-mission route example
    and a design reference for showing science regions along a path. It is not a
    live navigation feed.
-5. **Earthdata Worldview** — use for Earth analogs or portal-pattern inspiration
-   unless a specific Mars-compatible product is confirmed. Earth layers must not
-   be labeled as Mars observations.
 
 ## Data adapter contract
 

@@ -63,18 +63,5 @@
     ],
     "url": "https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/",
     "integration": "Use as a cited reference example. The page is not a live navigation feed."
-  },
-  {
-    "id": "earthdata-worldview",
-    "name": "NASA Earthdata Worldview",
-    "category": "earth-observation-portal",
-    "role": "Earth observation and analog-data discovery portal",
-    "supports": [
-      "Earth analogs",
-      "data-portal patterns",
-      "time-aware visualization"
-    ],
-    "url": "https://worldview.earthdata.nasa.gov/",
-    "integration": "Treat as an Earth-data portal unless a specific Mars-compatible product is confirmed; do not present Earth layers as Mars observations."
   }
 ]
