@@ -85,3 +85,19 @@ def test_blocked_endpoint_is_rejected():
         assert "impassable" in str(error)
     else:
         raise AssertionError("blocked endpoint was accepted")
+
+
+def test_route_candidates_include_reverse_and_single_stop_options():
+    from mars_pathfinder.models import EVAState, MissionConstraints, ScienceTarget, TerrainGrid
+    from mars_pathfinder.routing.candidates import generate_candidates, pareto_filter, select_recommended
+
+    terrain = TerrainGrid(np.zeros((8, 8)), cell_size_m=1.0)
+    slope = np.zeros((8, 8))
+    targets = [
+        ScienceTarget("a", "A", (2, 2), 1.0, "test", "test"),
+        ScienceTarget("b", "B", (6, 6), 1.0, "test", "test"),
+    ]
+    candidates = generate_candidates(np.ones((8, 8)), (0, 0), targets, terrain, slope, EVAState(), MissionConstraints())
+    assert {candidate.stop_ids for candidate in candidates} == {("a", "b"), ("b", "a"), ("a",), ("b",)}
+    assert pareto_filter(candidates)
+    assert select_recommended(candidates).route_id.startswith("route-")
