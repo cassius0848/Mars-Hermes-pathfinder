@@ -144,6 +144,22 @@ with st.sidebar:
 st.title("Mars Pathfinder AI")
 st.caption(f"Local Martian EVA mission planner — {data_caption}")
 
+with st.expander("Mission brief / 任务简报", expanded=True):
+    st.markdown(
+        "**Scenario:** Two astronauts leave a simulated base, investigate Swift Run and Hazeltop, "
+        "then return through a closed-loop route.\n\n"
+        "**场景：** 两名宇航员从模拟基地出发，调查 Swift Run 与 Hazeltop，随后沿闭环路线返航。"
+    )
+    brief_cols = st.columns(4)
+    brief_cols[0].metric("Crew / 人员", "2 astronauts")
+    brief_cols[1].metric("Study area / 区域", "Hawksbill Gap")
+    brief_cols[2].metric("Science stops / 科学站", str(len(mission_targets)))
+    brief_cols[3].metric("Route type / 路线", "Closed loop")
+    st.caption(
+        "Observed: HiRISE, USGS, Perseverance, THEMIS · Derived: slope, route, profile "
+        "· Unavailable: spatial weather/radiation and configured life-support capacity"
+    )
+
 # The base point is a mission-planning input, not an observed rover location.
 # 基地位置是任务规划输入，不应被描述成真实火星车观测位置。
 goal = selected_target.location
@@ -273,6 +289,23 @@ with st.expander("Offline mission assistant (MockProvider)"):
     )
     recommendation = MockProvider().recommend(ai_context)
     st.json(recommendation.to_dict())
+
+with st.expander("Route candidate comparison / 候选路线对比"):
+    candidate_rows = []
+    pareto_ids = {candidate.route_id for candidate in pareto_candidates}
+    for candidate in candidates:
+        candidate_rows.append({
+            "route": candidate.route_id,
+            "targets": " → ".join(candidate.stop_ids),
+            "distance_m": round(candidate.report["distance_m"], 1),
+            "time_h": round(candidate.report["estimated_time_h"], 3),
+            "max_slope_deg": round(candidate.report["max_slope_deg"], 2),
+            "resource_status": candidate.report["resource_status"],
+            "alignment_review": candidate.report["alignment_review_required"],
+            "pareto": candidate.route_id in pareto_ids,
+        })
+    st.dataframe(candidate_rows, use_container_width=True, hide_index=True)
+    st.caption("Routes are deterministic candidates. AI does not choose or alter hard constraints.")
 
 if research_package is not None:
     with st.expander("Hawksbill Gap research validation"):

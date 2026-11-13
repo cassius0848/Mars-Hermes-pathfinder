@@ -160,6 +160,20 @@ streamlit run app/streamlit_app.py
 
 队友的 `docs/jezero-research/` 归档已经接入 Streamlit 的研究包模式。选择 `Hawksbill Gap research package` 后，应用读取真实的 2 m HiRISE DTM、派生坡度、配套正射图、THEMIS 区域热红外、USGS SIM 3464 局部地质和 Perseverance/PDS 科学证据点。归档路线只用于对照，实时路线仍由当前 A* 规划器重新计算。MEDA 作为时间序列证据显示，不会被复制成虚假的空间天气栅格。
 
+### MVP 实机演示脚本
+
+推荐用一次 3–5 分钟的 Hawksbill Gap 任务完成演示：
+
+1. 选择 `Hawksbill Gap research package`，说明这是一个约 520×520 米的局部火星 EVA 区域；
+2. 展示 HiRISE DTM、正射图、USGS 地质、THEMIS 热红外和 Perseverance 图像证据；
+3. 选择 Swift Run 与 Hazeltop，显示两名宇航员的科学任务；
+4. 比较正序、反序和单站闭环路线，查看距离、坡度、停留时间和配准不确定性；
+5. 在光学图上展示路线和科学目标，在 THEMIS 图上说明区域尺度环境背景；
+6. 修改 EVA 时间或返航储备，展示路线是否仍满足当前模型；
+7. 明确说明天气、辐射和生命支持容量尚未配置，因此系统不会宣称飞行级安全。
+
+演示叙事对应官方挑战的四个问题：**为什么去**（USGS 地质与 Perseverance 证据）、**怎么走**（HiRISE DTM 与 A*）、**途中看到什么**（正射和表面图像）、**能否返回**（闭环路线、停留时间和资源状态）。
+
 ### MVP 与开发路线
 
 1. 接入三类以上真实数据并完成来源登记；
@@ -318,6 +332,10 @@ streamlit run app/streamlit_app.py
 ```
 
 The current UI can switch between the primary Jezero area and the supplied Mars Trek bookmarked view, uses real NASA Mars Trek MOLA DEM samples, and can display a Perseverance Sol 1934 SHERLOC_WATSON surface image, the Curiosity Mount Sharp route animation, and a USGS Jezero geology summary; weather and radiation use neutral no-data costs until an official product is selected; they are never presented as observations. Add adapters for confirmed official products, then adjust hazard layers, science targets, and visualizations without rewriting the search core.
+
+### MVP Live Demo Script
+
+Use a 3–5 minute Hawksbill Gap mission: select the research package, show the real HiRISE, USGS, THEMIS, and Perseverance layers, compare forward/reverse/single-stop closed-loop routes, inspect the optical evidence, adjust EVA time or reserve, and state clearly that spatial weather, radiation, and life-support capacity are not configured. The story answers **why go**, **how to walk**, **what will be seen**, and **whether the crew can return**.
 
 ### MVP and Roadmap
 
