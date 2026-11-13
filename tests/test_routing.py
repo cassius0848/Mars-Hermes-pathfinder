@@ -44,3 +44,17 @@ def test_closed_loop_returns_to_base():
     assert path[0] == path[-1] == (0, 0)
     assert len(segments) == 2
     assert total > 0
+
+
+def test_diagonal_corner_cutting_is_blocked():
+    """A diagonal cannot pass between two orthogonal obstacles."""
+
+    costs = np.ones((3, 3), dtype=float)
+    costs[0, 1] = np.inf
+    costs[1, 0] = np.inf
+    try:
+        shortest_path(costs, (0, 0), (1, 1))
+    except ValueError as error:
+        assert "no traversable route" in str(error)
+    else:
+        raise AssertionError("diagonal corner cutting was not blocked")

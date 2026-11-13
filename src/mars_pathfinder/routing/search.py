@@ -19,7 +19,7 @@ def _neighbors(point: Point, shape: tuple[int, int]):
     for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)):
         nr, nc = row + dr, col + dc
         if 0 <= nr < shape[0] and 0 <= nc < shape[1]:
-            yield (nr, nc), hypot(dr, dc)
+            yield (nr, nc), hypot(dr, dc), (dr, dc)
 
 
 def shortest_path(cost_grid: np.ndarray, start: Point, goal: Point, *, use_astar: bool = True) -> tuple[list[Point], float]:
@@ -57,9 +57,17 @@ def shortest_path(cost_grid: np.ndarray, start: Point, goal: Point, *, use_astar
             continue
         if current == goal:
             break
-        for neighbor, step_distance in _neighbors(current, costs.shape):
+        for neighbor, step_distance, delta in _neighbors(current, costs.shape):
             if not np.isfinite(costs[neighbor]):
                 continue
+            # For diagonal motion, both orthogonal corner cells must be open.
+            # 斜向移动时，两侧正交邻居都必须可通行，禁止穿过障碍夹角。
+            dr, dc = delta
+            if dr and dc:
+                side_a = (current[0] + dr, current[1])
+                side_b = (current[0], current[1] + dc)
+                if not (np.isfinite(costs[side_a]) and np.isfinite(costs[side_b])):
+                    continue
             step_cost = step_distance * (costs[current] + costs[neighbor]) / 2.0
             candidate = distance + step_cost
             if candidate < distances.get(neighbor, np.inf):
