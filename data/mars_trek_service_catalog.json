@@ -1,0 +1,79 @@
+[
+  {
+    "id": "mola-dem",
+    "name": "MOLA global DEM",
+    "type": "ImageServer",
+    "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/mola128_mola64_merge_90Nto90S_SimpleC_clon0/ImageServer",
+    "role": "real elevation and slope"
+  },
+  {
+    "id": "viking-mdim21",
+    "name": "Viking MDIM21 color mosaic",
+    "type": "MapServer",
+    "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Mars_Viking_MDIM21_ClrMosaic_global_232m/MapServer",
+    "role": "real optical context"
+  },
+  {
+    "id": "auto-layer-search",
+    "name": "Mars Trek science-product search",
+    "type": "REST endpoint",
+    "url": "https://trek.nasa.gov/mars/TrekServices/ws/index/PROJECTION/searchItems",
+    "role": "discover CTX, HiRISE and other mission products"
+  },
+  {
+    "id": "auto-layer-config",
+    "name": "Mars Trek automatic layer config",
+    "type": "JSON",
+    "url": "https://trek.nasa.gov/mars/jpl/config/autoLayers.json",
+    "role": "automatic CTX/HiRISE imagery selection"
+  },
+  {
+    "id": "nomenclature_eq",
+    "name": "Nomenclature",
+    "type": "FeatureLabel",
+    "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/combinedNom/MapServer/0",
+    "role": "static map support layer"
+  },
+  {
+    "id": "graticule_eq",
+    "name": "Graticule",
+    "type": "featureLayer",
+    "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/ERGraticule/MapServer",
+    "role": "static map support layer"
+  },
+  {
+    "id": "nomenclature_np",
+    "name": "Nomenclature",
+    "type": "FeatureLabel",
+    "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/combinedNom_np/MapServer/0",
+    "role": "static map support layer"
+  },
+  {
+    "id": "graticule_np",
+    "name": "Graticule",
+    "type": "featureLayer",
+    "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/NPolarGraticule/MapServer",
+    "role": "static map support layer"
+  },
+  {
+    "id": "nomenclature_sp",
+    "name": "Nomenclature",
+    "type": "FeatureLabel",
+    "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/combinedNom_sp/MapServer/0",
+    "role": "static map support layer"
+  },
+  {
+    "id": "graticule_sp",
+    "name": "Graticule",
+    "type": "featureLayer",
+    "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/SPolarGraticule/MapServer",
+    "role": "static map support layer"
+  },
+  {
+    "id": "ctx-hirise-auto",
+    "name": "CTX HiRISE",
+    "type": "automatic imagery",
+    "url": "https://trek.nasa.gov/mars/TrekServices/ws/index/PROJECTION/searchItems",
+    "role": "CTX/HiRISE imagery discovered by instrument and product category"
+  }
+]

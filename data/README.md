@@ -50,3 +50,16 @@ export around the center of the supplied Mars Trek bookmark. The metadata keeps
 the original view URL and export bounds. It is an optional study area; Jezero
 remains the primary region because the USGS geology and Perseverance evidence
 currently align with Jezero.
+
+## Mars Trek Viking optical mosaic
+
+`raw/mars_trek/jezero_viking_mdim21_512.jpg` is a 512×512 real optical export
+from the NASA Mars Trek Viking MDIM21 color mosaic for the Jezero window. Its
+metadata records the MapServer and export bounds. The app overlays the route on
+this image when the optical context layer is selected.
+
+
+Resource inventories are also stored in `mars_trek_service_catalog.json` and
+`usgs_jezero_layer_catalog.json`. The Perseverance gallery is indexed in
+`raw/perseverance/raw_image_manifest.json` (199 public image records at the time
+of retrieval); only selected evidence images are downloaded locally.

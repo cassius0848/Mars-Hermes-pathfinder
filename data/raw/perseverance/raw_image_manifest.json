@@ -1,0 +1,1797 @@
+{
+  "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+  "count": 199,
+  "images": [
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01934/ids/edr/browse/shrlc/SIF_1934_0838664054_968EBY_N0894246SRLC08062_0000LMJ01_1200.jpg",
+      "sol": 1934,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01955/ids/edr/browse/zcam/ZL0_1955_0840495343_598EBY_N0910000ZCAM04446_1100LMJ01_320.jpg",
+      "sol": 1955,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01948/ids/edr/browse/zcam/ZL7_1948_0839864813_757EBY_N0910000ZCAM01576_1100LMJ01_320.jpg",
+      "sol": 1948,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01939/ids/edr/browse/zcam/ZR0_1939_0839077389_206EBY_N0900000ZCAM09985_0630LMJ01_320.jpg",
+      "sol": 1939,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01932/ids/edr/browse/zcam/ZR0_1932_0838453937_660EBY_N0894246ZCAM05211_0340LMJ01_320.jpg",
+      "sol": 1932,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01927/ids/edr/browse/zcam/ZR0_1927_0838003040_568EBY_N0894178ZCAM09973_1100LMJ01_320.jpg",
+      "sol": 1927,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01922/ids/edr/browse/zcam/ZR0_1922_0837569216_724EBY_N0894178ZCAM07125_1100LMJ01_320.jpg",
+      "sol": 1922,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01914/ids/edr/browse/zcam/ZL0_1914_0836856926_568EBY_N0892556ZCAM09968_1100LMJ01_320.jpg",
+      "sol": 1914,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01907/ids/edr/browse/zcam/ZR0_1907_0836236909_348EBY_N0891368ZCAM09959_1100LMJ01_320.jpg",
+      "sol": 1907,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01900/ids/edr/browse/zcam/ZR0_1900_0835609505_659EBY_N0890000ZCAM09950_1100LMJ01_320.jpg",
+      "sol": 1900,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01892/ids/edr/browse/zcam/ZL0_1892_0834907635_519EBY_N0883136ZCAM09941_0630LMJ01_320.jpg",
+      "sol": 1892,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01885/ids/edr/browse/fcam/FRF_1885_0834281632_597ECM_N0881722FHAZ02008_01_095J01_320.jpg",
+      "sol": 1885,
+      "camera_group": "fcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01882/ids/edr/browse/zcam/ZR0_1882_0834020306_763EBY_N0881602ZCAM09932_0630LMJ01_320.jpg",
+      "sol": 1882,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01871/ids/edr/browse/zcam/ZL0_1871_0833043810_519EBY_N0881214ZCAM04386_1100LMJ01_320.jpg",
+      "sol": 1871,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01867/ids/edr/browse/shrlc/SIF_1867_0832682562_914EBY_N0881144SRLC00719_0000LMJ01_320.jpg",
+      "sol": 1867,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01859/ids/edr/browse/zcam/ZL0_1859_0831974139_738EBY_N0880620ZCAM09915_0630LMJ01_320.jpg",
+      "sol": 1859,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01852/ids/edr/browse/zcam/ZL0_1852_0831357047_956EBY_N0880206ZCAM09907_1100LMJ01_320.jpg",
+      "sol": 1852,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01844/ids/edr/browse/zcam/ZL0_1844_0830639989_223EBY_N0880000ZCAM09900_1100LMJ01_320.jpg",
+      "sol": 1844,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01839/ids/edr/browse/zcam/ZR0_1839_0830192065_894EBY_N0874924ZCAM04360_1100LMJ02_320.jpg",
+      "sol": 1839,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01834/ids/edr/browse/zcam/ZR0_1834_0829756209_724EBY_N0874184ZCAM04354_1100LMJ01_320.jpg",
+      "sol": 1834,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01825/ids/edr/browse/zcam/ZL0_1825_0828947452_193EBY_N0874084ZCAM09881_1100LMJ01_320.jpg",
+      "sol": 1825,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01820/ids/edr/browse/ncam/NLF_1820_0828506333_862ECM_N0874084NCAM15819_04_195J01_320.jpg",
+      "sol": 1820,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01810/ids/edr/browse/fcam/FRF_1810_0827632154_034ECM_N0870120FHAZ00206_01_295J01_320.jpg",
+      "sol": 1810,
+      "camera_group": "fcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01807/ids/edr/browse/shrlc/SIF_1807_0827365718_246EBY_N0870120SRLC01019_0000LMJ01_320.jpg",
+      "sol": 1807,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01797/ids/edr/browse/shrlc/SIF_1797_0826461564_875EBY_N0870000SRLC07021_0000LMJ01_320.jpg",
+      "sol": 1797,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01792/ids/edr/browse/fcam/FLF_1792_0826023946_645ECM_N0870000FHAZ02008_03_095J01_320.jpg",
+      "sol": 1792,
+      "camera_group": "fcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01785/ids/edr/browse/shrlc/SIF_1785_0825408112_437EBY_N0860510SRLC00741_0000LMJ02_320.jpg",
+      "sol": 1785,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01779/ids/edr/browse/zcam/ZR0_1779_0824866297_409EBY_N0860000ZCAM09831_0630LMJ01_320.jpg",
+      "sol": 1779,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01770/ids/edr/browse/shrlc/SIF_1770_0824086349_476EBY_N0850000SRLC02503_0000LMJ01_320.jpg",
+      "sol": 1770,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01764/ids/edr/browse/zcam/ZR0_1764_0823537822_159EBY_N0840000ZCAM09818_1100LMJ01_320.jpg",
+      "sol": 1764,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01758/ids/edr/browse/zcam/ZR0_1758_0823007309_894EBY_N0831252ZCAM09811_1100LMJ01_320.jpg",
+      "sol": 1758,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01717/ids/edr/browse/zcam/ZL0_1717_0819364248_988EBY_N0830000ZCAM09799_1100LMJ02_320.jpg",
+      "sol": 1717,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01730/ids/edr/browse/zcam/ZL0_1730_0820501759_707EBY_N0830000ZCAM00091_1100LMJ05_320.jpg",
+      "sol": 1730,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01717/ids/edr/browse/zcam/ZR0_1717_0819377037_456EBY_N0830000ZCAM09803_1100LMJ02_320.jpg",
+      "sol": 1717,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01725/ids/edr/browse/zcam/ZL0_1725_0820072230_568EBY_N0830000ZCAM00091_1100LMJ01_320.jpg",
+      "sol": 1725,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01717/ids/edr/browse/zcam/ZR0_1717_0819362844_723EBY_N0830000ZCAM09798_1100LMJ02_320.jpg",
+      "sol": 1717,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01711/ids/edr/browse/shrlc/SIF_1711_0818840423_164EBY_N0830000SRLC07079_0000LMJ01_320.jpg",
+      "sol": 1711,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01701/ids/edr/browse/zcam/ZL0_1701_0817937907_113EBY_N0820000ZCAM09785_1100LMJ02_320.jpg",
+      "sol": 1701,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01697/ids/edr/browse/shrlc/SIF_1697_0817588621_871EBY_N0813608SRLC07029_0000LMJ01_320.jpg",
+      "sol": 1697,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01688/ids/edr/browse/zcam/ZL0_1688_0816785417_318EBY_N0811418ZCAM09775_1100LMJ01_320.jpg",
+      "sol": 1688,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01681/ids/edr/browse/zcam/ZR0_1681_0816168612_957EBY_N0802956ZCAM04271_1100LMJ01_320.jpg",
+      "sol": 1681,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01675/ids/edr/browse/zcam/ZL0_1675_0815631718_582EBY_N0801644ZCAM09762_1100LMJ01_320.jpg",
+      "sol": 1675,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01669/ids/edr/browse/zcam/ZL0_1669_0815100030_020EBY_N0792048ZCAM09751_1100LMJ01_320.jpg",
+      "sol": 1669,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01663/ids/edr/browse/shrlc/SIF_1663_0814583833_988EBY_N0791762SRLC02504_0000LMJ01_320.jpg",
+      "sol": 1663,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01653/ids/edr/browse/shrlc/SIF_1653_0813721703_808EBY_N0791382SRLC08062_0000LMJ01_320.jpg",
+      "sol": 1653,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01645/ids/edr/browse/zcam/ZR0_1645_0812973946_659EBY_N0790870ZCAM09729_0630LMJ02_320.jpg",
+      "sol": 1645,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01643/ids/edr/browse/ncam/NRF_1643_0812830488_112EBY_N0790870NCAM00234_09_0LLJ01_320.jpg",
+      "sol": 1643,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01633/ids/edr/browse/shrlc/SIF_1633_0811908272_265EBY_N0790596SRLC00648_0000LMJ01_320.jpg",
+      "sol": 1633,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01629/ids/edr/browse/zcam/ZR0_1629_0811553061_831EBY_N0790488ZCAM09712_1100LMJ01_320.jpg",
+      "sol": 1629,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01620/ids/edr/browse/zcam/ZR0_1620_0810754726_534EBY_N0790198ZCAM09699_1100LMJ01_320.jpg",
+      "sol": 1620,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01613/ids/edr/browse/zcam/ZR0_1613_0810130123_409EBY_N0790102ZCAM09686_1100LMJ01_320.jpg",
+      "sol": 1613,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01602/ids/edr/browse/ncam/NLF_1602_0809145575_305EBY_N0784716SCAM01602_00_0LLJ02_320.jpg",
+      "sol": 1602,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01599/ids/edr/browse/zcam/ZR0_1599_0808895348_613EBY_N0783588ZCAM09665_1100LMJ01_320.jpg",
+      "sol": 1599,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01593/ids/edr/browse/ncam/NLF_1593_0808360284_222ECM_N0780922NCAM02593_04_195J02_320.jpg",
+      "sol": 1593,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01585/ids/edr/browse/zcam/ZL0_1585_0807648312_113EBY_N0780000ZCAM04194_1100LMJ01_320.jpg",
+      "sol": 1585,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01580/ids/edr/browse/zcam/ZL0_1580_0807204008_098EBY_N0774840ZCAM04190_1100LMJ01_320.jpg",
+      "sol": 1580,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01572/ids/edr/browse/shrlc/SIF_1572_0806497992_601EBY_N0771512SRLC00442_0000LMJ01_320.jpg",
+      "sol": 1572,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01568/ids/edr/browse/zcam/ZR0_1568_0806136285_271EBY_N0771350ZCAM04182_1100LMJ01_320.jpg",
+      "sol": 1568,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01556/ids/edr/browse/zcam/ZR0_1556_0805078923_053EBY_N0770942ZCAM07125_1100LMJ01_320.jpg",
+      "sol": 1556,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01555/ids/edr/browse/shrlc/SIF_1555_0804985824_601EBY_N0770000SRLC00336_0000LMJ02_320.jpg",
+      "sol": 1555,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01545/ids/edr/browse/shrlc/SIF_1545_0804097144_292EBY_N0760000SRLC07069_0000LMJ01_320.jpg",
+      "sol": 1545,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01539/ids/edr/browse/zcam/ZL0_1539_0803559235_488EBY_N0750000ZCAM09597_1100LMJ03_320.jpg",
+      "sol": 1539,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01531/ids/edr/browse/zcam/ZL0_1531_0802847401_303EBY_N0750000ZCAM04163_1100LMJ01_320.jpg",
+      "sol": 1531,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01524/ids/edr/browse/zcam/ZL0_1524_0802226725_568EBY_N0742404ZCAM04159_0790LMJ01_320.jpg",
+      "sol": 1524,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01519/ids/edr/browse/ncam/NRF_1519_0801792165_425ECM_N0741410NCAM02519_04_195J01_320.jpg",
+      "sol": 1519,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01513/ids/edr/browse/fcam/FLF_1513_0801260057_395ECM_N0740000FHAZ02008_03_095J01_320.jpg",
+      "sol": 1513,
+      "camera_group": "fcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01505/ids/edr/browse/zcam/ZR0_1505_0800554629_159EBY_N0731522ZCAM09562_1100LMJ01_320.jpg",
+      "sol": 1505,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01500/ids/edr/browse/shrlc/SIF_1500_0800110684_156EBY_N0730000SRLC07021_0000LMJ01_320.jpg",
+      "sol": 1500,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01492/ids/edr/browse/zcam/ZR0_1492_0799384437_264EBY_N0730000ZCAM09547_0630LMJ01_320.jpg",
+      "sol": 1492,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01480/ids/edr/browse/zcam/ZL0_1480_0798325060_707EBY_N0730000ZCAM04123_1100LMJ02_320.jpg",
+      "sol": 1480,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01476/ids/edr/browse/shrlc/SIF_1476_0797970484_351EBY_N0720000SRLC00636_0000LMJ01_320.jpg",
+      "sol": 1476,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01472/ids/edr/browse/zcam/ZR0_1472_0797612737_331EBY_N0711018ZCAM04115_1100LMJ01_320.jpg",
+      "sol": 1472,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01465/ids/edr/browse/shrlc/SIF_1465_0797001964_378EBY_N0710160SRLC02500_0000LMJ01_320.jpg",
+      "sol": 1465,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01458/ids/edr/browse/zcam/ZL0_1458_0796371342_900EBY_N0710056ZCAM09519_1100LMJ01_320.jpg",
+      "sol": 1458,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01452/ids/edr/browse/zcam/ZL0_1452_0795840021_894EBY_N0700228ZCAM09510_1100LMJ01_320.jpg",
+      "sol": 1452,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01446/ids/edr/browse/zcam/ZR0_1446_0795307016_331EBY_N0700000ZCAM09502_1100LMJ02_320.jpg",
+      "sol": 1446,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01437/ids/edr/browse/shrlc/SIF_1437_0794509499_203EBY_N0692124SRLC00655_0000LMJ01_320.jpg",
+      "sol": 1437,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01430/ids/edr/browse/zcam/ZL0_1430_0793889184_659EBY_N0691054ZCAM09481_1100LMJ01_320.jpg",
+      "sol": 1430,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01424/ids/edr/browse/shrlc/SIF_1424_0793357914_757EBY_N0690000SRLC03003_0000LMJ01_320.jpg",
+      "sol": 1424,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01417/ids/edr/browse/zcam/ZL0_1417_0792731892_943EBY_N0690000ZCAM01003_1100LMJ01_320.jpg",
+      "sol": 1417,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01412/ids/edr/browse/zcam/ZR0_1412_0792297259_894EBY_N0680142ZCAM09468_0340LMJ01_320.jpg",
+      "sol": 1412,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01402/ids/edr/browse/zcam/ZR0_1402_0791399398_394EBY_N0660000ZCAM09457_1100LMJ01_320.jpg",
+      "sol": 1402,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01398/ids/edr/browse/ncam/NRF_1398_0791046577_159ECM_N0650802NCAM14397_04_195J01_320.jpg",
+      "sol": 1398,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01382/ids/edr/browse/ncam/NRF_1382_0789615650_909ECM_N0650000NCAM14381_01_195J03_320.jpg",
+      "sol": 1382,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01381/ids/edr/browse/zcam/ZR0_1381_0789534271_285EBY_N0643040ZCAM04060_1000LMJ01_320.jpg",
+      "sol": 1381,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01374/ids/edr/browse/shrlc/SIF_1374_0788919225_539EBY_N0642278SRLC00736_0000LMJ02_320.jpg",
+      "sol": 1374,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01368/ids/edr/browse/ncam/NLF_1368_0788381315_096ECM_N0642278NCAM00501_01_295J01_320.jpg",
+      "sol": 1368,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01360/ids/edr/browse/zcam/ZL0_1360_0787676526_045EBY_N0641568ZCAM05066_0340LMJ01_320.jpg",
+      "sol": 1360,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01356/ids/edr/browse/zcam/ZR0_1356_0787317174_285EBY_N0640000ZCAM09420_1100LMJ01_320.jpg",
+      "sol": 1356,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01349/ids/edr/browse/zcam/ZL0_1349_0786710496_928EBY_N0633564ZCAM09416_1100LMJ03_320.jpg",
+      "sol": 1349,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01341/ids/edr/browse/zcam/ZR0_1341_0785988867_864EBY_N0621840ZCAM09414_1100LMJ01_320.jpg",
+      "sol": 1341,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01336/ids/edr/browse/zcam/ZR0_1336_0785542229_069EBY_N0620634ZCAM09406_1100LMJ01_320.jpg",
+      "sol": 1336,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01327/ids/edr/browse/zcam/ZL0_1327_0784742942_303EBY_N0620000ZCAM09399_1100LMJ01_320.jpg",
+      "sol": 1327,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01320/ids/edr/browse/zcam/ZR0_1320_0784114966_193EBY_N0612534ZCAM04024_1100LMJ01_320.jpg",
+      "sol": 1320,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01313/ids/edr/browse/zcam/ZL0_1313_0783506160_831EBY_N0611928ZCAM09376_1100LMJ01_320.jpg",
+      "sol": 1313,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01306/ids/edr/browse/zcam/ZL0_1306_0782884607_098EBY_N0611394ZCAM09367_1100LMJ02_320.jpg",
+      "sol": 1306,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01301/ids/edr/browse/zcam/ZL0_1301_0782435681_347EBY_N0610000ZCAM09362_1100LMJ02_320.jpg",
+      "sol": 1301,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01294/ids/edr/browse/zcam/ZL0_1294_0781821609_582EBY_N0603632ZCAM07125_1100LMJ01_320.jpg",
+      "sol": 1294,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01289/ids/edr/browse/zcam/ZL0_1289_0781374631_409EBY_N0602250ZCAM03990_1100LMJ01_320.jpg",
+      "sol": 1289,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01282/ids/edr/browse/zcam/ZR0_1282_0780746892_644EBY_N0600390ZCAM09338_1100LMJ01_320.jpg",
+      "sol": 1282,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01274/ids/edr/browse/zcam/ZR0_1274_0780039250_863EBY_N0593872ZCAM03981_1100LMJ01_320.jpg",
+      "sol": 1274,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01268/ids/edr/browse/zcam/ZL0_1268_0779507161_206EBY_N0591914ZCAM03974_1100LMJ01_320.jpg",
+      "sol": 1268,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01261/ids/edr/browse/zcam/ZL0_1261_0778888682_473EBY_N0590204ZCAM03972_0630LMJ01_320.jpg",
+      "sol": 1261,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01253/ids/edr/browse/ncam/NRF_1253_0778176960_362ECM_N0590018NCAM03253_01_195J01_320.jpg",
+      "sol": 1253,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01248/ids/edr/browse/ncam/NLF_1248_0777725475_120EBY_N0565250SCAM01248_00_0LLJ01_320.jpg",
+      "sol": 1248,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01239/ids/edr/browse/zcam/ZR0_1239_0776925651_456EBY_N0563438ZCAM09294_1100LMJ01_320.jpg",
+      "sol": 1239,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01233/ids/edr/browse/shrlc/SIF_1233_0776410162_519EBY_N0563438SRLC00696_0000LMJ01_320.jpg",
+      "sol": 1233,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01225/ids/edr/browse/zcam/ZR0_1225_0775688137_644EBY_N0561998ZCAM09273_1100LMJ01_320.jpg",
+      "sol": 1225,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01221/ids/edr/browse/zcam/ZL0_1221_0775339326_553EBY_N0561010ZCAM03940_0480LMJ01_320.jpg",
+      "sol": 1221,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01211/ids/edr/browse/shrlc/SIF_1211_0774481584_652EBY_N0560000SRLC08029_0000LMJ01_320.jpg",
+      "sol": 1211,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01204/ids/edr/browse/zcam/ZR0_1204_0773826474_363EBY_N0550144ZCAM09253_0630LMJ01_320.jpg",
+      "sol": 1204,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01198/ids/edr/browse/zcam/ZL0_1198_0773287109_113EBY_N0550000ZCAM03932_1100LMJ01_320.jpg",
+      "sol": 1198,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01194/ids/edr/browse/zcam/ZL0_1194_0772928215_706EBY_N0541152ZCAM09244_0630LMJ01_320.jpg",
+      "sol": 1194,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01182/ids/edr/browse/zcam/ZR0_1182_0771876586_894EBY_N0540702ZCAM09226_0630LMJ01_320.jpg",
+      "sol": 1182,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01177/ids/edr/browse/fcam/FRF_1177_0771434644_800ECM_N0540000FHAZ02008_03_095J01_320.jpg",
+      "sol": 1177,
+      "camera_group": "fcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01171/ids/edr/browse/zcam/ZL0_1171_0770903457_928EBY_N0526980ZCAM09210_0630LMJ02_320.jpg",
+      "sol": 1171,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01164/ids/edr/browse/zcam/ZL0_1164_0770274561_848EBY_N0524312ZCAM03910_1100LMJ01_320.jpg",
+      "sol": 1164,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01159/ids/edr/browse/zcam/ZR0_1159_0769818046_473EBY_N0523018ZCAM09196_0630LMJ01_320.jpg",
+      "sol": 1159,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01152/ids/edr/browse/zcam/ZR0_1152_0769215060_848EBY_N0522638ZCAM09188_1100LMJ01_320.jpg",
+      "sol": 1152,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01144/ids/edr/browse/zcam/ZR0_1144_0768495634_473EBY_N0521700ZCAM09175_1100LMJ01_320.jpg",
+      "sol": 1144,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01138/ids/edr/browse/zcam/ZL0_1138_0767969390_223EBY_N0520870ZCAM09166_1100LMJ01_320.jpg",
+      "sol": 1138,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01129/ids/edr/browse/zcam/ZL0_1129_0767165018_473EBY_N0515030ZCAM09151_1100LMJ01_320.jpg",
+      "sol": 1129,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01123/ids/edr/browse/zcam/ZL0_1123_0766628052_223EBY_N0514692ZCAM09147_0790LMJ01_320.jpg",
+      "sol": 1123,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01115/ids/edr/browse/zcam/ZR0_1115_0765921729_910EBY_N0512990ZCAM09137_1100LMJ01_320.jpg",
+      "sol": 1115,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01110/ids/edr/browse/zcam/ZR0_1110_0765477899_659EBY_N0512578ZCAM09132_1100LMJ01_320.jpg",
+      "sol": 1110,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01101/ids/edr/browse/zcam/ZL0_1101_0764678672_956EBY_N0510644ZCAM09120_1100LMJ01_320.jpg",
+      "sol": 1101,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01094/ids/edr/browse/ncam/NLF_1094_0764057215_612EBY_N0510030SCAM05094_00_0LLJ01_320.jpg",
+      "sol": 1094,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01088/ids/edr/browse/ncam/NRF_1088_0763540196_597ECM_N0510000NCAM00709_04_095J01_320.jpg",
+      "sol": 1088,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01080/ids/edr/browse/fcam/FLF_1080_0762818583_989ECM_N0501618FHAZ00215_04_090J01_320.jpg",
+      "sol": 1080,
+      "camera_group": "fcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01077/ids/edr/browse/zcam/ZL0_1077_0762548646_707ECM_N0501618ZCAM05189_026065J01_320.jpg",
+      "sol": 1077,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01065/ids/edr/browse/zcam/ZL0_1065_0761485516_973ECM_N0501422ZCAM05177_110085J02_320.jpg",
+      "sol": 1065,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01063/ids/edr/browse/zcam/ZR0_1063_0761307957_239EBY_N0501422ZCAM09082_1100LMJ01_320.jpg",
+      "sol": 1063,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01054/ids/edr/browse/zcam/ZR0_1054_0760506529_706EBY_N0501250ZCAM09075_1100LMJ01_320.jpg",
+      "sol": 1054,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01048/ids/edr/browse/zcam/ZL0_1048_0759972742_456EBY_N0500000ZCAM03857_1100LMJ01_320.jpg",
+      "sol": 1048,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01041/ids/edr/browse/zcam/ZR0_1041_0759367945_318EBY_N0491444ZCAM09039_1100LMJ01_320.jpg",
+      "sol": 1041,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01035/ids/edr/browse/zcam/ZR0_1035_0758821079_803EBY_N0490370ZCAM09048_1100LMJ01_320.jpg",
+      "sol": 1035,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01027/ids/edr/browse/zcam/ZR0_1027_0758111437_534EBY_N0490370ZCAM09032_1100LMJ01_320.jpg",
+      "sol": 1027,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01021/ids/edr/browse/zcam/ZR0_1021_0757575876_081EBY_N0490000ZCAM09017_1100LMJ01_320.jpg",
+      "sol": 1021,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01009/ids/edr/browse/zcam/ZL0_1009_0756513826_443EBY_N0482404ZCAM09020_1100LMJ01_320.jpg",
+      "sol": 1009,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01009/ids/edr/browse/zcam/ZR0_1009_0756515672_598EBY_N0482404ZCAM09021_0340LMJ01_320.jpg",
+      "sol": 1009,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01002/ids/edr/browse/ncam/NLF_1002_0755878813_613EBY_N0480000SCAM02002_00_0LLJ01_320.jpg",
+      "sol": 1002,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00994/ids/edr/browse/zcam/ZR0_0994_0755176004_803EBY_N0470640ZCAM09002_0630LMJ01_320.jpg",
+      "sol": 994,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00988/ids/edr/browse/zcam/ZL0_0988_0754649489_081EBY_N0470000ZCAM08997_1100LMJ01_320.jpg",
+      "sol": 988,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00963/ids/edr/browse/zcam/ZR0_0963_0752427684_659EBY_N0470000ZCAM08991_1100LMJ02_320.jpg",
+      "sol": 963,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00961/ids/edr/browse/zcam/ZL0_0961_0752254195_706EBY_N0470000ZCAM03815_0340LMJ01_320.jpg",
+      "sol": 961,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00955/ids/edr/browse/zcam/ZR0_0955_0751720407_456EBY_N0463032ZCAM08973_1100LMJ01_320.jpg",
+      "sol": 955,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00945/ids/edr/browse/zcam/ZL0_0945_0750832454_988EBY_N0460000ZCAM03804_1100LMJ01_320.jpg",
+      "sol": 945,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00939/ids/edr/browse/zcam/ZR0_0939_0750300616_519EBY_N0460000ZCAM03797_1100LMJ01_320.jpg",
+      "sol": 939,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00934/ids/edr/browse/zcam/ZR0_0934_0749872767_145EBY_N0460000ZCAM08949_1100LMJ01_320.jpg",
+      "sol": 934,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00926/ids/edr/browse/zcam/ZR0_0926_0749147872_707EBY_N0450086ZCAM03780_0340LMJ01_320.jpg",
+      "sol": 926,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00916/ids/edr/browse/zcam/ZR0_0916_0748238143_769EBY_N0450000ZCAM08923_1100LMJ01_320.jpg",
+      "sol": 916,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00912/ids/edr/browse/zcam/ZR0_0912_0747896791_394EBY_N0450000ZCAM08919_1100LMJ01_320.jpg",
+      "sol": 912,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00902/ids/edr/browse/zcam/ZR0_0902_0747012675_818EBY_N0440898ZCAM03756_0340LMJ01_320.jpg",
+      "sol": 902,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00896/ids/edr/browse/zcam/ZR0_0896_0746497876_285EBY_N0440820ZCAM07114_0340LMJ01_320.jpg",
+      "sol": 896,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00890/ids/edr/browse/zcam/ZL0_0890_0745950313_598EBY_N0440000ZCAM08896_1100LMJ01_320.jpg",
+      "sol": 890,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00886/ids/edr/browse/zcam/ZR0_0886_0745594327_053EBY_N0431270ZCAM03740_0790LMJ01_320.jpg",
+      "sol": 886,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00879/ids/edr/browse/scam/LRF_0879_0744970745_266EBY_N0430000SCAM03879_0030I6J01_320.jpg",
+      "sol": 879,
+      "camera_group": "scam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00871/ids/edr/browse/rcam/RRF_0871_0744271096_012ECM_N0422700RHAZ02420_01_295J01_320.jpg",
+      "sol": 871,
+      "camera_group": "rcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00867/ids/edr/browse/zcam/ZL0_0867_0743910528_534EBY_N0420776ZCAM08872_1100LMJ01_320.jpg",
+      "sol": 867,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00859/ids/edr/browse/zcam/ZL0_0859_0743195869_113EBY_N0420000ZCAM08865_1100LMJ01_320.jpg",
+      "sol": 859,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00849/ids/edr/browse/shrlc/SIF_0849_0742314231_781EBY_N0410188SRLC00701_0000LMJ01_320.jpg",
+      "sol": 849,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00845/ids/edr/browse/zcam/ZL0_0845_0741952851_956EBY_N0410000ZCAM08849_1100LMJ01_320.jpg",
+      "sol": 845,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00837/ids/edr/browse/zcam/ZR0_0837_0741238940_784EBY_N0400992ZCAM08846_1100LMJ01_320.jpg",
+      "sol": 837,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00831/ids/edr/browse/zcam/ZL0_0831_0740709028_285EBY_N0400132ZCAM03681_1100LMJ01_320.jpg",
+      "sol": 831,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00824/ids/edr/browse/zcam/ZR0_0824_0740094837_707EBY_N0400132ZCAM03680_0630LMJ02_320.jpg",
+      "sol": 824,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00818/ids/edr/browse/zcam/ZL0_0818_0739560232_113EBY_N0391418ZCAM08835_1100LMJ01_320.jpg",
+      "sol": 818,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00812/ids/edr/browse/zcam/ZR0_0812_0739017260_428EBY_N0391170ZCAM03671_0340LMJ01_320.jpg",
+      "sol": 812,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00805/ids/edr/browse/zcam/ZR0_0805_0738401772_785EBY_N0391170ZCAM08826_0340LMJ03_320.jpg",
+      "sol": 805,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00795/ids/edr/browse/zcam/ZL0_0795_0737516585_910EBY_N0391036ZCAM03659_1100LMJ01_320.jpg",
+      "sol": 795,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00791/ids/edr/browse/zcam/ZL0_0791_0737154048_098EBY_N0390926ZCAM03651_1100LMJ01_320.jpg",
+      "sol": 791,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00781/ids/edr/browse/zcam/ZR0_0781_0736270839_318EBY_N0390690ZCAM03633_1100LMJ01_320.jpg",
+      "sol": 781,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00776/ids/edr/browse/zcam/ZR0_0776_0735824870_113EBY_N0390690ZCAM08796_1100LMJ01_320.jpg",
+      "sol": 776,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00768/ids/edr/browse/zcam/ZL0_0768_0735129137_388EBY_N0390000ZCAM08785_0630LMJ01_320.jpg",
+      "sol": 768,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00762/ids/edr/browse/zcam/ZR0_0762_0734601338_303EBY_N0374972ZCAM08775_1100LMJ01_320.jpg",
+      "sol": 762,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00756/ids/edr/browse/zcam/ZL0_0756_0734057300_193EBY_N0372562ZCAM03598_1100LMJ02_320.jpg",
+      "sol": 756,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00750/ids/edr/browse/fcam/FRF_0750_0733519147_132ECM_N0370000FHAZ02008_03_095J01_320.jpg",
+      "sol": 750,
+      "camera_group": "fcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00739/ids/edr/browse/zcam/ZR0_0739_0732546154_081EBY_N0370000ZCAM08750_1100LMJ03_320.jpg",
+      "sol": 739,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00733/ids/edr/browse/zcam/ZL0_0733_0732010378_864EBY_N0363294ZCAM08743_1100LMJ01_320.jpg",
+      "sol": 733,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00729/ids/edr/browse/zcam/ZR0_0729_0731661862_160EBY_N0360000ZCAM03572_1100LMJ02_320.jpg",
+      "sol": 729,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00724/ids/edr/browse/zcam/ZR0_0724_0731206591_659EBY_N0345120ZCAM08735_1100LMJ01_320.jpg",
+      "sol": 724,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00714/ids/edr/browse/ncam/NLF_0714_0730336979_160ECM_N0334752NCAM13714_04_195J01_320.jpg",
+      "sol": 714,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00708/ids/edr/browse/zcam/ZR0_0708_0729803024_660EBY_N0331756ZCAM08709_1100LMJ01_320.jpg",
+      "sol": 708,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00703/ids/edr/browse/ncam/NLF_0703_0729350933_598EBY_N0330402SCAM02703_00_0LLJ02_320.jpg",
+      "sol": 703,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00695/ids/edr/browse/zcam/ZL0_0695_0728632246_659EBY_N0322340ZCAM08693_1100LMJ01_320.jpg",
+      "sol": 695,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00687/ids/edr/browse/zcam/ZR0_0687_0727928383_928EBY_N0321184ZCAM08687_1100LMJ01_320.jpg",
+      "sol": 687,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00682/ids/edr/browse/zcam/ZR0_0682_0727484844_598EBY_N0321038ZCAM03527_1100LMJ01_320.jpg",
+      "sol": 682,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00672/ids/edr/browse/zcam/ZL0_0672_0726597813_613EBY_N0320672ZCAM03516_1100LMJ01_320.jpg",
+      "sol": 672,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00669/ids/edr/browse/zcam/ZR0_0669_0726335209_613EBY_N0320580ZCAM08666_1100LMJ01_320.jpg",
+      "sol": 669,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00661/ids/edr/browse/shrlc/SIF_0661_0725620212_433EBY_N0320378SRLC07059_0000LMJ01_320.jpg",
+      "sol": 661,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00653/ids/edr/browse/shrlc/SIF_0653_0724915267_015EBY_N0320148SRLC08040_0000LMJ01_320.jpg",
+      "sol": 653,
+      "camera_group": "shrlc",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00645/ids/edr/browse/ncam/NLF_0645_0724215260_496EBY_N0310856SCAM15011_00_0LLJ01_320.jpg",
+      "sol": 645,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00639/ids/edr/browse/zcam/ZL0_0639_0723682063_447EBY_N0310000ZCAM05134_0340LMJ01_320.jpg",
+      "sol": 639,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00634/ids/edr/browse/ncam/NLF_0634_0723238492_135ECM_N0310000NCAM00709_01_095J02_320.jpg",
+      "sol": 634,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00627/ids/edr/browse/zcam/ZL0_0627_0722604058_988EBY_N0301172ZCAM03491_1100LMJ01_320.jpg",
+      "sol": 627,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00621/ids/edr/browse/zcam/ZL7_0621_0722074727_054EBY_N0301172ZCAM01521_1100LMJ01_320.jpg",
+      "sol": 621,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00610/ids/edr/browse/zcam/ZL0_0610_0721082530_928EBY_N0301172ZCAM08618_1100LMJ01_320.jpg",
+      "sol": 610,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00606/ids/edr/browse/zcam/ZL0_0606_0720750417_785EBY_N0301096ZCAM08614_1100LMJ01_320.jpg",
+      "sol": 606,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00596/ids/edr/browse/ncam/NRF_0596_0719851985_168ECM_N0300000NCAM00709_04_095J01_320.jpg",
+      "sol": 596,
+      "camera_group": "ncam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    },
+    {
+      "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00591/ids/edr/browse/zcam/ZR0_0591_0719410543_568EBY_N0290000ZCAM08606_1100LMJ01_320.jpg",
+      "sol": 591,
+      "camera_group": "zcam",
+      "mission": "Mars 2020 Perseverance",
+      "role": "candidate surface evidence; select and download with provenance before use",
+      "source_page": "https://mars.nasa.gov/mars2020/multimedia/raw-images/image-of-the-week/",
+      "attribution": "NASA/JPL-Caltech"
+    }
+  ]
+}

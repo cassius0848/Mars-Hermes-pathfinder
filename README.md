@@ -115,6 +115,7 @@ AI 是任务助手，不是未经验证的导航器：
 
 - [NASA Mars Trek](https://trek.nasa.gov/mars/)：局部区域、坐标和行星图层发现；
 - NASA Mars Trek MOLA ImageServer：已接入 Jezero 附近 256×256 高程样本，并保存了团队提供的 Mars Trek 书签区域作为可选研究区；
+- NASA Mars Trek Viking MDIM21：已接入 Jezero 512×512 真实光学镶嵌图；
 - Perseverance Sol 1934 SHERLOC_WATSON 图像：已保存为路线节点的表面证据样本；
 - [USGS Astrogeology Mars Maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars)：已接入 Jezero 地质单元 GeoJSON，作为科学目标背景；
 - [Perseverance Raw Images](https://mars.nasa.gov/mars2020/multimedia/raw-images/)：科学目标和路线节点的表面图像证据；
@@ -153,7 +154,7 @@ PYTHONPATH=src pytest
 streamlit run app/streamlit_app.py
 ```
 
-当前界面可以在 Jezero 主区域和团队提供的 Mars Trek 书签区域之间切换，使用真实 MOLA DEM 样本，并可显示 Perseverance Sol 1934 SHERLOC_WATSON 表面图像、Curiosity Mount Sharp 路线动画和 USGS Jezero 地质单元摘要；天气和辐射仍是明确标记的合成 fixture。官方产品确认后，继续增加数据适配器，将数据转换为上述模型，再调整风险层、科学目标和可视化，不需要重写路径搜索核心。
+当前界面可以在 Jezero 主区域和团队提供的 Mars Trek 书签区域之间切换，使用真实 MOLA DEM 样本，并可显示 Perseverance Sol 1934 SHERLOC_WATSON 表面图像、Curiosity Mount Sharp 路线动画和 USGS Jezero 地质单元摘要；天气和辐射在尚未选定官方产品时使用中性无数据代价，不作为观测值。官方产品确认后，继续增加数据适配器，将数据转换为上述模型，再调整风险层、科学目标和可视化，不需要重写路径搜索核心。
 
 ### MVP 与开发路线
 
@@ -164,6 +165,12 @@ streamlit run app/streamlit_app.py
 5. 展示科学停留点、现场证据、路线指标和返航检查；
 6. 增加时间、天气、辐射和机器人支援模式；
 7. 最后接入 AI 任务解析与路线解释。
+
+### 真实数据优先
+
+主规划链必须由已登记的 NASA / USGS 数据驱动。当前已经真实接入 MOLA 高程、Viking MDIM21 光学图、USGS SIM 3464 地质单元、Perseverance 图像和 Curiosity 路线动画。天气和辐射尚未选定官方产品时使用中性无数据代价，不生成或伪装成观测值。
+
+合成数据只允许用于单元测试和界面 fallback，必须带有 `synthetic-demo` 标记，不能混入未来 AI 训练集。完整规则见 [`docs/data-policy.md`](docs/data-policy.md)。
 
 ### 协作原则
 
@@ -258,6 +265,7 @@ The released resource links are cataloged in [`data/source_catalog.json`](data/s
 
 - [NASA Mars Trek](https://trek.nasa.gov/mars/) for local-area, coordinate, and planetary-layer discovery;
 - NASA Mars Trek MOLA ImageServer, integrated as a bounded 256×256 Jezero sample plus the supplied bookmarked view as an optional study area;
+- NASA Mars Trek Viking MDIM21, integrated as a real 512×512 Jezero optical mosaic;
 - A Perseverance Sol 1934 SHERLOC_WATSON image, stored as surface evidence for route waypoints;
 - [USGS Astrogeology Mars Maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) with the Jezero geologic-unit GeoJSON used for science context;
 - [Perseverance Raw Images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) for surface-view evidence at targets and waypoints;
@@ -296,7 +304,7 @@ PYTHONPATH=src pytest
 streamlit run app/streamlit_app.py
 ```
 
-The current UI can switch between the primary Jezero area and the supplied Mars Trek bookmarked view, uses real NASA Mars Trek MOLA DEM samples, and can display a Perseverance Sol 1934 SHERLOC_WATSON surface image, the Curiosity Mount Sharp route animation, and a USGS Jezero geology summary; weather and radiation remain clearly labeled synthetic fixtures. Add adapters for confirmed official products, then adjust hazard layers, science targets, and visualizations without rewriting the search core.
+The current UI can switch between the primary Jezero area and the supplied Mars Trek bookmarked view, uses real NASA Mars Trek MOLA DEM samples, and can display a Perseverance Sol 1934 SHERLOC_WATSON surface image, the Curiosity Mount Sharp route animation, and a USGS Jezero geology summary; weather and radiation use neutral no-data costs until an official product is selected; they are never presented as observations. Add adapters for confirmed official products, then adjust hazard layers, science targets, and visualizations without rewriting the search core.
 
 ### MVP and Roadmap
 
@@ -307,6 +315,12 @@ The current UI can switch between the primary Jezero area and the supplied Mars 
 5. Show science stops, evidence, route metrics, and return checks;
 6. Add time, weather, radiation, and robot-support modes;
 7. Add AI task parsing and route explanations last.
+
+### Real-data policy
+
+The primary planner must be driven by documented NASA / USGS products. Real MOLA elevation, Viking MDIM21 optical imagery, USGS SIM 3464 geology, a Perseverance image, and the Curiosity route reference are already integrated. Weather and radiation use neutral no-data costs until official products are selected; the system never invents observations.
+
+Synthetic data is limited to unit tests and UI fallback, must carry the `synthetic-demo` label, and must not enter a future AI training set. See [`docs/data-policy.md`](docs/data-policy.md).
 
 ### Collaboration Rules
 

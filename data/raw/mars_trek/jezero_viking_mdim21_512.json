@@ -1,0 +1,11 @@
+{
+  "name": "Jezero Viking MDIM21 color mosaic",
+  "source": "NASA Mars Trek Viking MDIM21 color mosaic MapServer",
+  "source_url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Mars_Viking_MDIM21_ClrMosaic_global_232m/MapServer",
+  "export_url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Mars_Viking_MDIM21_ClrMosaic_global_232m/MapServer/export",
+  "bbox": [77.0, 18.0, 78.0, 19.0],
+  "bbox_crs": "EPSG:104905",
+  "image_size": [512, 512],
+  "role": "real optical context layer for local route and science-target visualization",
+  "attribution": "NASA/JPL/USGS"
+}

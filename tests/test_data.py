@@ -24,3 +24,10 @@ def test_mars_trek_bookmarked_sample_is_loadable():
     )
     assert terrain.shape == (256, 256)
     assert terrain.crs == 'EPSG:104905'
+
+
+def test_viking_optical_sample_is_loadable():
+    from PIL import Image
+
+    image = Image.open(Path('data/raw/mars_trek/jezero_viking_mdim21_512.jpg'))
+    assert image.size == (512, 512)

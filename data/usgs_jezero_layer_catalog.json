@@ -1,0 +1,74 @@
+[
+  {
+    "id": 0,
+    "name": "MapBoundary",
+    "geometry_type": "esriGeometryPolygon",
+    "url": "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/0",
+    "supports_query": true,
+    "role": "reference layer"
+  },
+  {
+    "id": 1,
+    "name": "Figures",
+    "geometry_type": "esriGeometryPolygon",
+    "url": "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/1",
+    "supports_query": true,
+    "role": "reference layer"
+  },
+  {
+    "id": 2,
+    "name": "LandingEllipse",
+    "geometry_type": "esriGeometryPolygon",
+    "url": "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/2",
+    "supports_query": true,
+    "role": "reference layer"
+  },
+  {
+    "id": 3,
+    "name": "CrossSections",
+    "geometry_type": "esriGeometryPolyline",
+    "url": "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/3",
+    "supports_query": true,
+    "role": "reference layer"
+  },
+  {
+    "id": 4,
+    "name": "Location Features",
+    "geometry_type": "esriGeometryPoint",
+    "url": "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/4",
+    "supports_query": true,
+    "role": "geologic context / science evidence"
+  },
+  {
+    "id": 5,
+    "name": "Geologic Contacts",
+    "geometry_type": "esriGeometryPolyline",
+    "url": "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/5",
+    "supports_query": true,
+    "role": "reference layer"
+  },
+  {
+    "id": 6,
+    "name": "Linear Features",
+    "geometry_type": "esriGeometryPolyline",
+    "url": "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/6",
+    "supports_query": true,
+    "role": "reference layer"
+  },
+  {
+    "id": 7,
+    "name": "Surface Features",
+    "geometry_type": "esriGeometryPolygon",
+    "url": "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/7",
+    "supports_query": true,
+    "role": "geologic context / science evidence"
+  },
+  {
+    "id": 8,
+    "name": "Geologic Units",
+    "geometry_type": "esriGeometryPolygon",
+    "url": "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/8",
+    "supports_query": true,
+    "role": "geologic context / science evidence"
+  }
+]

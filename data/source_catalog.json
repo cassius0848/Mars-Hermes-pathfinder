@@ -6,11 +6,11 @@
     "role": "Primary planetary map and layer-discovery portal",
     "supports": [
       "context map",
-      "terrain and imagery discovery",
+      "terrain, optical imagery, and layer discovery",
       "coordinate inspection"
     ],
     "url": "https://trek.nasa.gov/mars/",
-    "integration": "Use the portal and its documented service endpoints to identify the local study area and layer products."
+    "integration": "MOLA terrain and Viking MDIM21 optical exports are integrated as bounded samples; additional CTX/HiRISE products should be added through documented service endpoints."
   },
   {
     "id": "mars-trek-bookmarked-view",
@@ -24,6 +24,19 @@
     ],
     "url": "https://trek.nasa.gov/mars/#v=0.1&x=-92.87000360685576&y=-16.318730130228616&z=2&p=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A104905&d=&locale=&b=mars&e=-223.73914179067953%2C-95.2445099079813%2C37.99913457696802%2C62.607049647524065&sfz=&w=",
     "integration": "A bounded MOLA DEM sample around the bookmarked center is stored in data/raw/mars_trek_views/ and is selectable in the Streamlit demo; Jezero remains the primary region."
+  },
+  {
+    "id": "mars-trek-viking-optical",
+    "name": "NASA Mars Trek Viking MDIM21 optical mosaic",
+    "category": "optical",
+    "role": "Real optical context for the Jezero local route view",
+    "supports": [
+      "surface context",
+      "route visualization",
+      "science-target orientation"
+    ],
+    "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Mars_Viking_MDIM21_ClrMosaic_global_232m/MapServer",
+    "integration": "A 512x512 Jezero export is stored in data/raw/mars_trek/ and can be selected as the optical map layer in Streamlit."
   },
   {
     "id": "mars-trek-mola-dem",

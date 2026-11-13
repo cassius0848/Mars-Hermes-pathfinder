@@ -52,9 +52,10 @@ Jezero-area window (`77–78°E`, `18–19°N`, EPSG:104905). The loader convert
 Mars Trek geographic spacing to approximate meters for slope calculation. This
 is a development sample, not a complete high-resolution mission map.
 
-The current demo combines this real DEM, the USGS Jezero geologic-unit vector
-layer, a Perseverance Sol 1934 SHERLOC_WATSON surface image, and the Curiosity
-Mount Sharp route animation with synthetic weather and radiation fixtures.
+The current demo combines this real DEM, the NASA Mars Trek Viking optical
+mosaic, the USGS Jezero geologic-unit vector layer, a Perseverance Sol 1934
+SHERLOC_WATSON surface image, and the Curiosity Mount Sharp route animation.
+Weather and radiation use neutral no-data costs until official products are selected.
 The image is displayed as waypoint evidence, not treated as a georeferenced
 raster layer. The synthetic fixtures remain clearly labeled and are not NASA
 measurements.
@@ -70,3 +71,10 @@ The supplied Mars Trek bookmark is represented by a second bounded MOLA sample
 under `data/raw/mars_trek_views/`. The Streamlit demo can switch to it for terrain
 experiments, but the current USGS geology and surface-image evidence remain
 associated with the primary Jezero area.
+
+
+The Mars Trek service inventory is recorded in `data/mars_trek_service_catalog.json`,
+and all nine USGS Jezero FeatureServer layers are recorded in
+`data/usgs_jezero_layer_catalog.json`. The Perseverance gallery manifest indexes
+199 public browse-image records; the project downloads only selected samples to
+keep the repository small and auditable.

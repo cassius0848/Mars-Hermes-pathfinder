@@ -45,6 +45,66 @@ def load_synthetic_terrain(shape: tuple[int, int] = (50, 50), seed: int = 7) -> 
     return TerrainGrid(elevation, cell_size_m=10.0, source="synthetic-demo")
 
 
+def science_targets_from_vector(
+    layer: VectorLayer,
+    bbox: tuple[float, float, float, float],
+    shape: tuple[int, int],
+    *,
+    max_targets: int = 4,
+) -> list[ScienceTarget]:
+    """Derive candidate science stops from mapped USGS geologic units.
+
+    The coordinates are approximate centroids of the published vector features.
+    The normalized value is a planner priority, not a measured scientific score.
+    """
+
+    def points(value):
+        if isinstance(value, list) and len(value) >= 2 and all(isinstance(v, (int, float)) for v in value[:2]):
+            yield (float(value[0]), float(value[1]))
+        elif isinstance(value, list):
+            for child in value:
+                yield from points(child)
+
+    candidates = []
+    min_lon, min_lat, max_lon, max_lat = bbox
+    for feature in layer.features:
+        geometry = feature.get("geometry") or {}
+        vertices = list(points(geometry.get("coordinates", [])))
+        if not vertices:
+            continue
+        lon = sum(point[0] for point in vertices) / len(vertices)
+        lat = sum(point[1] for point in vertices) / len(vertices)
+        margin = min(lon - min_lon, max_lon - lon, lat - min_lat, max_lat - lat)
+        if margin < 0.02:
+            continue
+        properties = feature.get("properties") or {}
+        name = properties.get("name") or "Unnamed geologic unit"
+        symbol = properties.get("symbol") or properties.get("unit") or "unknown"
+        row = round((max_lat - lat) / (max_lat - min_lat) * (shape[0] - 1))
+        col = round((lon - min_lon) / (max_lon - min_lon) * (shape[1] - 1))
+        candidates.append((name, symbol, (max(0, min(shape[0] - 1, row)), max(0, min(shape[1] - 1, col))), lon, lat, margin))
+
+    preferred = ["Jezero fan 2 unit", "Jezero floor unit", "Rugged bright unit", "Nili Planum fan unit", "Crater rim unit"]
+    candidates.sort(key=lambda item: (preferred.index(item[0]) if item[0] in preferred else len(preferred), -item[5]))
+    selected: list[ScienceTarget] = []
+    seen: set[str] = set()
+    for name, symbol, location, lon, lat, _margin in candidates:
+        if name in seen:
+            continue
+        seen.add(name)
+        selected.append(ScienceTarget(
+            target_id=f"usgs-{symbol}",
+            name=f"{name} ({symbol})",
+            location=location,
+            science_value=1.0,
+            rationale=f"Mapped geologic unit from USGS SIM 3464 near {lon:.3f}°E, {lat:.3f}°N.",
+            source=layer.source,
+        ))
+        if len(selected) >= max_targets:
+            break
+    return selected
+
+
 def load_synthetic_mission(shape: tuple[int, int] = (50, 50)) -> tuple[TerrainGrid, dict[str, MapLayer], list[ScienceTarget]]:
     """Create a labeled local-EVA fixture until official resources arrive.
 
