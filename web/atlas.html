@@ -55,6 +55,12 @@
           <p class="muted">沿两点连线估算距离、爬升和坡度，适合四个陨石坑之间的路线初筛；米级导航请打开任务地图。</p>
         </section>
         <section class="panel">
+          <div class="panel-heading"><h2>经典陨石坑数据源</h2></div>
+          <p id="crater-source-status" class="message" role="status"></p>
+          <ul id="crater-sources" class="product-list"></ul>
+          <p class="muted">官方原始 DEM/DTM 保留在 NASA/USGS；本项目只将经过核验的裁切包放进本地规划器。</p>
+        </section>
+        <section class="panel">
           <div class="panel-heading"><h2>高分辨率产品</h2></div>
           <button id="search-products" type="button">搜索当前视野的 USGS 产品</button>
           <p id="product-status" class="message" role="status">缩放到目标区域，可查原始 HiRISE 高程和正射数据。</p>
