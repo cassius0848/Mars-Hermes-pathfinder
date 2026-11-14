@@ -304,6 +304,19 @@ function link(title, url) {
   return a;
 }
 
+function routeMetrics(track) {
+  let ascent = 0, descent = 0, maxGrade = 0;
+  for (let i = 1; i < track.length; i++) {
+    const previous = track[i - 1], current = track[i];
+    if (!Number.isFinite(previous.z) || !Number.isFinite(current.z)) continue;
+    const dz = current.z - previous.z;
+    const meters = Math.max((current.km - previous.km) * 1000, 1);
+    if (dz >= 0) ascent += dz; else descent -= dz;
+    maxGrade = Math.max(maxGrade, Math.abs(dz) / meters * 100);
+  }
+  return { ascent, descent, maxGrade };
+}
+
 function drawChart(track) {
   const svg = $('height-chart');
   const good = track.filter(point => Number.isFinite(point.z));
@@ -344,7 +357,10 @@ async function pick(point) {
     if (controller !== state.profileRequest) return;
     state.profileTrack = track; paint();
     const count = track.filter(p => Number.isFinite(p.z)).length;
-    status.textContent = count > 1 ? `NASA 返回 ${count}/${track.length} 个有效高程 · 长约 ${track.at(-1).km.toFixed(2)} km` : '有效 MOLA 样本不足，请重选。';
+    const metrics = routeMetrics(track);
+    status.textContent = count > 1
+      ? `NASA 返回 ${count}/${track.length} 个有效高程 · 长约 ${track.at(-1).km.toFixed(2)} km · 上升 ${metrics.ascent.toFixed(0)} m · 下降 ${metrics.descent.toFixed(0)} m · 最大坡度约 ${metrics.maxGrade.toFixed(1)}%`
+      : '有效 MOLA 样本不足，请重选。';
     $('profile-source').href = url; $('profile-source').hidden = false;
     if (count > 1) drawChart(track);
   } catch (error) {
