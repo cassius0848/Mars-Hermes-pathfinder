@@ -9,7 +9,7 @@ const profileLabels = { time: '时间优先', terrain: '坡度优先', light: '�
 const state = { generation: 0, planningId: 0, queryId: 0, closures: [], complete: [], mode: 'idle',
   localization: { status: 'UNINITIALIZED', source: '未初始化', cell: null, confidence: null, updated: null } };
 const map = new MissionMap($('map'), pickPoint);
-const worker = new Worker(new URL('./planner-worker.js', import.meta.url), { type: 'module' });
+let worker = createPlanner();
 const dataUrl = id => `assets/${id}`;
 const compass = ([lon, lat]) => `${lon.toFixed(5)}°E, ${Math.abs(lat).toFixed(5)}°${lat < 0 ? 'S' : 'N'}`;
 const distance = meters => meters >= 1000 ? `${(meters / 1000).toFixed(2)} km` : `${meters.toFixed(0)} m`;
@@ -82,9 +82,9 @@ function renderLocalization() {
   status.textContent = localizationLabels[localization.status] ?? localization.status ?? '未初始化';
   if (localization.status === 'FIXED') {
     const coordinate = localization.cell && state.site ? compass(geographic(state.site, cellXY(state.site, localization.cell))) : '—';
-    detail.textContent = `${coordinate} · ${localization.source} · 置信度 ${localization.confidence} · ${localization.updated}`;
+    detail.textContent = `${coordinate} · ${localization.source} · ${localization.confidence} · ${localization.updated}`;
   } else {
-    detail.textContent = localization.source ?? '先在地图上确认出发地，再初始化定位。';
+    detail.textContent = '开始导航演示时会使用所选出发地初始化模拟位置，也可手动初始化。';
   }
   $('localize-start').disabled = !state.start || Boolean(state.nav);
   $('localize-now').disabled = !state.start && !state.progress?.cell;
@@ -99,7 +99,7 @@ function initializeLocalization() {
     status: 'FIXED',
     source: '已知起点 + 地图锚点（演示）',
     cell: state.start,
-    confidence: `${state.site.step} m 网格内`,
+    confidence: `地图网格 ${state.site.step} m，未测量实际定位误差`,
     updated: '当前任务时刻',
   };
   renderLocalization();
@@ -113,7 +113,7 @@ function relocalize() {
     status: 'FIXED',
     source: '局部视觉/地形匹配（模拟）',
     cell,
-    confidence: `${state.site.step} m 网格内`,
+    confidence: `地图网格 ${state.site.step} m，未测量实际定位误差`,
     updated: '刚刚',
   };
   renderLocalization();
@@ -126,6 +126,7 @@ function relocalize() {
 
 function invalidate() {
   state.planningId++;
+  state.onPlan = null;
   state.current = null;
   state.candidates = [];
   $('compute').disabled = !state.site?.height || !state.start || !state.stops?.length;
@@ -159,6 +160,7 @@ async function loadSite(site) {
     const [height, slope] = await Promise.all([get(`${dataUrl(site.id)}/elevation.bin`, 'arrayBuffer'), get(`${dataUrl(site.id)}/slope.bin`, 'arrayBuffer')]);
     if (generation !== state.generation) return;
     state.site = decodeTerrain(site, height, slope);
+    worker ??= createPlanner();
     worker.postMessage({ type: 'terrain', site, height, slope }, [height, slope]);
     $('preset').disabled = false;
     loadPreset();
@@ -260,6 +262,7 @@ function pickPoint(cell, xy) {
   }
   const i = indexOf(state.site, cell);
   if (!Number.isFinite(state.site.height[i])) { $('pick-hint').textContent = '这个位置没有高程数据。请在地图覆盖内重新选点。'; return; }
+  if (!Number.isFinite(state.site.slope[i])) { $('pick-hint').textContent = '这个位置没有有效坡度数据，请重新选点。'; return; }
   if (state.site.slope[i] > Number($('slope-limit').value)) {
     $('pick-hint').textContent = `此处坡度 ${state.site.slope[i].toFixed(1)}°，超过当前上限。请重新选点。`;
     return;
@@ -303,19 +306,38 @@ function readRoute() {
 }
 
 function requestPlan(route, onResult, hourOffset = 0) {
+  if (!worker) {
+    worker = createPlanner();
+    worker.postMessage({ type: 'terrain', site: state.site });
+  }
   const id = ++state.planningId;
   const localHour = Number($('hour')?.value ?? 12);
   state.onPlan = onResult;
   worker.postMessage({ id, route, hour: (localHour + hourOffset / (60 * SOL_RATIO)) % 24, season: +($('season')?.value ?? 0) });
 }
 
-worker.onmessage = ({ data }) => {
-  if (data.id !== state.planningId) return;
-  state.light = data.light ?? state.light;
-  state.onPlan?.(data);
-  renderLayers();
-};
-worker.onerror = () => { $('plan-error').textContent = '规划程序加载失败，请重新载入页面。'; };
+function createPlanner() {
+  const planner = new Worker(new URL('./planner-worker.js', import.meta.url), { type: 'module' });
+  planner.onmessage = ({ data }) => {
+    if (data.id !== state.planningId) return;
+    state.light = data.light ?? state.light;
+    const callback = state.onPlan;
+    state.onPlan = null;
+    callback?.(data);
+    renderLayers();
+  };
+  planner.onerror = event => {
+    event.preventDefault();
+    if (planner !== worker) return;
+    planner.terminate(); worker = null;
+    const callback = state.onPlan;
+    state.onPlan = null;
+    callback?.({ candidates: [], error: '规划程序中断。请点击计算路线重试。' });
+    $('compute').disabled = Boolean(state.nav) || !state.site?.height || !state.start || !state.stops?.length;
+    $('plan-error').textContent = '规划程序中断。请点击计算路线重试。';
+  };
+  return planner;
+}
 
 function preferredProfile() {
   try { return localStorage.getItem('mars-pathfinder-profile'); } catch { return null; }
@@ -344,7 +366,7 @@ function calculate() {
       else if (state.current && !state.current.feasible) $('plan-error').textContent = '没有能在预算内完成的路线。可调整停靠点、预算或返航预留。';
       renderRoutes(); redraw();
     });
-  } catch (error) { $('plan-error').textContent = error.message; }
+  } catch (error) { $('compute').disabled = false; $('plan-error').textContent = error.message; }
 }
 
 function describe(candidate) {
@@ -455,10 +477,12 @@ function renderSciencePoints() {
         $('pick-hint').textContent = '地形仍在读取，请稍后再选择科学点。';
         return;
       }
-      state.start ??= state.site.base;
+      if (!state.start) { state.start = state.site.base; resetLocalization(); }
       state.stops = [{ cell: target.cell, name: target.name, minutes: 12 }];
       state.preset = false;
-      resetLocalization();
+      setMode('idle');
+      state.queryId++;
+      $('official-results').hidden = true;
       renderSelections();
       calculate();
     }, 'text-button');
@@ -541,6 +565,7 @@ function setPlanningEnabled(enabled) {
   for (const control of [...$('settings').querySelectorAll('input, select'), $('preset'), $('roundtrip')]) control.disabled = !enabled;
   $('compute').disabled = !enabled || !state.start || !state.stops?.length;
   renderSelections();
+  renderLocalization();
 }
 
 function show2D() {
@@ -575,16 +600,14 @@ async function show3D(nav) {
 function beginNavigation() {
   if (!state.current?.feasible || state.site.regional) return;
   if (state.localization?.status !== 'FIXED') {
-    $('nav-notice').textContent = '请先初始化当前位置，再开始导航。';
-    $('localize-start').focus();
-    return;
+    initializeLocalization();
   }
   setMode('idle');
   const route = state.inputRoute;
   const nav = { time: 0, elapsed: 0, playing: true, base: state.start, route, replanning: false, done: false };
   state.nav = nav;
   $('navigation').hidden = false; $('view-tools').hidden = false;
-  $('nav-notice').textContent = '模拟回放 · 时间加速。';
+  $('nav-notice').textContent = '模拟回放 · 已用所选出发地初始化位置 · 时间加速。';
   $('camera').textContent = '俯瞰全区';
   setPlanningEnabled(false); renderRoutes(); updateNavigation(); show3D(nav);
   nav.frame = requestAnimationFrame(tick);
@@ -626,6 +649,7 @@ function endNavigation() {
   if (!state.nav) return;
   const nav = state.nav;
   state.planningId++;
+  state.onPlan = null;
   cancelAnimationFrame(nav.frame);
   nav.view?.destroy();
   state.nav = null; state.progress = null; state.closures = [];
@@ -732,3 +756,4 @@ async function init() {
 }
 
 init().catch(error => { $('pick-hint').textContent = error.message; });
+

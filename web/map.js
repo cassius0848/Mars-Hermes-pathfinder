@@ -71,7 +71,6 @@ export class MissionMap {
     if (!this.site) return;
     const [east, north] = this.xyFromScreen(x, y), site = this.site;
     const cell = [Math.floor((site.top - north) / site.step), Math.floor((east - site.left) / site.step)];
-    if (indexOf(site, cell) < 0) return;
     this.onPick(cell, [east, north]);
   }
 
@@ -240,3 +239,4 @@ export function profileChart(canvas, site, plan, progress) {
   ctx.fillStyle = '#beab97'; ctx.textAlign = 'right';
   ctx.fillText(plan.distance < 1000 ? `${plan.distance.toFixed(0)} m` : `${(plan.distance / 1000).toFixed(2)} km`, width - 14, 106);
 }
+

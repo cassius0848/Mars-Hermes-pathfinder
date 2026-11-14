@@ -6,7 +6,7 @@ const lightCache = new Map();
 self.onmessage = ({ data }) => {
   try {
     if (data.type === 'terrain') {
-      grid = decodeTerrain(data.site, data.height, data.slope);
+      grid = data.height ? decodeTerrain(data.site, data.height, data.slope) : data.site;
       lightCache.clear();
       return;
     }
@@ -33,3 +33,4 @@ self.onmessage = ({ data }) => {
     self.postMessage({ id: data.id, error: error.message, candidates: [] });
   }
 };
+
