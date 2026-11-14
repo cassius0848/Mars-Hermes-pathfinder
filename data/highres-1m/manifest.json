@@ -27,14 +27,14 @@
     },
     "neretva": {
       "center_lon_lat": [77.303, 18.4945],
-      "source_window_col_row_width_height": [4486, 10102, 520, 520],
+      "source_window_col_row_width_height": [4186, 9802, 1120, 1120],
       "coverage_pct": 100.0,
-      "elevation_m": [-2366.17, -2295.56],
-      "max_slope_deg": 48.03,
+      "elevation_m": [-2369.45, -2183.01],
+      "max_slope_deg": 55.58,
       "sha256": {
-        "elevation-1m.tif": "D0DEC2BC9C517693D4C8B53E8987524A88847514A77FA99BBB9349363F2F6779",
-        "slope-1m.tif": "6E85031BBB4B3BF47A0B33393B35A0CCEF7417512BBF2A0E239064F394C14B78",
-        "quality-1m.tif": "C2172799B3038EDB37274DB8C196BB2F5F4A47B0995943D3B7EEB2A9A3784B1B"
+        "elevation-1m.tif": "C34B7B17748E1E341A084EF3976CF359C01256CBB428A90E7A10A9EE26AD5B61",
+        "slope-1m.tif": "E5958B0C5007E38DD4F9C218EA60909F03B45502A3C735176E887A84D5A0B8C9",
+        "quality-1m.tif": "C90C9651CA79E69CBE2F7085842973CE6EEFC87EC3C9DFDAE237F4241DAC9B9F"
       }
     }
   }
