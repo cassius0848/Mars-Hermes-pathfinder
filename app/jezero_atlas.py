@@ -83,7 +83,7 @@ def render_jezero_atlas(project_root: Path):
     st.caption(
         f"半径 {REGION_RADIUS_M / 1000:.0f} km · {REGION_CENTER[0]:.2f}°E，{REGION_CENTER[1]:.2f}°N · Mars 2020"
     )
-    controls, map_column = st.columns([1, 3], gap="large")
+    controls, map_column = st.columns([1, 4], gap="large")
 
     with controls:
         layer = st.selectbox("地图图层", LAYERS, format_func=lambda value: LAYER_LABELS_ZH.get(value, value))
@@ -209,7 +209,7 @@ def regional_map(region, layer, rover_x, rover_y, rover_sols, show_traverse, res
             hovertemplate="%{text}<extra></extra>", showlegend=False,
         ))
     figure.update_layout(
-        height=650, margin={"l": 48, "r": 22, "t": 8, "b": 60}, plot_bgcolor="#191719",
+        height=720, margin={"l": 48, "r": 22, "t": 8, "b": 60}, plot_bgcolor="#191719",
         legend={"orientation": "h", "yanchor": "top", "y": -0.16}, uirevision=REGIONAL_VIEW,
         xaxis={"title": "东向 · 千米", "range": [-42, 42], "showgrid": False, "zeroline": False, "constrain": "domain"},
         yaxis={"title": "北向 · 千米", "range": [-42, 42], "showgrid": False, "zeroline": False,
