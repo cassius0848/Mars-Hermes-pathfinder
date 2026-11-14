@@ -140,7 +140,11 @@ export class MissionMap {
         ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2);
         ctx.strokeStyle = '#a6d6f0'; ctx.lineWidth = 1.75; ctx.stroke();
       }
-      if (!(plan && stops.some(s => s.name === target.name))) this.scienceMarker(cellXY(site, target.cell), target.name.split(' · ')[0]);
+      if (!(plan && stops.some(s => s.name === target.name))) {
+        const science = target.task || target.reference || target.image;
+        if (science) this.scienceMarker(cellXY(site, target.cell), target.name.split(' · ')[0]);
+        else this.marker(cellXY(site, target.cell), target.name.split(' · ')[0], colors.goal, 3);
+      }
     }
     if (start) this.marker(cellXY(site, start), '出发地', colors.start);
     stops.forEach((stop, i) => this.marker(cellXY(site, stop.cell), stops.length === 1 ? '目的地' : `停靠 ${i + 1}`, colors.goal));
