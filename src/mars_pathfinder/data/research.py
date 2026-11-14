@@ -238,6 +238,7 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
         if (grid_crs != CRS.from_string(NERETVA_CRS) or dataset.res != (spacing,) * 2
                 or array_bounds(*dataset.shape, transform) != (-extent, -extent, extent, extent)):
             raise ValueError("Neretva Vallis elevation does not match the local planning grid.")
+    slope_file = _materialize(root / "slope-1m.tif")
     quality_path = _materialize(root / "quality-1m.tif")
     quality = None
     if quality_path is not None:
