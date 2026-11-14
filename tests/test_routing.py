@@ -99,5 +99,15 @@ def test_route_candidates_include_reverse_and_single_stop_options():
     ]
     candidates = generate_candidates(np.ones((8, 8)), (0, 0), targets, terrain, slope, EVAState(), MissionConstraints())
     assert {candidate.stop_ids for candidate in candidates} == {("a", "b"), ("b", "a"), ("a",), ("b",)}
-    assert pareto_filter(candidates)
-    assert select_recommended(candidates).route_id.startswith("route-")
+    assert any(len(candidate.stop_ids) == 2 for candidate in pareto_filter(candidates))
+    assert len(select_recommended(candidates).stop_ids) == 2
+
+    constrained = generate_candidates(np.ones((8, 8)), (0, 0), targets, terrain, slope,
+                                     EVAState(remaining_time_h=0.006), MissionConstraints())
+    assert select_recommended(constrained).stop_ids == ("a",)
+    assert select_recommended(constrained).report["time_budget_ok"]
+
+    blocked = np.ones((8, 8))
+    blocked[6, 6] = np.inf
+    feasible = generate_candidates(blocked, (0, 0), targets, terrain, slope, EVAState(), MissionConstraints())
+    assert [candidate.stop_ids for candidate in feasible] == [("a",)]

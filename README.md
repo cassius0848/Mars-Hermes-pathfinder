@@ -154,7 +154,7 @@ PYTHONPATH=src pytest
 streamlit run app/streamlit_app.py
 ```
 
-当前界面可以在 Jezero 主区域和团队提供的 Mars Trek 书签区域之间切换，使用真实 MOLA DEM 样本，并可显示 Perseverance Sol 1934 SHERLOC_WATSON 表面图像、Curiosity Mount Sharp 路线动画和 USGS Jezero 地质单元摘要；天气和辐射在尚未选定官方产品时使用中性无数据代价，不作为观测值。官方产品确认后，继续增加数据适配器，将数据转换为上述模型，再调整风险层、科学目标和可视化，不需要重写路径搜索核心。
+启动后默认进入 Jezero 40 km 区域地图。可切换 CTX 光学影像、高程、坡度、THEMIS 红外和 USGS 地质，查看毅力号历史路线，或在 100 m 网格上试算区域走廊。进入 Hawksbill Gap 可用 2 m 网格计算局部步行任务并查看三维地形。团队的 MOLA 样本和 Mars Trek 书签仍可通过研究区选择器访问。 [首版导航范围与数据来源](docs/jezero-navigation-scope.md)
 
 ### Hawksbill Gap 研究包
 
@@ -164,12 +164,12 @@ streamlit run app/streamlit_app.py
 
 推荐用一次 3–5 分钟的 Hawksbill Gap 任务完成演示：
 
-1. 选择 `Hawksbill Gap research package`，说明这是一个约 520×520 米的局部火星 EVA 区域；
+1. 在 `Jezero region · 40 km` 试算从毅力号登陆区到 Hawksbill Gap 的粗略走廊，然后打开约 520×520 米的局部 EVA 规划器；
 2. 展示 HiRISE DTM、正射图、USGS 地质、THEMIS 热红外和 Perseverance 图像证据；
 3. 选择 Swift Run 与 Hazeltop，显示两名宇航员的科学任务；
-4. 比较正序、反序和单站闭环路线，查看距离、坡度、停留时间和配准不确定性；
-5. 在光学图上展示路线和科学目标，在 THEMIS 图上说明区域尺度环境背景；
-6. 修改 EVA 时间或返航储备，展示路线是否仍满足当前模型；
+4. 比较同一站序的最短和坡度加权路线，查看总距离、陡坡段距离、科学停留和返航余量；
+5. 在配准的正射图和同源三维地形中查看路线，结合高程剖面判断坡段；
+6. 将模拟预算从 80 分钟改为 55 分钟，查看推荐路线从双站往返调整为 Hazeltop 单站；
 7. 明确说明天气、辐射和生命支持容量尚未配置，因此系统不会宣称飞行级安全。
 
 演示叙事对应官方挑战的四个问题：**为什么去**（USGS 地质与 Perseverance 证据）、**怎么走**（HiRISE DTM 与 A*）、**途中看到什么**（正射和表面图像）、**能否返回**（闭环路线、停留时间和资源状态）。
@@ -331,7 +331,7 @@ PYTHONPATH=src pytest
 streamlit run app/streamlit_app.py
 ```
 
-The current UI can switch between the primary Jezero area and the supplied Mars Trek bookmarked view, uses real NASA Mars Trek MOLA DEM samples, and can display a Perseverance Sol 1934 SHERLOC_WATSON surface image, the Curiosity Mount Sharp route animation, and a USGS Jezero geology summary; weather and radiation use neutral no-data costs until an official product is selected; they are never presented as observations. Add adapters for confirmed official products, then adjust hazard layers, science targets, and visualizations without rewriting the search core.
+The app opens the 40 km Jezero map. Switch among CTX imagery and elevation, terrain slope, THEMIS infrared imagery, and USGS geology. The regional map can screen corridors on a 100 m grid and open the 2 m Hawksbill Gap EVA planner with georeferenced imagery, a route profile, and a 3D terrain view. The study-area selector also includes the earlier MOLA samples. [Navigation scope and data sources](docs/jezero-navigation-scope.md)
 
 ### MVP Live Demo Script
 

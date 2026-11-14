@@ -10,6 +10,9 @@ import numpy as np
 from mars_pathfinder.models import EVAState, MissionConstraints, Point, ScienceTarget, TerrainGrid
 
 
+STEEP_TERRAIN_DEG = 12.0  # Demonstration threshold for comparing exposure along valid routes.
+
+
 def evaluate_eva_route(
     path: list[Point],
     terrain: TerrainGrid,
@@ -31,7 +34,12 @@ def evaluate_eva_route(
     visited_targets = [target for target in (targets or []) if target.location in path]
     science_stop_time = sum(target.stop_duration_min for target in visited_targets) / 60.0
     route_time = walk_time + science_stop_time
+    usable_time = eva.remaining_time_h * (1.0 - eva.reserve_fraction)
+    time_margin = usable_time - route_time
     route_slopes = [float(slope[p]) for p in path[1:]]
+    heights = terrain.elevation[tuple(np.asarray(path).T)]
+    edge_slopes = np.maximum(np.r_[slope[path[0]], route_slopes[:-1]], route_slopes)
+    steep_distance = float(np.sum(np.asarray(distances)[edge_slopes >= STEEP_TERRAIN_DEG]))
     if eva.metabolic_rate_kj_h is None:
         # Unknown is intentionally not treated as safe.
         # 未配置资源模型时不能把路线标记为安全。
@@ -51,8 +59,12 @@ def evaluate_eva_route(
         "walk_time_h": walk_time,
         "science_stop_time_h": science_stop_time,
         "estimated_time_h": route_time,
+        "time_budget_ok": time_margin >= 0,
+        "time_margin_h": time_margin,
         "mean_slope_deg": float(np.nanmean(route_slopes)),
         "max_slope_deg": float(np.nanmax(route_slopes)),
+        "steep_distance_m": steep_distance,
+        "ascent_m": float(np.maximum(np.diff(heights), 0).sum()),
         "resource_status": resource_status,
         "resource_source": eva.resource_source,
         "resource_used_kj": resource_used_kj,
@@ -61,5 +73,5 @@ def evaluate_eva_route(
         "target_ids": target_ids,
         "max_position_uncertainty_m": max_position_uncertainty,
         "alignment_review_required": max_position_uncertainty > 0.0,
-        "safety_ok": route_time <= eva.remaining_time_h and resource_reserve_ok,
+        "safety_ok": time_margin >= 0 and resource_reserve_ok,
     }
