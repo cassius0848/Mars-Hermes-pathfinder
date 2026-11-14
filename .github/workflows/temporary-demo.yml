@@ -1,0 +1,25 @@
+name: Temporary demo package
+on:
+  push:
+    branches: [codex/temporary-site-preview]
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: python -m pip install numpy rasterio pyproj Pillow
+      - run: python scripts/build_web.py
+      - run: node --test tests/web_planner.test.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mars-pathfinder-latest-web
+          path: dist/
+          retention-days: 3
