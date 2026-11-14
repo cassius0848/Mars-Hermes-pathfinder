@@ -51,6 +51,7 @@ function invalidate() {
 async function loadSite(site) {
   const generation = ++state.generation;
   $('area').value = site.id;
+  $('atlas-link').href = `atlas.html?area=${site.id}`;
   endNavigation();
   Object.assign(state, { site, start: null, stops: [], light: null, closures: [], complete: [], mode: 'idle', preset: false });
   $('map-title').textContent = site.name;

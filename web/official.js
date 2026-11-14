@@ -1,6 +1,6 @@
 import { project } from './planner.js';
 
-const GEOLOGY = 'https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/8';
+export const GEOLOGY = 'https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/8';
 const WAYPOINTS = 'https://mars.nasa.gov/mmgis-maps/M20/Layers/json/M20_waypoints.json';
 const WMTS = 'https://trek.nasa.gov/tiles/Mars/EQ';
 const HI = 'JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first_dd';
@@ -8,8 +8,9 @@ const CTX = 'Jezero_CTX_BlockAdj_dd';
 const DEG = Math.PI / 180;
 const RADIUS = 3396190;
 
-function fetchOfficial(url, format) {
-  return fetch(url, { signal: AbortSignal.timeout(12000), credentials: 'omit' }).then(response => {
+export function fetchOfficial(url, format, signal) {
+  const timeout = AbortSignal.timeout(12000);
+  return fetch(url, { signal: signal ? AbortSignal.any([signal, timeout]) : timeout, credentials: 'omit' }).then(response => {
     if (!response.ok) throw Error(`HTTP ${response.status}`);
     return response[format]();
   });

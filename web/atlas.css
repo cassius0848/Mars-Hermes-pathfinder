@@ -1,0 +1,34 @@
+.live-atlas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 345px);
+  align-items: start;
+  gap: 14px;
+}
+.atlas-toolbar, .atlas-status { padding: 12px; }
+.atlas-toolbar { display: flex; flex-wrap: wrap; gap: 7px; }
+.atlas-map { position: relative; border-block: 1px solid var(--line); }
+#surface {
+  display: block;
+  width: 100%;
+  height: clamp(375px, 53vw, 710px);
+  background: #191715;
+  cursor: grab;
+  touch-action: none;
+}
+#surface.dragging { cursor: grabbing; }
+#surface.picking { cursor: crosshair; }
+.atlas-status { display: flex; flex-wrap: wrap; gap: 5px 16px; color: var(--muted); font-size: 12px; }
+.atlas-checks { display: grid; gap: 7px; margin: 13px 0; }
+.atlas-field { display: grid; gap: 5px; }
+.atlas-ctx { display: block; margin: 12px 0 5px; }
+#geo-legend { max-height: 165px; overflow: auto; margin: 7px 0; display: flex; padding-inline: 0; }
+#height-chart { display: block; width: 100%; background: #1b1816; border: 1px solid var(--line); border-radius: 7px; margin: 10px 0; }
+.product-list { padding-left: 17px; }
+.product-list:empty { display: none; }
+.product-list li { margin: 5px 0; overflow-wrap: anywhere; }
+.product-list a + a { margin-left: 9px; }
+.atlas-credits { color: var(--muted); margin: 13px 0; font-size: 12px; }
+@media (max-width: 800px) {
+  .live-atlas { grid-template-columns: 1fr; }
+  #surface { height: clamp(345px, 67vw, 540px); }
+}

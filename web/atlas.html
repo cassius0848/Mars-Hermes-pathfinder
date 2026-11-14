@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>火星在线地图 · Mars Pathfinder AI</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="atlas.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./">MARS PATHFINDER<span class="brand-ai"> AI</span></a>
+    <nav aria-label="页面入口"><a href="atlas.html" aria-current="page">在线地图</a><a href="./?area=jezero">步行规划</a></nav>
+  </header>
+  <main>
+    <div class="page-intro"><div><h1>火星在线地图</h1><p>拖动和缩放地图，按当前视野从 NASA 和 USGS 读取数据。</p></div><a id="walk-link" href="./?area=jezero">打开 Jezero 任务地图 →</a></div>
+    <div class="live-atlas">
+      <section class="map-panel" aria-label="在线火星地图">
+        <div class="atlas-toolbar">
+          <button type="button" id="global">全球</button><button type="button" id="jezero">Jezero</button>
+          <button type="button" id="hawksbill">Hawksbill Gap</button><button type="button" id="neretva">Neretva Vallis</button>
+        </div>
+        <div class="atlas-map">
+          <canvas id="surface" tabindex="0" aria-label="在线火星地图。拖动平移，滚轮缩放。键盘方向键平移，加减键缩放，回车选取中心。"></canvas>
+          <div class="map-tools"><button id="closer" type="button" aria-label="放大在线地图">+</button><button id="farther" type="button" aria-label="缩小在线地图">−</button></div>
+        </div>
+        <div class="atlas-status"><p id="location" class="mono"></p><p id="tile-status" role="status"></p></div>
+      </section>
+      <aside class="side" aria-label="图层与数据查询">
+        <section class="panel">
+          <div class="panel-heading"><h2>在线图层</h2></div>
+          <label class="atlas-field">底图<select id="base"><option value="viking">Viking 全球光学</option><option value="mola">MOLA 全球地形着色</option><option value="thermal">THEMIS 日间红外</option></select></label>
+          <div class="atlas-checks">
+            <label><input type="checkbox" value="ctx" data-overlay checked> Jezero CTX 高分辨率影像</label>
+            <label><input type="checkbox" value="hirise" data-overlay checked> Jezero HiRISE 正射影像</label>
+            <label class="atlas-field">高分辨率影像透明度<input type="range" id="image-opacity" min="0" max="100" value="100"></label>
+            <label><input type="checkbox" id="geology" checked> USGS SIM 3464 地质面</label>
+          </div>
+          <p id="geo-status" class="muted" role="status"></p>
+          <div id="geo-legend" class="geology-key"></div>
+          <a id="base-source" target="_blank" rel="noreferrer">当前底图的 NASA 服务说明 ↗</a>
+          <label class="atlas-ctx"><input type="checkbox" id="ctx-elevation"> USGS CTX 20 米数值高程</label>
+          <p id="ctx-status" class="muted" role="status"></p>
+        </section>
+        <section class="panel">
+          <div class="panel-heading"><h2>在线高程剖面</h2></div>
+          <button id="pick-profile" type="button">在地图上选两个点</button>
+          <p id="profile-status" class="message" role="status">沿两点连线查询 NASA MOLA 高程。</p>
+          <svg id="height-chart" viewBox="0 0 320 150" role="img" aria-label="MOLA 在线高程剖面" hidden></svg>
+          <a id="profile-source" target="_blank" rel="noreferrer" hidden>查看 NASA 原始高程响应 ↗</a>
+          <a id="dem-export" target="_blank" rel="noreferrer" hidden>下载当前视野的 MOLA GeoTIFF ↗</a>
+          <p class="muted">高程为轨道激光测高产品，适合了解起伏。</p>
+        </section>
+        <section class="panel">
+          <div class="panel-heading"><h2>高分辨率产品</h2></div>
+          <button id="search-products" type="button">搜索当前视野的 USGS 产品</button>
+          <p id="product-status" class="message" role="status">缩放到目标区域，可查原始 HiRISE 高程和正射数据。</p>
+          <ul id="products" class="product-list"></ul>
+          <a id="product-source" target="_blank" rel="noreferrer" hidden>查看 USGS 原始目录结果 ↗</a>
+        </section>
+      </aside>
+    </div>
+    <p class="atlas-credits">地图坐标使用火星中心纬度和东经为正。米级步行路线可在 Jezero 任务地图计算。</p>
+  </main>
+  <script type="module" src="atlas.js"></script>
+</body>
+</html>

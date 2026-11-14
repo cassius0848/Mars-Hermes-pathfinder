@@ -4,7 +4,7 @@
 >
 > **A local EVA mission-planning tool for Martian astronauts**
 
-**队友入口**：[在线演示](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/) · [离线网页 ZIP](releases/mars-pathfinder-jezero-offline.zip) · [使用说明与校验](releases/README.md)
+**队友入口** [火星在线地图](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/atlas.html) · [步行规划](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/) · [离线网页 ZIP](releases/mars-pathfinder-jezero-offline.zip) · [使用说明与校验](releases/README.md)
 
 ## 中文版
 
@@ -375,27 +375,3 @@ GitHub Actions installs the declared dependencies and runs the full `pytest` sui
 - Record source, version, coverage, resolution, CRS, units, and limitations;
 - Do not commit large raw datasets, secrets, or personal credentials;
 - Use branches such as `data`, `terrain`, `routing`, `analysis`, `ui`, `ai`, and `tests-docs`.
-
-
-## Judge-ready launch and deployment
-
-Windows:
-
-~~~powershell
-powershell -ExecutionPolicy Bypass -File .\\scripts\\run_demo.ps1 -OpenBrowser
-~~~
-
-Linux / macOS:
-
-~~~bash
-bash scripts/run_demo.sh
-~~~
-
-Docker:
-
-~~~bash
-docker build -t mars-pathfinder-ai .
-docker run --rm -p 8501:8501 mars-pathfinder-ai
-~~~
-
-The launch scripts verify the committed real-data assets before starting the app. The full 3–5 minute judge flow is in docs/demo-runbook.md.
