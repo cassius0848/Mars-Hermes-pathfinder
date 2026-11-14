@@ -5,8 +5,8 @@ const lightCache = new Map();
 
 self.onmessage = ({ data }) => {
   try {
-    if (data.type === 'terrain') {
-      grid = decodeTerrain(data.site, data.height, data.slope);
+    if (data.type === 'terrain' || data.type === 'grid') {
+      grid = data.type === 'grid' ? data.grid : decodeTerrain(data.site, data.height, data.slope);
       lightCache.clear();
       return;
     }

@@ -1,5 +1,6 @@
 import { layers, officialLayerUrl, readCapabilities, tilesInView, viewportGeology, hiRiseProducts, molaProfile, molaExport,
   CTX_DEM, ctxWindow, fetchCtxTerrain } from './mars-data.js';
+import { attachAtlasNavigation } from './atlas-navigation.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('surface');
@@ -13,12 +14,10 @@ const atlasViews = {
   hawksbill: { center: [77.406, 18.4588], span: 0.022 },
   neretva: { center: [77.303, 18.4945], span: 0.035 },
 };
-const classicCraters = [
-  { id: 'jezero', label: 'Jezero', center: [77.74, 18.44] },
-  { id: 'gale', label: 'Gale', center: [137.4, -5.4] },
-  { id: 'endeavour', label: 'Endeavour', center: [-5.53, -1.95] },
-  { id: 'eberswalde', label: 'Eberswalde', center: [-33.3, -23.8] },
-];
+const craterNames = {
+  jezero: 'Jezero', gale: 'Gale', endeavour: 'Endeavour', eberswalde: 'Eberswalde',
+  hawksbill: 'Hawksbill Gap', neretva: 'Neretva Vallis',
+};
 const classicRoute = ['jezero', 'gale', 'endeavour', 'eberswalde'];
 const tileCache = new Map();
 const shown = new Map();
@@ -28,6 +27,26 @@ const initialView = Object.hasOwn(atlasViews, requested) ? requested : 'jezero';
 const state = { ...atlasViews[initialView], center: [...atlasViews[initialView].center], viewId: initialView, epoch: 0, points: [], picking: false };
 const overlays = [...document.querySelectorAll('[data-overlay]')];
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const navigation = attachAtlasNavigation({
+  canvas, fmt, paint,
+  cancelProfile() {
+    state.profileRequest?.abort(); state.profileRequest = null;
+    if (state.picking) {
+      state.picking = false; state.points = [];
+      $('profile-status').textContent = '沿两点连线查询 NASA MOLA 高程。';
+    }
+  },
+  fit(points) {
+    let west = Infinity, east = -Infinity, south = Infinity, north = -Infinity;
+    for (const [lon, lat] of points) {
+      west = Math.min(west, lon); east = Math.max(east, lon);
+      south = Math.min(south, lat); north = Math.max(north, lat);
+    }
+    state.center = [(west + east) / 2, (south + north) / 2];
+    state.span = clamp(1.33 * Math.max(east - west, (north - south) * state.w / state.h), 0.002, 360);
+    schedule();
+  },
+});
 
 function screen([lon, lat]) {
   return [(lon - state.center[0]) * state.scale + state.w / 2, (state.center[1] - lat) * state.scale + state.h / 2];
@@ -61,33 +80,21 @@ function geologicColor(unit) {
 }
 
 function drawClassicNetwork() {
-  if (state.viewId !== 'global') return;
-  const byId = new Map(classicCraters.map(crater => [crater.id, crater]));
+  if (state.viewId !== 'global' || state.span < 90) return;
   ctx.save();
-  ctx.setLineDash([8, 6]);
-  ctx.strokeStyle = '#f5d892';
-  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 6]); ctx.strokeStyle = '#f5d892'; ctx.lineWidth = 2;
   ctx.beginPath();
   classicRoute.forEach((id, index) => {
-    const [x, y] = screen(byId.get(id).center);
+    const [x, y] = screen(atlasViews[id].center);
     if (index) ctx.lineTo(x, y); else ctx.moveTo(x, y);
   });
   ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.font = '600 12px system-ui';
-  ctx.textAlign = 'left';
-  for (const crater of classicCraters) {
-    const [x, y] = screen(crater.center);
-    if (x < -80 || x > state.w + 80 || y < -40 || y > state.h + 40) continue;
-    ctx.beginPath();
-    ctx.arc(x, y, 6, 0, Math.PI * 2);
-    ctx.fillStyle = '#f5d892';
-    ctx.fill();
-    ctx.strokeStyle = '#241f1b';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = '#fff1c7';
-    ctx.fillText(crater.label, x + 10, y - 9);
+  ctx.setLineDash([]); ctx.font = '600 12px system-ui'; ctx.textAlign = 'left';
+  for (const id of classicRoute) {
+    const [x, y] = screen(atlasViews[id].center);
+    ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#f5d892'; ctx.fill(); ctx.strokeStyle = '#241f1b'; ctx.stroke();
+    ctx.fillStyle = '#fff1c7'; ctx.fillText(craterNames[id], x + 10, y - 9);
   }
   ctx.restore();
 }
@@ -136,6 +143,7 @@ function paint() {
     ctx.fillStyle = '#b9f5cf'; ctx.fill(); ctx.fillStyle = '#1f271e';
     ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText(i + 1, x, y + 3.5);
   });
+  navigation.draw(ctx, screen);
   const axes = $('location');
   const label = `中心 ${fmt(state.center)} · 横向约 ${(state.w / state.scale).toFixed(state.span < 0.15 ? 3 : 1)}°`;
   if (axes.textContent !== label) axes.textContent = label;
@@ -345,6 +353,7 @@ function drawChart(track) {
 }
 
 async function pick(point) {
+  if (navigation.pick(point)) return;
   if (!state.picking || Math.abs(point[0]) > 180 || Math.abs(point[1]) > 90) return;
   state.points.push(point); paint();
   const status = $('profile-status');
@@ -404,25 +413,16 @@ async function search() {
 
 new ResizeObserver(() => {
   const { width, height } = canvas.getBoundingClientRect(), ratio = Math.min(devicePixelRatio, 2);
+  if (!width || !height) return;
   state.w = width; state.h = height;
   canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   schedule();
 }).observe(canvas);
-const craterNames = {
-  jezero: 'Jezero', gale: 'Gale', endeavour: 'Endeavour', eberswalde: 'Eberswalde',
-  hawksbill: 'Hawksbill Gap', neretva: 'Neretva Vallis',
-};
 function updateWalkLink(id) {
-  const area = id === 'global' ? 'jezero' : id;
-  const name = craterNames[area] ?? 'Jezero';
-  if (['jezero', 'hawksbill', 'neretva'].includes(area)) {
-    $('walk-link').href = `./?area=${area}`;
-    $('walk-link').textContent = `打开 ${name} 任务地图 →`;
-  } else {
-    $('walk-link').href = `./atlas.html?area=${area}`;
-    $('walk-link').textContent = `查看 ${name} 区域图和高程剖面 →`;
-  }
+  const area = ['jezero', 'hawksbill', 'neretva'].includes(id) ? id : 'jezero';
+  $('walk-link').href = `./?area=${area}`;
+  $('walk-link').textContent = `打开 ${craterNames[area]} 任务地图 →`;
 }
 
 updateWalkLink(initialView);
@@ -440,6 +440,8 @@ $('ctx-elevation').onchange = refreshCtx;
 $('closer').onclick = () => zoom(0.6);
 $('farther').onclick = () => zoom(1.7);
 $('pick-profile').onclick = () => {
+  navigation.cancelPick();
+  if (canvas.hidden) $('nav-back').click();
   state.profileRequest?.abort(); state.profileRequest = null;
   state.points = []; state.profileTrack = null; state.picking = true;
   canvas.classList.add('picking'); canvas.focus();
@@ -476,4 +478,5 @@ canvas.addEventListener('keydown', e => {
     e.preventDefault(); state.center = state.center.map((value, i) => value + moves[e.key][i] * state.span); schedule();
   } else if (['+', '=', '-'].includes(e.key)) { e.preventDefault(); zoom(e.key === '-' ? 1.7 : 0.6); }
   else if (e.key === 'Enter') { e.preventDefault(); pick(state.center); }
+  else if (e.key === 'Escape') navigation.cancelPick();
 });
