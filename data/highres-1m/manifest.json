@@ -7,8 +7,6 @@
   },
   "grid": {
     "resolution_m": 1,
-    "width_m": 520,
-    "height_m": 520,
     "vertical_units": "m",
     "quality_mask": "1=finite source pixel, 0=nodata/outside"
   },
