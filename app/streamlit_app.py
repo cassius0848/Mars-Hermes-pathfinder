@@ -19,11 +19,13 @@ PROJECT_ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from hawksbill_map import elevation_profile, render_map, render_terrain  # noqa: E402
-from jezero_atlas import LOCAL_VIEW, REGIONAL_VIEW, render_jezero_atlas  # noqa: E402
+from jezero_atlas import LOCAL_VIEW, NERETVA_VIEW, REGIONAL_VIEW, render_jezero_atlas  # noqa: E402
+
 
 STUDY_AREA_LABELS = {
     REGIONAL_VIEW: "Jezero 区域 · 40 km",
     LOCAL_VIEW: "Hawksbill Gap 局部 EVA",
+    NERETVA_VIEW: "Neretva Vallis 局部 EVA",
     "Jezero (primary)": "Jezero 主研究区",
     "Mars Trek bookmarked view": "Mars Trek 书签视图",
 }
@@ -55,7 +57,7 @@ from mars_pathfinder.data.loaders import (  # noqa: E402
     load_synthetic_mission,
     science_targets_from_vector,
 )
-from mars_pathfinder.data.research import load_hawksbill_gap_package  # noqa: E402
+from mars_pathfinder.data.research import load_hawksbill_gap_package, load_neretva_package  # noqa: E402
 from mars_pathfinder.data.remote_sources import (  # noqa: E402
     CURIOSITY_MOUNT_SHARP_ASSET,
     CURIOSITY_MOUNT_SHARP_PAGE,
@@ -76,6 +78,8 @@ from mars_pathfinder.terrain.derivatives import slope_degrees  # noqa: E402
 
 st.set_page_config(page_title="火星探路者 AI — EVA 规划器", layout="wide")
 load_hawksbill_gap_package = st.cache_data(show_spinner=False)(load_hawksbill_gap_package)
+load_neretva_package = st.cache_data(show_spinner=False)(load_neretva_package)
+generate_candidates = st.cache_data(show_spinner=False, max_entries=16)(generate_candidates)
 fetch_perseverance_latest = st.cache_data(ttl=900, show_spinner=False)(fetch_perseverance_latest)
 fetch_usgs_geology = st.cache_data(ttl=900, show_spinner=False)(fetch_usgs_geology)
 
@@ -92,13 +96,14 @@ bookmarked_sample = PROJECT_ROOT / "data" / "raw" / "mars_trek_views" / "view_-9
 geology_path = PROJECT_ROOT / "data" / "raw" / "usgs" / "jezero_geologic_units_100m.geojson"
 optical_path = PROJECT_ROOT / "data" / "raw" / "mars_trek" / "jezero_viking_mdim21_512.jpg"
 research_root = PROJECT_ROOT / "docs" / "jezero-research"
+neretva_root = PROJECT_ROOT / "data" / "local" / "neretva-vallis"
 research_photo_path = research_root / "raw" / "perseverance-sol518-mastcam-z.png"
 science_mosaic = research_root / "raw" / "perseverance-pia24924-fig-a.png"
 
 with st.sidebar:
     st.header("任务设置")
     study_area = st.selectbox(
-        "研究区域", [REGIONAL_VIEW, LOCAL_VIEW, "Jezero (primary)", "Mars Trek bookmarked view"],
+        "研究区域", [REGIONAL_VIEW, LOCAL_VIEW, NERETVA_VIEW, "Jezero (primary)", "Mars Trek bookmarked view"],
         format_func=lambda value: STUDY_AREA_LABELS.get(value, value), key="study_area",
     )
 
@@ -109,21 +114,22 @@ if study_area == REGIONAL_VIEW:
 selected_sample = bookmarked_sample if study_area == "Mars Trek bookmarked view" else jezero_sample
 selected_bbox = (-93.0, -16.8, -92.0, -15.8) if study_area == "Mars Trek bookmarked view" else (77.0, 18.0, 78.0, 19.0)
 
-if study_area == LOCAL_VIEW:
-    # Research mode consumes the teammate's measured local package directly.
-    # 研究包模式直接读取队友取得的真实局部数据。
-    research_package = load_hawksbill_gap_package(research_root)
+is_neretva = study_area == NERETVA_VIEW
+if study_area in (LOCAL_VIEW, NERETVA_VIEW):
+    research_package = load_neretva_package(neretva_root) if is_neretva else load_hawksbill_gap_package(research_root)
     terrain = research_package.terrain
     slope = research_package.slope
     geology = research_package.geology
     targets = research_package.science_targets
     research_thermal = research_package.thermal
     start = research_package.base_point
-    selected_sample = research_root / "derived" / "jezero-elevation-local-2m.tif"
     has_official_environment_layers = False
     weather = np.zeros(terrain.shape, dtype=float)
     radiation = np.zeros(terrain.shape, dtype=float)
-    data_caption = "真实 Hawksbill Gap 数据包 · HiRISE DTM + USGS 地质 + THEMIS 背景"
+    data_caption = (
+        "Neretva Vallis · 1.12 × 1.12 km · HiRISE 地形与影像 · THEMIS · Perseverance"
+        if is_neretva else "真实 Hawksbill Gap 数据包 · HiRISE DTM + USGS 地质 + THEMIS 背景"
+    )
 elif selected_sample.exists():
     # Real-data mode: do not create the synthetic mission fixture here.
     # 真实数据模式：这里不再创建合成任务 fixture。
@@ -179,7 +185,7 @@ with st.sidebar:
     mission_targets = targets if mission_scope == "All science targets" else [selected_target]
     max_slope = st.slider("最大坡度（度）", 5, 30, 18)
     if research_package is not None:
-        budget_minutes = st.slider("模拟 EVA 预算（分钟）", 35, 120, 80, 5)
+        budget_minutes = st.slider("模拟 EVA 预算（分钟）", 35, 120, 100 if is_neretva else 80, 5)
         reserve_minutes = st.number_input("返航预留（分钟）", min_value=0, max_value=20, value=8)
         eva_hours, reserve = budget_minutes / 60, reserve_minutes / budget_minutes
         speed = 900.0
@@ -198,18 +204,22 @@ st.title("火星探路者 AI")
 st.caption(f"局部火星 EVA 任务规划器 — {data_caption}")
 
 with st.expander("任务简报", expanded=True):
-    st.markdown(
-        "**任务场景：** 两名宇航员从模拟基地出发，调查 Swift Run 与 Hazeltop，随后沿闭环路线返航。"
-    )
+    if is_neretva:
+        st.markdown("两名宇航员从模拟基地出发，对照北岸 Bright Angel 和南岸 Serpentine Rapids 的岩石纹理，完成观察后返回基地。")
+    elif study_area == LOCAL_VIEW:
+        st.markdown("两名宇航员从模拟基地出发，调查 Swift Run 与 Hazeltop，随后返航。")
+    else:
+        st.markdown("两名宇航员访问所选站点后返回模拟基地。")
     brief_cols = st.columns(4)
     brief_cols[0].metric("人员", "2 名宇航员")
-    brief_cols[1].metric("区域", "Hawksbill Gap")
+    brief_cols[1].metric("区域", STUDY_AREA_LABELS.get(study_area, study_area))
     brief_cols[2].metric("计划站点", str(len(mission_targets)))
     brief_cols[3].metric("路线类型", "闭环路线")
-    st.caption(
-        "观测：HiRISE、USGS、Perseverance、THEMIS · 派生：坡度、路线、剖面 "
-        "· 未配置：空间天气/辐射和生命支持容量"
-    )
+    if is_neretva:
+        st.caption("路线使用 2 米 HiRISE 高程。科学证据区提供火星车参考位置和影像。")
+        st.caption("2 米坡度网格可能遗漏单块岩石、沙地隐患和陡坎。")
+    elif study_area == LOCAL_VIEW:
+        st.caption("观测数据来自 HiRISE、USGS、Perseverance 和 THEMIS。坡度、路线与剖面由应用计算。")
 
 # The base point is a mission-planning input, not an observed rover location.
 # 基地位置是任务规划输入，不应被描述成真实火星车观测位置。
@@ -248,7 +258,7 @@ try:
     candidates = generate_candidates(cost_grid, start, mission_targets, terrain, slope, eva, constraints,
                                      gentle_cost_grid=gentle_cost_grid)
     pareto_candidates = pareto_filter(candidates)
-    recommended = select_recommended(candidates)
+    recommended = select_recommended(pareto_candidates if is_neretva else candidates)
     route_ids = [candidate.route_id for candidate in candidates]
     target_names = {target.target_id: target.name for target in targets}
     labels = {
@@ -256,7 +266,7 @@ try:
         for candidate in candidates
     }
     selected_route_id = st.sidebar.selectbox(
-        "路线候选", ["Recommended", *route_ids], format_func=lambda route_id: ("推荐路线" if route_id == "Recommended" else PROFILE_LABELS.get(labels.get(route_id, ""), labels.get(route_id, route_id))),
+        "路线候选", ["Recommended", *route_ids], format_func=lambda route_id: ("推荐路线" if route_id == "Recommended" else labels.get(route_id, route_id)),
     )
     selected_candidate = recommended if selected_route_id == "Recommended" else next(
         candidate for candidate in candidates if candidate.route_id == selected_route_id
@@ -285,7 +295,7 @@ with left:
     route_rows, route_cols = zip(*path)
     if research_package is not None and display_layer == "3D terrain":
         figure = render_terrain(research_package, path, route_targets)
-    elif display_layer == "THEMIS thermal context" and research_thermal is not None:
+    elif display_layer == "THEMIS thermal context" and research_thermal is not None and not is_neretva:
         # THEMIS is regional context at 100 m/pixel; do not pretend it is route-resolution.
         # THEMIS 是 100 m 区域背景，不能伪装成米级路线图层。
         figure = go.Figure(go.Heatmap(z=research_thermal, colorbar_title="THEMIS DN（相对值）"))
@@ -309,6 +319,8 @@ with left:
         figure.add_trace(go.Scatter(x=[goal[1]], y=[goal[0]], mode="markers", name="科学目标", marker={"color": "yellow", "size": 12}))
         figure.update_layout(title=f"{display_layer} — {terrain.source}", yaxis_autorange="reversed")
     st.plotly_chart(figure, use_container_width=True)
+    if is_neretva and display_layer == "THEMIS thermal context":
+        st.caption("Mars Odyssey THEMIS · 100 米网格 · 相对红外强度用于区域背景。")
     if research_package is not None:
         st.plotly_chart(elevation_profile(research_package, path, segments), use_container_width=True)
 
@@ -381,7 +393,21 @@ with st.expander("路线候选对比"):
     st.dataframe(candidate_rows, use_container_width=True, hide_index=True)
     st.caption("路线候选由确定性算法生成；AI 不会选择或修改硬约束。")
 
-if research_package is not None:
+if is_neretva:
+    st.caption("[USGS HiRISE 高程](https://doi.org/10.5066/P9REJ9JN) · "
+               "[NASA Mars Trek 影像](https://trek.nasa.gov/mars/) · "
+               "[Mars Odyssey THEMIS](https://stac.astrogeology.usgs.gov/docs/data/mars/themis_controlled_mosaics/)")
+    with st.expander("科学证据 · Bright Angel 与 Serpentine Rapids"):
+        st.caption("火星车参考点标示观测的大致位置。路线标记代表模拟停靠点。")
+        for target, reference, column in zip(targets, research_package.observation_references, st.columns(2)):
+            with column:
+                st.markdown(f"**{target.name}**")
+                st.write(target.rationale)
+                image = reference.photograph
+                st.image(image.local_path, caption=f"Sol {image.sol} · {image.instrument} · {image.attribution}")
+                st.caption(f"{reference.rover_reference} · 模拟停靠点偏移 {reference.modeled_stop_offset_m:.1f} m")
+                st.markdown(f"[NASA 观测]({image.page_url}) · [火星车参考数据]({reference.rover_source_url})")
+elif study_area == LOCAL_VIEW:
     with st.expander("科学证据 · Swift Run 与 Hazeltop"):
         first, second = st.columns(2)
         with first:
@@ -449,14 +475,14 @@ with st.expander("在线 NASA / USGS 数据（按需读取）"):
 
 # Evidence assets are shown with provenance and are never treated as DEM layers.
 # 证据素材始终显示溯源信息，不会被误当作 DEM 图层。
-if research_photo_path.exists():
+if not is_neretva and research_photo_path.exists():
     with st.expander("研究包表面证据 — Perseverance Sol 518"):
         st.image(str(research_photo_path), caption="真实 Perseverance Mastcam-Z 图像 · Sol 518")
         st.caption("来源与溯源：docs/jezero-research/raw/perseverance-sol518.html")
 
 image_metadata_path = PROJECT_ROOT / "data" / "raw" / "perseverance" / "sol1934_sample.json"
 image_evidence = load_surface_image_evidence(image_metadata_path) if image_metadata_path.exists() else None
-if image_evidence is not None:
+if not is_neretva and image_evidence is not None:
     with st.expander("表面图像证据 — Perseverance"):
         st.image(str(PROJECT_ROOT / image_evidence.local_path), caption=f"Sol {image_evidence.sol} · {image_evidence.instrument} · {image_evidence.attribution}")
         st.caption(f"图像 ID：{image_evidence.image_id}")

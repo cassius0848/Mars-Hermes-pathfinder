@@ -21,3 +21,20 @@ jobs:
           MPLCONFIGDIR: /tmp/matplotlib
           PYTHONPATH: src
         run: python -m pytest -q
+
+  browser-planner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install data exporter dependencies
+        run: python -m pip install numpy rasterio pyproj Pillow
+      - name: Export the browser data and check route planning
+        run: |
+          python scripts/build_web.py
+          node --test tests/web_planner.test.mjs

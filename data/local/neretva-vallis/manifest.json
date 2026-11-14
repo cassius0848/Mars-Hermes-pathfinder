@@ -1,0 +1,123 @@
+{
+  "id": "neretva-vallis-v1",
+  "center_lon_e_lat_n": [
+    77.303,
+    18.4945
+  ],
+  "width_m": 1120,
+  "crs": "+proj=aeqd +lat_0=18.4945 +lon_0=77.303 +a=3396190 +b=3396190 +units=m +type=crs",
+  "grid_spacing_m": {
+    "elevation": 2,
+    "optical": 1,
+    "thermal": 100
+  },
+  "valid_pixel_pct": {
+    "elevation": 100.0,
+    "optical": 100.0,
+    "thermal": 100.0
+  },
+  "dtm_source_crop": {
+    "window_col_row_width_height": [
+      4153,
+      9800,
+      1186,
+      1125
+    ],
+    "range_transfer_bytes": 96472609
+  },
+  "optical_tile_crop": {
+    "wmts_level": 16,
+    "tile_count": 64,
+    "tile_bounds_col_row": [
+      93677,
+      26030,
+      93684,
+      26037
+    ]
+  },
+  "simulated_base_lonlat": [
+    77.30248410956098,
+    18.494246940228436
+  ],
+  "observations": [
+    {
+      "id": "cheyava-falls",
+      "name": "Bright Angel · Cheyava Falls",
+      "science_task": "Document pale sulfate veins and dark-rimmed spots in the Bright Angel outcrop. Compare their textures with the southern exposure.",
+      "rover_reference": {
+        "lonlat": [
+          77.30519089,
+          18.49748444
+        ],
+        "description": "Nearby NASA end-of-drive position 56_0 · Sol 1210",
+        "source": "https://mars.nasa.gov/mmgis-maps/M20/Layers/json/M20_waypoints.json",
+        "rmc": "56_0",
+        "localization_sol": 1210,
+        "elevation_m": -2354.03125
+      },
+      "image": {
+        "id": "PIA26368 Figure A",
+        "sol": 1212,
+        "page_url": "https://science.nasa.gov/resource/perseverance-finds-a-rock-with-leopard-spots/",
+        "asset_url": "https://science.nasa.gov/wp-content/uploads/2024/07/pia26368-perseverance-finds-a-rock-with-leopard-spots-annotated.jpg",
+        "file": "cheyava-falls.jpg"
+      },
+      "modeled_stop_lonlat": [
+        77.30518812755155,
+        18.497418602070614
+      ],
+      "modeled_stop_offset_m": 3.906,
+      "modeled_stop_slope_deg": 9.941,
+      "stop_duration_min": 12
+    },
+    {
+      "id": "malgosa-crest",
+      "name": "Serpentine Rapids · Malgosa Crest",
+      "science_task": "Compare the red bedrock, pale patches and millimeter-scale green spots at the southern exposure. The composition of the green spots is undetermined.",
+      "rover_reference": {
+        "lonlat": [
+          77.301089466,
+          18.491949884
+        ],
+        "description": "PDS PLACES rover reference 56_3438 · localization Sol 1231",
+        "source": "https://pds-geosciences.wustl.edu/m2020/urn-nasa-pds-mars2020_rover_places/data_localizations/best_interp.csv",
+        "rmc": "56_3438",
+        "localization_sol": 1231,
+        "spacecraft_clock_s": 776226101,
+        "elevation_m": -2347.83
+      },
+      "image": {
+        "id": "SIF_1243_0777313998_496EBY_N0563438SRLC09814_0000LMJ",
+        "sol": 1243,
+        "page_url": "https://science.nasa.gov/blog/red-rocks-with-green-spots-at-serpentine-rapids/",
+        "asset_url": "https://science.nasa.gov/wp-content/uploads/2024/10/mars-perseverance-sif-1243-0777313998-496eby-n0563438srlc09814-0000lmj.png?resize=900,655",
+        "file": "malgosa-crest.png"
+      },
+      "modeled_stop_lonlat": [
+        77.30109656766767,
+        18.491952529155302
+      ],
+      "modeled_stop_offset_m": 0.429,
+      "modeled_stop_slope_deg": 9.576,
+      "stop_duration_min": 12
+    }
+  ],
+  "observation_offset_basis": "Planar distance from each archived rover reference to its modeled stop cell centre. The rock location and absolute accuracy are separate questions.",
+  "thermal_basis": "Nearest cell from the 100 m regional THEMIS mosaic. Relative infrared DN, for context.",
+  "sources": {
+    "usgs_trn_publication": "https://doi.org/10.5066/P9REJ9JN",
+    "usgs_trn_dtm_1m": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/mars2020_trn/HiRISE/JEZ_hirise_soc_006_DTM_MOLAtopography_DeltaGeoid_1m_Eqc_latTs0_lon0_blend40.tif",
+    "dtm_header_sha256": "81f630ce3680d12bacf102e78f8ac3ab80c99fccb1493fde650a3680910d41b1",
+    "usgs_trn_ortho_025m": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/mars2020_trn/HiRISE/JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first.tif",
+    "mars_trek_ortho_wmts": "https://trek.nasa.gov/tiles/Mars/EQ/JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first_dd/1.0.0/WMTSCapabilities.xml",
+    "themis_source_cog": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mo/themis/controlled_mosaics/mc13_syrtis_major_dir/mc13_syrtis_major_dir.tif",
+    "thermal_input_sha256": "099a7cc46a227e40c5f73277103dc65029d8654859ef8f3db2e4759baecf96b4"
+  },
+  "sha256": {
+    "elevation.tif": "3bdc78e05c2727341b4129244991da9904787bb7d4dce5480e081c92e8b329a6",
+    "optical.tif": "d9f3b0c650515b8619055525e73870b9d84bc58a2c0bcff54a1a9580314286af",
+    "thermal.tif": "df459b6d1e9d7b4596b49caf5cf98c4bf93afc24bb1588a4d09dc4896c959939",
+    "cheyava-falls.jpg": "cf270aa71dcc97d8a2d0dfbb8af7cafffd3b58f3ba4b4b4f80927556d01d820b",
+    "malgosa-crest.png": "acc5c377e1d8950375f2ecb01ca8056b700cf96dc8288e7ebf0d83ebf966accf"
+  }
+}
