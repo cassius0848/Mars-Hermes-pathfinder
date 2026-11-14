@@ -14,13 +14,15 @@
     <nav aria-label="页面入口"><a href="atlas.html" aria-current="page">在线地图</a><a href="./?area=jezero">步行规划</a></nav>
   </header>
   <main>
-    <div class="page-intro"><div><h1>火星在线地图</h1><p>拖动和缩放地图，按当前视野从 NASA 和 USGS 读取数据。</p></div><a id="walk-link" href="./?area=jezero">打开 Jezero 任务地图 →</a></div>
+    <div class="page-intro"><div><h1>火星在线地图</h1><p>拖动和缩放地图，按当前视野从 NASA 和 USGS 读取数据；全球视图连接四个经典陨石坑。</p></div><a id="walk-link" href="./?area=jezero">打开 Jezero 任务地图 →</a></div>
     <div class="live-atlas">
       <section class="map-panel" aria-label="在线火星地图">
         <div class="atlas-toolbar">
-          <button type="button" id="global">全球</button><button type="button" id="jezero">Jezero</button>
-          <button type="button" id="hawksbill">Hawksbill Gap</button><button type="button" id="neretva">Neretva Vallis</button>
+          <button type="button" id="global">全球 · 经典陨石坑网络</button><button type="button" id="jezero">Jezero</button>
+          <button type="button" id="gale">Gale</button><button type="button" id="endeavour">Endeavour</button>
+          <button type="button" id="eberswalde">Eberswalde</button><button type="button" id="hawksbill">Hawksbill Gap</button><button type="button" id="neretva">Neretva Vallis</button>
         </div>
+        <p class="muted atlas-network-note">全球视图中的虚线连接 Jezero、Gale、Endeavour、Eberswalde。四个区域均可直接查看 NASA MOLA 在线高程剖面；米级 A* 步行规划继续使用 Jezero 任务数据包。</p>
         <div class="atlas-map">
           <canvas id="surface" tabindex="0" aria-label="在线火星地图。拖动平移，滚轮缩放。键盘方向键平移，加减键缩放，回车选取中心。"></canvas>
           <div class="map-tools"><button id="closer" type="button" aria-label="放大在线地图">+</button><button id="farther" type="button" aria-label="缩小在线地图">−</button></div>
@@ -61,7 +63,7 @@
         </section>
       </aside>
     </div>
-    <p class="atlas-credits">地图坐标使用火星中心纬度和东经为正。米级步行路线可在 Jezero 任务地图计算。</p>
+    <p class="atlas-credits">地图坐标使用火星中心纬度和东经为正。在线地图用于跨区域地形筛选；米级 A* 步行路线可在 Jezero、Hawksbill Gap 和 Neretva Vallis 任务地图计算。</p>
   </main>
   <script type="module" src="atlas.js"></script>
 </body>
