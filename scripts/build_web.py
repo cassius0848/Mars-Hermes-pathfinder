@@ -99,8 +99,10 @@ def raster_rgb(values, bounds, palette):
     return rgb
 
 
-def write_layers(folder, elevation, slope, optical, thermal, geology=None, units=None):
+def write_layers(folder, elevation, slope, optical, thermal, geology=None, units=None, quality=None):
     valid = np.isfinite(elevation)
+    if quality is not None:
+        valid &= quality > 0
     e_min, e_max = map(float, (elevation[valid].min(), elevation[valid].max()))
     z_offset = int(np.floor(e_min))
     z_step = 0.01 if e_max - z_offset < 655 else 0.1
@@ -108,12 +110,17 @@ def write_layers(folder, elevation, slope, optical, thermal, geology=None, units
     encoded[valid] = np.rint((elevation[valid] - z_offset) / z_step).astype(np.uint16)
     encoded.tofile(folder / "elevation.bin")
     slope.astype("<f4").tofile(folder / "slope.bin")
+    if quality is not None:
+        quality.astype("uint8").tofile(folder / "quality.bin")
     images = {"elevation": raster_rgb(elevation, (e_min, e_max), PALETTES["elevation"]),
               "slope": raster_rgb(slope, (0, 35), PALETTES["slope"]),
               "thermal": raster_rgb(thermal, (0, 255), PALETTES["thermal"]),
               "optical": optical}
-    coverage = {"elevation": 100.0, "slope": round(float(np.isfinite(slope[valid]).mean() * 100), 3),
+    coverage = {"elevation": round(float(np.isfinite(elevation[valid]).mean() * 100), 3),
+                "slope": round(float(np.isfinite(slope[valid]).mean() * 100), 3),
                 "thermal": round(float(np.isfinite(thermal[valid]).mean() * 100), 3)}
+    if quality is not None:
+        coverage["quality"] = round(float((quality > 0).mean() * 100), 3)
     if geology is not None:
         colors = GEOLOGY_COLORS if units else []
         image = np.full((*geology.shape, 3), (29, 28, 26), dtype=np.uint8)
@@ -176,7 +183,7 @@ def build_local(assets, site_id, package):
                 polygons.append((shape, code))
         codes = rasterize(polygons, elevation.shape, transform=transform, dtype="uint8")
         geology = np.where(codes, codes, np.nan)
-    depth, coverage = write_layers(folder, elevation, package.slope, package.optical_rgb, thermal, geology, units)
+    depth, coverage = write_layers(folder, elevation, package.slope, package.optical_rgb, thermal, geology, units, package.quality)
     coverage["optical"] = 100.0
     slope_delta = float(np.nanmax(np.abs(slope_degrees(package.terrain) - package.slope)))
     if slope_delta > 0.0001:
@@ -221,7 +228,7 @@ def build_local(assets, site_id, package):
     return {**grid_metadata(crs, transform, elevation), "id": site_id, "name": "Hawksbill Gap" if is_hawksbill else "Neretva Vallis",
             "depth": depth, "coverage": coverage, "layers": [*PALETTES, *(["geology"] if units else [])], "base": package.base_point,
             "targets": targets, "rovers": rover_trace(crs, transform, elevation.shape), "sources": sources, "note": audit_note,
-            "meda": meda, "gallery": gallery, "hashes": len(hashes), "sourceSpacing": {"thermal": 100, "terrain": 2},
+            "meda": meda, "gallery": gallery, "hashes": len(hashes), "sourceSpacing": {"thermal": 100, "terrain": float(transform.a)},
             "units": [[name, color] for name, color in zip(units.values(), GEOLOGY_COLORS)],
             "budget": 80 if is_hawksbill else 100}
 
