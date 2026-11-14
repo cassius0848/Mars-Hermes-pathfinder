@@ -10,6 +10,10 @@ Point = tuple[int, int]
 Heuristic = Callable[[Point, Point], float]
 
 
+class RouteUnavailable(ValueError):
+    """A valid search cannot connect its endpoints under the current limits."""
+
+
 def _neighbors(point: Point, shape: tuple[int, int]):
     """Yield valid 8-connected neighbors and their geometric step distance.
 
@@ -41,7 +45,7 @@ def shortest_path(cost_grid: np.ndarray, start: Point, goal: Point, *, use_astar
         if not (0 <= point[0] < costs.shape[0] and 0 <= point[1] < costs.shape[1]):
             raise ValueError(f"point outside grid: {point}")
         if not np.isfinite(costs[point]):
-            raise ValueError(f"point is impassable: {point}")
+            raise RouteUnavailable(f"point is impassable: {point}")
 
     minimum_cost = float(np.min(finite_costs))
     heuristic: Heuristic = lambda a, b: hypot(a[0] - b[0], a[1] - b[1]) * minimum_cost
@@ -79,7 +83,7 @@ def shortest_path(cost_grid: np.ndarray, start: Point, goal: Point, *, use_astar
                 heappush(frontier, (candidate + estimate, candidate, neighbor))
 
     if goal not in distances:
-        raise ValueError("no traversable route exists between start and goal")
+        raise RouteUnavailable("no traversable route exists between start and goal")
 
     path = [goal]
     while path[-1] != start:

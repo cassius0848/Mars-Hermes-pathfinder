@@ -1,0 +1,60 @@
+{
+  "id": "jezero-40km-v1",
+  "center_lon_e_lat_n": [
+    77.74,
+    18.44
+  ],
+  "radius_m": 40000,
+  "grid_spacing_m": 100,
+  "crs": "+proj=aeqd +lat_0=18.44 +lon_0=77.74 +a=3396190 +b=3396190 +units=m +type=crs",
+  "coverage_basis": "valid cells with centres within the study circle",
+  "coverage_pct": {
+    "elevation": 100.0,
+    "slope": 100.0,
+    "optical": 99.967,
+    "thermal": 100.0,
+    "geology": 40.64
+  },
+  "ctx_elevation_radius_audit_pct": {
+    "25": 100.0,
+    "30": 100.0,
+    "35": 100.0,
+    "40": 100.0,
+    "45": 98.878
+  },
+  "geologic_units": {
+    "1": "Upper etched unit",
+    "2": "Eolian bedform unit",
+    "3": "Smooth unit, undivided",
+    "4": "Nili Planum 2 unit",
+    "5": "Rugged bright unit",
+    "6": "Nili Planum 1 unit",
+    "7": "Crater ejecta unit",
+    "8": "Crater interior unit",
+    "9": "Crater rim unit",
+    "10": "Jezero floor unit",
+    "11": "Lower etched unit",
+    "12": "Nili Planum fan unit",
+    "13": "Crater riim unit",
+    "14": "Jezero fan 2 unit",
+    "15": "Jezero fan 1 unit"
+  },
+  "source_spacing_m": {
+    "ctx_dem": 20,
+    "themis": 100
+  },
+  "ctx_wmts_level": 9,
+  "sha256": {
+    "terrain.tif": "ee082a5f1b01546df3ab44f7e1f00476fddca71e8c86209dd6b2e5953ea89da3",
+    "optical.tif": "3b81f64292d95bff5c5264e420f9f5209f063dd2f4370a4daa722f0cc562c526",
+    "thermal.tif": "099a7cc46a227e40c5f73277103dc65029d8654859ef8f3db2e4759baecf96b4",
+    "geology.tif": "ae14f90c40617ae61d2ea9321a34fb09bf5a0ae30f960e0cd96b74f593ebb69b"
+  },
+  "sources": {
+    "ctx_dem": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/mars2020_trn/CTX/ScienceInvestigationMaps_JPL/M20_JezeroCrater_CTXDEM_20m.tif",
+    "ctx_wmts_capabilities": "https://trek.nasa.gov/tiles/Mars/EQ/Jezero_CTX_BlockAdj_dd/1.0.0/WMTSCapabilities.xml",
+    "themis_cog": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mo/themis/controlled_mosaics/mc13_syrtis_major_dir/mc13_syrtis_major_dir.tif",
+    "sim3464_layer": "https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/8",
+    "perseverance_waypoints": "https://mars.nasa.gov/mmgis-maps/M20/Layers/json/M20_waypoints.json"
+  }
+}

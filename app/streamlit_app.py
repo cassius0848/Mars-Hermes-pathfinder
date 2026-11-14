@@ -7,7 +7,6 @@ Run with: streamlit run app/streamlit_app.py
 
 import json
 import sys
-from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -18,7 +17,9 @@ import streamlit as st
 PROJECT_ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from mars_pathfinder.analysis.mission import evaluate_eva_route  # noqa: E402
+from hawksbill_map import elevation_profile, render_map, render_terrain  # noqa: E402
+from jezero_atlas import LOCAL_VIEW, REGIONAL_VIEW, render_jezero_atlas  # noqa: E402
+from mars_pathfinder.analysis.mission import STEEP_TERRAIN_DEG  # noqa: E402
 from mars_pathfinder.data.loaders import (  # noqa: E402
     load_geojson_layer,
     load_mars_trek_mola_sample,
@@ -37,6 +38,7 @@ from mars_pathfinder.terrain.derivatives import slope_degrees  # noqa: E402
 
 
 st.set_page_config(page_title="Mars Pathfinder AI — EVA Planner", layout="wide")
+load_hawksbill_gap_package = st.cache_data(show_spinner=False)(load_hawksbill_gap_package)
 
 catalog = json.loads((PROJECT_ROOT / "data" / "source_catalog.json").read_text())
 with st.sidebar.expander("NASA / mission resources", expanded=False):
@@ -52,15 +54,22 @@ geology_path = PROJECT_ROOT / "data" / "raw" / "usgs" / "jezero_geologic_units_1
 optical_path = PROJECT_ROOT / "data" / "raw" / "mars_trek" / "jezero_viking_mdim21_512.jpg"
 research_root = PROJECT_ROOT / "docs" / "jezero-research"
 research_photo_path = research_root / "raw" / "perseverance-sol518-mastcam-z.png"
+science_mosaic = research_root / "raw" / "perseverance-pia24924-fig-a.png"
 
 with st.sidebar:
     st.header("Mission settings")
-    study_area = st.selectbox("Study area", ["Hawksbill Gap research package", "Jezero (primary)", "Mars Trek bookmarked view"])
+    study_area = st.selectbox(
+        "Study area", [REGIONAL_VIEW, LOCAL_VIEW, "Jezero (primary)", "Mars Trek bookmarked view"], key="study_area",
+    )
+
+if study_area == REGIONAL_VIEW:
+    render_jezero_atlas(PROJECT_ROOT)
+    st.stop()
 
 selected_sample = bookmarked_sample if study_area == "Mars Trek bookmarked view" else jezero_sample
 selected_bbox = (-93.0, -16.8, -92.0, -15.8) if study_area == "Mars Trek bookmarked view" else (77.0, 18.0, 78.0, 19.0)
 
-if study_area == "Hawksbill Gap research package" and research_root.exists():
+if study_area == LOCAL_VIEW:
     # Research mode consumes the teammate's measured local package directly.
     # 研究包模式直接读取队友取得的真实局部数据。
     research_package = load_hawksbill_gap_package(research_root)
@@ -68,7 +77,6 @@ if study_area == "Hawksbill Gap research package" and research_root.exists():
     slope = research_package.slope
     geology = research_package.geology
     targets = research_package.science_targets
-    research_optical = research_package.optical_rgb
     research_thermal = research_package.thermal
     start = research_package.base_point
     selected_sample = research_root / "derived" / "jezero-elevation-local-2m.tif"
@@ -83,7 +91,6 @@ elif selected_sample.exists():
     terrain = load_mars_trek_mola_sample(selected_sample, bbox=selected_bbox)
     slope = slope_degrees(terrain)
     has_official_environment_layers = False
-    research_optical = None
     research_thermal = None
     if study_area == "Jezero (primary)" and geology_path.exists():
         geology = load_geojson_layer(geology_path, name="USGS Jezero geologic units", source="USGS SIM 3464")
@@ -114,7 +121,6 @@ else:
     weather = layers["weather_demo"].values
     radiation = layers["radiation_demo"].values
     has_official_environment_layers = False
-    research_optical = None
     research_thermal = None
     start = (2, 2)
     data_caption = "SYNTHETIC DEVELOPMENT FIXTURE — no official DEM available"
@@ -128,17 +134,24 @@ with st.sidebar:
     selected_target = next(target for target in targets if target.name == target_name)
     scope_options = ["Selected target round trip"]
     if len(targets) > 1:
-        scope_options.insert(0, "All targets in listed order")
+        scope_options.insert(0, "All science targets")
     mission_scope = st.selectbox("Mission scope", scope_options)
-    mission_targets = targets if mission_scope == "All targets in listed order" else [selected_target]
-    eva_hours = st.slider("EVA duration (hours)", 4.0, 24.0, 12.0, 1.0)
-    reserve = st.slider("Return reserve", 0.10, 0.50, 0.25, 0.05)
+    mission_targets = targets if mission_scope == "All science targets" else [selected_target]
     max_slope = st.slider("Maximum slope (degrees)", 5, 30, 18)
-    display_options = ["Elevation", "Slope", "Weather risk", "Radiation risk"]
     if research_package is not None:
-        display_options.extend(["HiRISE local orthophoto", "THEMIS thermal context"])
-    elif study_area == "Jezero (primary)" and optical_path.exists():
-        display_options.append("Viking optical context")
+        budget_minutes = st.slider("Simulated EVA budget (min)", 35, 120, 80, 5)
+        reserve_minutes = st.number_input("Return reserve (min)", min_value=0, max_value=20, value=8)
+        eva_hours, reserve = budget_minutes / 60, reserve_minutes / budget_minutes
+        speed = 900.0
+        st.caption("Simulation · 15 m/min walking speed · 12 min per stop")
+        display_options = ["HiRISE local orthophoto", "Elevation", "Slope", "3D terrain", "THEMIS thermal context"]
+    else:
+        eva_hours = st.slider("EVA duration (hours)", 4.0, 24.0, 12.0, 1.0)
+        reserve = st.slider("Return reserve", 0.10, 0.50, 0.25, 0.05)
+        speed = 3000.0
+        display_options = ["Elevation", "Slope", "Weather risk", "Radiation risk"]
+        if study_area == "Jezero (primary)" and optical_path.exists():
+            display_options.append("Viking optical context")
     display_layer = st.selectbox("Map layer", display_options)
 
 st.title("Mars Pathfinder AI")
@@ -153,7 +166,7 @@ with st.expander("Mission brief / 任务简报", expanded=True):
     brief_cols = st.columns(4)
     brief_cols[0].metric("Crew / 人员", "2 astronauts")
     brief_cols[1].metric("Study area / 区域", "Hawksbill Gap")
-    brief_cols[2].metric("Science stops / 科学站", str(len(mission_targets)))
+    brief_cols[2].metric("Requested stops / 计划站点", str(len(mission_targets)))
     brief_cols[3].metric("Route type / 路线", "Closed loop")
     st.caption(
         "Observed: HiRISE, USGS, Perseverance, THEMIS · Derived: slope, route, profile "
@@ -188,21 +201,38 @@ try:
     # Generate forward, reverse, and single-stop candidates before choosing one.
     # 先生成正序、反序和单站候选，再选择路线。
     eva = EVAState(remaining_time_h=eva_hours, reserve_fraction=reserve)
-    constraints = MissionConstraints(max_slope_deg=float(max_slope))
-    candidates = generate_candidates(cost_grid, start, mission_targets, terrain, slope, eva, constraints)
+    constraints = MissionConstraints(max_slope_deg=float(max_slope), speed_m_per_h=speed)
+    gentle_cost_grid = None
+    if research_package is not None:
+        passable = np.isfinite(cost_grid)
+        gentle_cost_grid = np.where(passable, 1.0 + 4.0 * (slope / max_slope) ** 2, np.inf)
+        cost_grid = np.where(passable, 1.0, np.inf)
+    candidates = generate_candidates(cost_grid, start, mission_targets, terrain, slope, eva, constraints,
+                                     gentle_cost_grid=gentle_cost_grid)
     pareto_candidates = pareto_filter(candidates)
     recommended = select_recommended(candidates)
     route_ids = [candidate.route_id for candidate in candidates]
+    target_names = {target.target_id: target.name for target in targets}
+    labels = {
+        candidate.route_id: candidate.profile + " · " + " → ".join(target_names[stop] for stop in candidate.stop_ids)
+        for candidate in candidates
+    }
     selected_route_id = st.sidebar.selectbox(
-        "Route candidate", route_ids, index=route_ids.index(recommended.route_id)
+        "Route candidate", ["Recommended", *route_ids], format_func=lambda route_id: labels.get(route_id, route_id),
     )
-    selected_candidate = next(candidate for candidate in candidates if candidate.route_id == selected_route_id)
+    selected_candidate = recommended if selected_route_id == "Recommended" else next(
+        candidate for candidate in candidates if candidate.route_id == selected_route_id
+    )
+    route_targets = [next(target for target in targets if target.target_id == stop) for stop in selected_candidate.stop_ids]
     path = selected_candidate.path
     planning_cost = selected_candidate.planning_cost
     segments = selected_candidate.segments
     report = selected_candidate.report
 except ValueError as exc:
-    st.error(f"No safe route: {exc}")
+    st.error(str(exc))
+    if research_package is not None:
+        st.plotly_chart(render_map(research_package, "HiRISE local orthophoto", [], mission_targets),
+                        use_container_width=True)
     st.stop()
 
 layer_values = {
@@ -215,20 +245,15 @@ layer_values = {
 left, right = st.columns([3, 2])
 with left:
     route_rows, route_cols = zip(*path)
-    if display_layer == "HiRISE local orthophoto" and research_optical is not None:
-        # The orthophoto is a real HiRISE product aligned to the local DTM package.
-        # 该正射图来自真实 HiRISE 产品，与局部 DTM 数据包对齐。
-        figure = go.Figure(go.Image(z=research_optical))
-        scale = research_optical.shape[0] / terrain.shape[0]
-        figure.add_trace(go.Scatter(x=[col * scale for col in route_cols], y=[row * scale for row in route_rows], mode="lines", name="EVA route", line={"color": "red", "width": 3}))
-        figure.add_trace(go.Scatter(x=[start[1] * scale], y=[start[0] * scale], mode="markers", name="Base", marker={"color": "white", "size": 10}))
-        figure.add_trace(go.Scatter(x=[goal[1] * scale], y=[goal[0] * scale], mode="markers", name="Science target", marker={"color": "yellow", "size": 12}))
-        figure.update_layout(title="Real HiRISE orthophoto — Hawksbill Gap", yaxis_autorange="reversed")
+    if research_package is not None and display_layer == "3D terrain":
+        figure = render_terrain(research_package, path, route_targets)
     elif display_layer == "THEMIS thermal context" and research_thermal is not None:
         # THEMIS is regional context at 100 m/pixel; do not pretend it is route-resolution.
         # THEMIS 是 100 m 区域背景，不能伪装成米级路线图层。
         figure = go.Figure(go.Heatmap(z=research_thermal, colorbar_title="THEMIS DN"))
         figure.update_layout(title="Real THEMIS thermal context — regional scale", yaxis_autorange="reversed")
+    elif research_package is not None:
+        figure = render_map(research_package, display_layer, path, route_targets)
     elif display_layer == "Viking optical context" and optical_path.exists():
         # The optical export shares the Jezero bbox, so grid coordinates scale directly.
         # 光学图与 MOLA 使用同一 Jezero 范围，可直接按网格比例叠加路线。
@@ -246,26 +271,34 @@ with left:
         figure.add_trace(go.Scatter(x=[goal[1]], y=[goal[0]], mode="markers", name="Science target", marker={"color": "yellow", "size": 12}))
         figure.update_layout(title=f"{display_layer} — {terrain.source}", yaxis_autorange="reversed")
     st.plotly_chart(figure, use_container_width=True)
+    if research_package is not None:
+        st.plotly_chart(elevation_profile(research_package, path, segments), use_container_width=True)
 
 with right:
     st.subheader("Mission report")
     st.metric("Route distance", f"{report['distance_m']:.0f} m")
     st.metric("Estimated EVA time", f"{report['estimated_time_h']:.2f} h")
     st.caption(f"Walk {report['walk_time_h']:.2f} h · science stops {report['science_stop_time_h']:.2f} h")
+    st.metric("Time margin after reserve", f"{report['time_margin_h'] * 60:+.1f} min")
     st.metric("Maximum slope", f"{report['max_slope_deg']:.1f}°")
-    st.metric("Planning cost", f"{planning_cost:.1f}")
+    st.metric(f"Distance on slopes ≥ {STEEP_TERRAIN_DEG:g}°", f"{report['steep_distance_m']:.0f} m")
     st.caption(f"Closed-loop legs: {len(segments)} · {mission_scope}")
     st.caption(f"Pareto candidates: {len(pareto_candidates)} / all candidates: {len(candidates)}")
-    if report["safety_ok"]:
+    if not report["time_budget_ok"]:
+        st.warning("This route exceeds the time budget after the return reserve.")
+    elif report["safety_ok"]:
         st.success("Time and configured resource checks passed")
     elif report["resource_status"] == "unconfigured":
         st.warning("Route geometry and time are available, but the EVA resource model is not configured")
     else:
         st.warning("Route exceeds the configured EVA resource reserve")
-    st.caption("Targets: " + ", ".join(target.name for target in mission_targets))
+    st.caption("Stops on this route · " + ", ".join(target.name for target in route_targets))
+    skipped = [target.name for target in mission_targets if target.target_id not in selected_candidate.stop_ids]
+    if skipped:
+        st.info("Deferred science stops · " + ", ".join(skipped))
     if report["alignment_review_required"]:
         st.warning(f"Target alignment requires review; recorded uncertainty up to {report['max_position_uncertainty_m']:.1f} m")
-    st.caption("Sources: " + ", ".join(sorted({target.source for target in mission_targets})))
+    st.caption("Sources · " + ", ".join(sorted({target.source for target in route_targets})))
     if not has_official_environment_layers:
         st.info("Weather and radiation have no selected official layer; their weights are 0 and they are not presented as observations.")
 
@@ -276,15 +309,15 @@ with st.expander("Offline mission assistant (MockProvider)"):
         mission_id=study_area,
         data_mode="real" if research_package is not None or selected_sample.exists() else "synthetic",
         constraints={"eva_hours": eva_hours, "reserve_fraction": reserve, "max_slope_deg": max_slope},
-        targets=[{"id": target.target_id, "name": target.name, "source": target.source} for target in mission_targets],
+        targets=[{"id": target.target_id, "name": target.name, "source": target.source} for target in route_targets],
         route_candidates=[{
-            "route_id": "current-closed-loop",
+            "route_id": selected_candidate.route_id,
             "planning_cost": float(planning_cost),
             "distance_m": report["distance_m"],
             "estimated_time_h": report["estimated_time_h"],
             "safety_ok": report["safety_ok"],
         }],
-        data_sources=sorted({target.source for target in mission_targets}),
+        data_sources=sorted({target.source for target in route_targets}),
         missing_data=["official spatial weather layer", "official spatial radiation layer"],
     )
     recommendation = MockProvider().recommend(ai_context)
@@ -295,11 +328,14 @@ with st.expander("Route candidate comparison / 候选路线对比"):
     pareto_ids = {candidate.route_id for candidate in pareto_candidates}
     for candidate in candidates:
         candidate_rows.append({
-            "route": candidate.route_id,
-            "targets": " → ".join(candidate.stop_ids),
+            "profile": candidate.profile,
+            "targets": " → ".join(target_names[stop] for stop in candidate.stop_ids),
             "distance_m": round(candidate.report["distance_m"], 1),
             "time_h": round(candidate.report["estimated_time_h"], 3),
+            "time_margin_min": round(candidate.report["time_margin_h"] * 60, 1),
             "max_slope_deg": round(candidate.report["max_slope_deg"], 2),
+            "steep_distance_m": round(candidate.report["steep_distance_m"], 1),
+            "ascent_m": round(candidate.report["ascent_m"], 1),
             "resource_status": candidate.report["resource_status"],
             "alignment_review": candidate.report["alignment_review_required"],
             "pareto": candidate.route_id in pareto_ids,
@@ -308,6 +344,19 @@ with st.expander("Route candidate comparison / 候选路线对比"):
     st.caption("Routes are deterministic candidates. AI does not choose or alter hard constraints.")
 
 if research_package is not None:
+    with st.expander("Science evidence · Swift Run and Hazeltop"):
+        first, second = st.columns(2)
+        with first:
+            st.markdown("**Swift Run · Skinner Ridge**")
+            st.write("Compare the sandstone grain size and bedding at the delta front.")
+        with second:
+            st.markdown("**Hazeltop · Wildcat Ridge**")
+            st.write("Inspect fine-grained sedimentary rock and the sulfate-bearing alteration evidence.")
+        st.image(str(science_mosaic), caption="Mastcam-Z annotated outcrops · NASA/JPL-Caltech/ASU/MSSS")
+        st.markdown(
+            "[NASA annotated sites](https://science.nasa.gov/resource/two-perseverance-sampling-locations-in-jezeros-delta/) · "
+            "[NASA Mars rock samples](https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples/)"
+        )
     with st.expander("Hawksbill Gap research validation"):
         route_names = [feature.get("properties", {}).get("name", "Unnamed") for feature in research_package.route_preview.get("features", [])]
         st.metric("Archived route candidates", len(route_names))

@@ -1,9 +1,13 @@
 """Hawksbill Gap research-package checks / Hawksbill Gap 研究包检查。"""
 
+import json
 from pathlib import Path
 
 import pytest
+from pyproj import Transformer
+from rasterio.transform import xy
 
+from mars_pathfinder.data.jezero_region import MARS_GEOGRAPHIC_CRS
 from mars_pathfinder.data.research import load_hawksbill_gap_package
 
 
@@ -19,6 +23,12 @@ def test_hawksbill_package_uses_real_local_products():
     assert package.science_targets[0].source.startswith('NASA PDS')
     assert package.geology.source == 'USGS SIM 3464'
     assert package.meda_summary['pressure']['PRESSURE'] > 0
+    assert package.optical_rgb.shape == (1040, 1040, 3)
+    archived = json.loads(Path('docs/jezero-research/derived/validation.json').read_text())
+    inverse = Transformer.from_crs(package.terrain.crs, MARS_GEOGRAPHIC_CRS, always_xy=True)
+    for point, name in zip([package.base_point, *(target.location for target in package.science_targets)], ('base', 'A', 'B')):
+        lonlat = inverse.transform(*xy(package.transform, *point))
+        assert lonlat == pytest.approx(archived['modeled_waypoints_lonlat'][name], abs=1e-8)
 
 
 def test_hawksbill_targets_support_closed_loop_planning():
