@@ -246,6 +246,7 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
         valid = quality > 0
         elevation[~valid] = np.nan
     terrain = TerrainGrid(elevation, transform.a, NERETVA_CRS, str(elevation_path))
+    slope = slope_degrees(terrain)
     with rasterio.open(root / "optical.tif") as source:
         if (source.crs != grid_crs or source.res != (1, 1)
                 or array_bounds(*source.shape, source.transform) != array_bounds(*terrain.shape, transform)):
@@ -270,7 +271,7 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
         best_cell, best_distance = modeled_cell, float("inf")
         for row in range(max(0, ref_row - search), min(terrain.shape[0], ref_row + search + 1)):
             for col in range(max(0, ref_col - search), min(terrain.shape[1], ref_col + search + 1)):
-                if not np.isfinite(terrain.slope[row, col]) or terrain.slope[row, col] > 10:
+                if not np.isfinite(slope[row, col]) or slope[row, col] > 10:
                     continue
                 candidate_xy = xy(transform, row, col)
                 distance = float(np.linalg.norm(np.subtract(candidate_xy, rover_xy)))
@@ -293,7 +294,7 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
             ),
         ))
     return ResearchPackage(
-        name="Neretva Vallis", terrain=terrain, slope=slope_degrees(terrain), optical_rgb=optical_rgb,
+        name="Neretva Vallis", terrain=terrain, slope=slope, optical_rgb=optical_rgb,
         thermal=thermal, geology=None, science_targets=targets,
         base_point=_lonlat_to_local(manifest["simulated_base_lonlat"], transform, grid_crs, terrain.shape),
         route_preview={}, meda_summary={}, source_root=str(root), transform=transform,
