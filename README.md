@@ -146,13 +146,28 @@ mars-pathfinder-ai/
 
 ### 技术栈与运行
 
-Python 3.11+、NumPy、SciPy、Pandas、Rasterio、PyProj、NetworkX、Streamlit、Plotly、Pytest。AI API 为可选依赖。
+Python 3.12、NumPy、SciPy、Pandas、Rasterio、PyProj、NetworkX、Streamlit、Plotly、Pytest。依赖版本已固定在 requirements.txt；AI API 为可选依赖。
 
-```bash
-pip install -r requirements.txt
-PYTHONPATH=src pytest
-streamlit run app/streamlit_app.py
-```
+Windows 评委演示：
+
+~~~powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1 -OpenBrowser
+~~~
+
+Linux / macOS：
+
+~~~bash
+bash scripts/run_demo.sh
+~~~
+
+Docker：
+
+~~~bash
+docker build -t mars-pathfinder-ai .
+docker run --rm -p 8501:8501 mars-pathfinder-ai
+~~~
+
+启动脚本会先运行 scripts/verify_demo_assets.py，确认真实区域栅格、Hawksbill Gap 研究包、图像证据和 SHA-256 清单完整，再启动 Streamlit。完整评委流程见 docs/demo-runbook.md。
 
 启动后默认进入 Jezero 40 km 区域地图。可切换 CTX 光学影像、高程、坡度、THEMIS 红外和 USGS 地质，查看毅力号历史路线，或在 100 m 网格上试算区域走廊。进入 Hawksbill Gap 可用 2 m 网格计算局部步行任务并查看三维地形。团队的 MOLA 样本和 Mars Trek 书签仍可通过研究区选择器访问。 [首版导航范围与数据来源](docs/jezero-navigation-scope.md)
 
@@ -323,13 +338,28 @@ The current scaffold provides `TerrainGrid`, `MapLayer`, `ScienceTarget`, `EVASt
 
 ### Technology and Run Commands
 
-Python 3.11+, NumPy, SciPy, Pandas, Rasterio, PyProj, NetworkX, Streamlit, Plotly, and Pytest. AI APIs are optional.
+Python 3.12 with pinned NumPy, SciPy, Pandas, Rasterio, PyProj, NetworkX, Streamlit, Plotly, Pytest, and Pillow dependencies. AI APIs are optional.
 
-```bash
-pip install -r requirements.txt
-PYTHONPATH=src pytest
-streamlit run app/streamlit_app.py
-```
+Windows:
+
+~~~powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1 -OpenBrowser
+~~~
+
+Linux / macOS:
+
+~~~bash
+bash scripts/run_demo.sh
+~~~
+
+Docker:
+
+~~~bash
+docker build -t mars-pathfinder-ai .
+docker run --rm -p 8501:8501 mars-pathfinder-ai
+~~~
+
+The launch scripts verify the committed real-data assets before starting the app. See docs/demo-runbook.md for the judge flow and deployment checklist.
 
 The app opens the 40 km Jezero map. Switch among CTX imagery and elevation, terrain slope, THEMIS infrared imagery, and USGS geology. The regional map can screen corridors on a 100 m grid and open the 2 m Hawksbill Gap EVA planner with georeferenced imagery, a route profile, and a 3D terrain view. The study-area selector also includes the earlier MOLA samples. [Navigation scope and data sources](docs/jezero-navigation-scope.md)
 
