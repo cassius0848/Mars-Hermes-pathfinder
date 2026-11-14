@@ -21,3 +21,7 @@ jobs:
           MPLCONFIGDIR: /tmp/matplotlib
           PYTHONPATH: src
         run: python -m pytest -q
+      - name: Verify judge demo assets
+        env:
+          PYTHONPATH: src
+        run: python scripts/verify_demo_assets.py
