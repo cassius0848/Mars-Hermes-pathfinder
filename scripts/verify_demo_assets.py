@@ -56,8 +56,11 @@ def verify_local_assets() -> None:
     require_files(required)
 
     package = load_hawksbill_gap_package(research)
-    if package.terrain.shape != (260, 260):
+    expected = {(260, 260), (520, 520)}
+    if package.terrain.shape not in expected:
         raise ValueError(f"Unexpected Hawksbill Gap grid shape: {package.terrain.shape}")
+    if package.terrain.cell_size_m not in (1.0, 2.0):
+        raise ValueError(f"Unexpected Hawksbill Gap grid spacing: {package.terrain.cell_size_m}")
 
 
 def main() -> int:

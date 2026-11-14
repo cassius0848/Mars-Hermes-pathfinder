@@ -12,7 +12,7 @@
 <body>
 <header class="topbar">
   <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">⤢</span><span>MARS PATHFINDER<span class="brand-ai"> AI</span></span></a>
-  <nav aria-label="页面入口"><a href="#mission">任务地图</a><a href="#sources">数据来源</a></nav>
+  <nav aria-label="页面入口"><a id="atlas-link" href="atlas.html">在线火星地图</a><a href="#mission">任务地图</a><a href="#sources">数据来源</a></nav>
   <span class="team">ORIONX <span> / </span> NASA SPACE APPS</span>
 </header>
 <main id="mission">
@@ -58,6 +58,21 @@
         <button id="start-nav" class="secondary" type="button" disabled>开始导航 <span aria-hidden="true">→</span></button>
         <button id="export-route" class="text-button" type="button" disabled hidden>导出任务卡 ↓</button>
         <p id="scope-note" class="muted note"></p>
+      </section>
+      <section class="panel science-points-panel">
+        <div class="panel-heading"><h2>科学研究点</h2><span id="science-point-count" class="mono muted"></span></div>
+        <div id="science-points" class="science-points"></div>
+        <p class="muted note">菱形标记来自任务包中的 NASA/PDS 观测坐标和科学说明；路线经过的点会显示为已纳入任务。</p>
+      </section>
+      <section class="panel localization-box">
+        <div class="panel-heading"><h2>当前位置</h2><span id="localization-status" class="tag mono">未初始化</span></div>
+        <p id="localization-detail" class="muted">先在地图上确认出发地，再初始化定位。</p>
+        <div class="nav-buttons"><button id="localize-start" type="button">初始化出发地</button><button id="localize-now" type="button" disabled>模拟地形重定位</button></div>
+      </section>
+      <section class="panel mission-data-panel">
+        <div class="panel-heading"><h2>任务数据层</h2></div>
+        <div id="mission-data" class="mission-data"></div>
+        <p id="mission-data-note" class="muted note"></p>
       </section>
     </aside>
   </div>

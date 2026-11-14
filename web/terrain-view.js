@@ -5,6 +5,11 @@ export class TerrainView {
   constructor(host, site, plan) {
     this.host = host;
     this.site = site;
+    this.meshStride = site.regional
+      ? Math.max(1, Math.ceil(Math.sqrt((site.rows * site.cols) / 180000)))
+      : 1;
+    this.meshResolution = site.step * this.meshStride;
+    this.verticalScale = site.step <= 2 ? 2.5 : 1.6;
     const size = site.cols * site.step;
     this.mid = (site.depth.min + site.depth.max) * 0.5;
     this.scene = new THREE.Scene();
@@ -15,6 +20,10 @@ export class TerrainView {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
     this.renderer.domElement.setAttribute('aria-label', '有路线和队员位置的三维火星地形');
     host.append(this.renderer.domElement);
+    this.badge = document.createElement('div');
+    this.badge.className = 'terrain-quality';
+    this.badge.textContent = `3D 网格 ${this.meshResolution} m · 垂直显示 ×${this.verticalScale}；路线计算使用原始 ${site.step} m 高程`;
+    host.append(this.badge);
     this.initialDistance = size * 1.33;
     this.distance = this.initialDistance;
     this.angle = 0.64; this.pitch = 0.74;
@@ -50,13 +59,13 @@ export class TerrainView {
 
   mesh() {
     const { site } = this;
-    const step = Math.max(1, Math.ceil(Math.max(site.rows, site.cols) / 230));
+    const step = this.meshStride;
     const axis = count => [...Array.from({ length: Math.ceil((count - 1) / step) }, (_, i) => i * step), count - 1];
     const rows = axis(site.rows), cols = axis(site.cols);
     const positions = [], uv = [], triangles = [];
     for (const row of rows) for (const col of cols) {
       const [east, north] = cellXY(site, [row, col]);
-      positions.push(east, site.height[row * site.cols + col] - this.mid, -north);
+      positions.push(east, (site.height[row * site.cols + col] - this.mid) * this.verticalScale, -north);
       uv.push((col + 0.5) / site.cols, 1 - (row + 0.5) / site.rows);
     }
     for (let row = 0; row < rows.length - 1; row++) for (let col = 0; col < cols.length - 1; col++) {
@@ -77,7 +86,7 @@ export class TerrainView {
     const cell = (axis, v) => Math.min(axis.length - 2, Math.max(0, Math.floor(v / axis[1])));
     const y = cell(rows, r), x = cell(cols, c);
     const dx = (c - cols[x]) / (cols[x + 1] - cols[x]), dy = (r - rows[y]) / (rows[y + 1] - rows[y]);
-    const z = (row, col) => site.height[rows[row] * site.cols + cols[col]] - this.mid;
+    const z = (row, col) => (site.height[rows[row] * site.cols + cols[col]] - this.mid) * this.verticalScale;
     return dx + dy <= 1 ? z(y, x) + dx * (z(y, x + 1) - z(y, x)) + dy * (z(y + 1, x) - z(y, x))
       : z(y + 1, x + 1) + (1 - dx) * (z(y + 1, x) - z(y + 1, x + 1)) + (1 - dy) * (z(y, x + 1) - z(y + 1, x + 1));
   }
@@ -86,7 +95,7 @@ export class TerrainView {
     this.route.geometry.dispose();
     this.route.geometry = new THREE.BufferGeometry().setFromPoints(plan.path.map(index => {
       const [e, n] = cellXY(this.site, cellOf(this.site, index));
-      return new THREE.Vector3(e, this.heightAt(e, n) + 1.5, -n);
+      return new THREE.Vector3(e, this.heightAt(e, n) + 1.5 * this.verticalScale, -n);
     }));
     this.draw();
   }
@@ -94,7 +103,7 @@ export class TerrainView {
   update(progress, light) {
     if (!progress) return;
     const [e, n] = progress.xy;
-    this.marker.position.set(e, this.heightAt(e, n) + 4, -n);
+    this.marker.position.set(e, this.heightAt(e, n) + 4 * this.verticalScale, -n);
     this.focus.copy(this.marker.position);
     if (light) this.sun.position.set(light.sun.east, Math.max(0.08, light.sun.up), -light.sun.north);
     this.draw();
@@ -151,5 +160,6 @@ export class TerrainView {
     this.renderer.dispose();
     this.renderer.forceContextLoss();
     this.renderer.domElement.remove();
+    this.badge?.remove();
   }
 }

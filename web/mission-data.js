@@ -1,0 +1,51 @@
+export const missionData = [
+  {
+    id: 'terrain',
+    name: '地形 / 坡度',
+    role: 'A* 路线、坡度阈值、返航和高程剖面',
+    status: '已接入',
+    source: 'https://trek.nasa.gov/mars/',
+  },
+  {
+    id: 'optical',
+    name: '光学影像',
+    role: '识别岩石、沟槽、露头和路线障碍',
+    status: '已接入',
+    source: 'https://trek.nasa.gov/mars/',
+  },
+  {
+    id: 'thermal',
+    name: '热学 / THEMIS',
+    role: '区域热环境背景和任务时段比较',
+    status: '已接入',
+    source: 'https://stac.astrogeology.usgs.gov/docs/data/mars/themis_controlled_mosaics/',
+  },
+  {
+    id: 'geology',
+    name: '地质 / SIM 3464',
+    role: '科学目标、地质单元和风险解释',
+    status: '已接入',
+    source: 'https://pubs.usgs.gov/publication/sim3464',
+  },
+  {
+    id: 'spectral',
+    name: '光谱 / 化学 · CRISM',
+    role: '后续识别黏土、硫酸盐和其他矿物目标',
+    status: '官方目录已链接，尚未栅格化',
+    source: 'https://pds-geosciences.wustl.edu/missions/mro/crism.htm',
+  },
+  {
+    id: 'atmosphere',
+    name: '大气 / MEDA',
+    role: '气温、气压、风和尘埃的任务背景',
+    status: 'Jezero 历史样本可用',
+    source: 'https://pds-atmospheres.nmsu.edu/data_and_services/atmospheres_data/PERSEVERANCE/meda.html',
+  },
+  {
+    id: 'radiation',
+    name: '辐射 / RAD',
+    role: '辐射环境参考和任务约束入口',
+    status: '官方数据已链接，尚未进入路线代价',
+    source: 'https://data.nasa.gov/dataset/mars-science-laboratory-msl-radiation-assessment-detector-rad-level-2-observation-dosimetr',
+  },
+];

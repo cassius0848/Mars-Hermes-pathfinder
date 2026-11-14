@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import base64
 import csv
 import json
 from dataclasses import dataclass
@@ -15,7 +16,7 @@ import numpy as np
 import rasterio
 from pyproj import Transformer
 from rasterio.crs import CRS
-from rasterio.transform import Affine, array_bounds, from_origin, rowcol
+from rasterio.transform import Affine, array_bounds, from_origin, rowcol, xy
 from rasterio.warp import Resampling, reproject
 
 from mars_pathfinder.data.jezero_region import MARS_GEOGRAPHIC_CRS
@@ -64,6 +65,18 @@ class ResearchPackage:
     transform: Affine
     thermal_transform: Affine | None = None
     observation_references: tuple[ObservationReference, ...] = ()
+    quality: np.ndarray | None = None
+
+
+def _materialize(path: Path) -> Path | None:
+    """Decode a tracked .b64 crop into a local binary file when needed."""
+    if path.exists():
+        return path
+    encoded = Path(f"{path}.b64")
+    if not encoded.exists():
+        return None
+    path.write_bytes(base64.b64decode(encoded.read_text(encoding="ascii")))
+    return path
 
 
 def _read_raster(path: Path) -> np.ndarray:
@@ -140,11 +153,26 @@ def load_hawksbill_gap_package(root: str | Path) -> ResearchPackage:
     root = Path(root)
     derived = root / "derived"
     raw = root / "raw"
-    elevation_path = derived / "jezero-elevation-local-2m.tif"
+    elevation_path = next((path for path in (
+        _materialize(derived / "jezero-elevation-local-1m.tif"),
+        _materialize(derived / "jezero-elevation-local-2m.tif"),
+    ) if path is not None), None)
+    if elevation_path is None:
+        raise FileNotFoundError("No local Hawksbill elevation package was found.")
     with rasterio.open(elevation_path) as dataset:
         elevation = dataset.read(1, masked=True).astype(float).filled(np.nan)
         transform, grid_crs = dataset.transform, dataset.crs
-    slope = _read_raster(derived / "jezero-slope-local-2m.tif")[0].astype(float)
+    suffix = "1m" if elevation_path.name.endswith("1m.tif") else "2m"
+    slope_path = _materialize(derived / f"jezero-slope-local-{suffix}.tif")
+    if slope_path is None:
+        raise FileNotFoundError(f"No local Hawksbill slope package was found for {suffix}.")
+    slope = _read_raster(slope_path)[0].astype(float)
+    quality_path = _materialize(derived / f"jezero-quality-local-{suffix}.tif")
+    quality = _read_raster(quality_path)[0].astype(np.uint8) if quality_path is not None else None
+    if quality is not None:
+        valid = quality > 0
+        elevation[~valid] = np.nan
+        slope[~valid] = np.nan
     thermal = _read_raster(derived / "jezero-thermal-native.tif")[0].astype(float)
     optical_rgb = _read_rgb(derived / "jezero-ortho-native.tif", grid_crs, transform, elevation.shape)
     terrain = TerrainGrid(elevation, cell_size_m=transform.a, crs=LOCAL_CRS, source=str(elevation_path))
@@ -192,6 +220,7 @@ def load_hawksbill_gap_package(root: str | Path) -> ResearchPackage:
         meda_summary=meda_summary,
         source_root=str(root),
         transform=transform,
+        quality=quality,
     )
 
 
@@ -201,19 +230,30 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
     root = Path(root)
     manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     extent = NERETVA_WIDTH_M / 2
-    elevation_path = root / "elevation.tif"
+    spacing = float(manifest.get("grid_spacing_m", {}).get("elevation", NERETVA_SPACING_M))
+    elevation_path = _materialize(root / "elevation-1m.tif") or root / "elevation.tif"
     with rasterio.open(elevation_path) as dataset:
         elevation = dataset.read(1, masked=True).astype(float).filled(np.nan)
         transform, grid_crs = dataset.transform, dataset.crs
-        if (grid_crs != CRS.from_string(NERETVA_CRS) or dataset.res != (NERETVA_SPACING_M,) * 2
+        if (grid_crs != CRS.from_string(NERETVA_CRS) or dataset.res != (spacing,) * 2
                 or array_bounds(*dataset.shape, transform) != (-extent, -extent, extent, extent)):
             raise ValueError("Neretva Vallis elevation does not match the local planning grid.")
+    slope_file = _materialize(root / "slope-1m.tif")
+    quality_path = _materialize(root / "quality-1m.tif")
+    quality = None
+    if quality_path is not None:
+        with rasterio.open(quality_path) as quality_source:
+            quality = quality_source.read(1).astype(np.uint8)
+        valid = quality > 0
+        elevation[~valid] = np.nan
     terrain = TerrainGrid(elevation, transform.a, NERETVA_CRS, str(elevation_path))
+    slope = slope_degrees(terrain)
     with rasterio.open(root / "optical.tif") as source:
         if (source.crs != grid_crs or source.res != (1, 1)
                 or array_bounds(*source.shape, source.transform) != array_bounds(*terrain.shape, transform)):
             raise ValueError("Neretva Vallis orthophoto does not match the local planning extent.")
-    optical_rgb = _read_rgb(root / "optical.tif", grid_crs, transform, elevation.shape, oversampling=2)
+    optical_rgb = _read_rgb(root / "optical.tif", grid_crs, transform, elevation.shape,
+                             oversampling=max(1, int(round(transform.a))))
     with rasterio.open(root / "thermal.tif") as source:
         if source.crs != grid_crs or source.res != (100, 100):
             raise ValueError("Neretva Vallis thermal context does not match the 100 m display grid.")
@@ -225,24 +265,39 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
     for observation in manifest["observations"]:
         image = observation["image"]
         rover = observation["rover_reference"]
+        modeled_cell = _lonlat_to_local(observation["modeled_stop_lonlat"], transform, grid_crs, terrain.shape)
+        rover_xy = project.transform(*rover["lonlat"])
+        ref_row, ref_col = rowcol(transform, *rover_xy)
+        search = max(1, int(round(25 / transform.a)))
+        best_cell, best_distance = modeled_cell, float("inf")
+        for row in range(max(0, ref_row - search), min(terrain.shape[0], ref_row + search + 1)):
+            for col in range(max(0, ref_col - search), min(terrain.shape[1], ref_col + search + 1)):
+                if not np.isfinite(slope[row, col]) or slope[row, col] > 10:
+                    continue
+                candidate_xy = xy(transform, row, col)
+                distance = float(np.linalg.norm(np.subtract(candidate_xy, rover_xy)))
+                if distance < best_distance:
+                    best_cell, best_distance = (row, col), distance
+        modeled_cell = best_cell
+        modeled_xy = xy(transform, *modeled_cell)
+        offset = float(np.linalg.norm(np.subtract(modeled_xy, rover_xy)))
         targets.append(ScienceTarget(
-            observation["id"], observation["name"],
-            _lonlat_to_local(observation["modeled_stop_lonlat"], transform, grid_crs, terrain.shape),
+            observation["id"], observation["name"], modeled_cell,
             1.0, observation["science_task"], "NASA Perseverance / PDS PLACES",
             stop_duration_min=observation["stop_duration_min"],
         ))
         references.append(ObservationReference(
-            observation["id"], project.transform(*rover["lonlat"]), rover["description"],
-            rover["source"], observation["modeled_stop_offset_m"],
+            observation["id"], rover_xy, rover["description"],
+            rover["source"], offset,
             SurfaceImageEvidence(
                 image["id"], str(root / image["file"]), image["asset_url"], image["page_url"],
                 "Perseverance", "SHERLOC WATSON", image["sol"], "NASA/JPL-Caltech",
             ),
         ))
     return ResearchPackage(
-        name="Neretva Vallis", terrain=terrain, slope=slope_degrees(terrain), optical_rgb=optical_rgb,
+        name="Neretva Vallis", terrain=terrain, slope=slope, optical_rgb=optical_rgb,
         thermal=thermal, geology=None, science_targets=targets,
         base_point=_lonlat_to_local(manifest["simulated_base_lonlat"], transform, grid_crs, terrain.shape),
         route_preview={}, meda_summary={}, source_root=str(root), transform=transform,
-        thermal_transform=thermal_transform, observation_references=tuple(references),
+        thermal_transform=thermal_transform, observation_references=tuple(references), quality=quality,
     )

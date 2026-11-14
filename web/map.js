@@ -1,6 +1,6 @@
 import { cellXY, cellOf, geographic, indexOf } from './planner.js';
 
-const colors = { start: '#a8dbb2', goal: '#ffc18d', crew: '#ffefc0', route: '#7de3bd', rover: '#f6c197' };
+const colors = { start: '#a8dbb2', goal: '#ffc18d', science: '#f6d477', crew: '#ffefc0', route: '#7de3bd', rover: '#f6c197' };
 
 export class MissionMap {
   constructor(canvas, onPick) {
@@ -140,7 +140,11 @@ export class MissionMap {
         ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2);
         ctx.strokeStyle = '#a6d6f0'; ctx.lineWidth = 1.75; ctx.stroke();
       }
-      if (!(plan && stops.some(s => s.name === target.name))) this.marker(cellXY(site, target.cell), target.name.split(' · ')[0], colors.goal, 3);
+      if (!(plan && stops.some(s => s.name === target.name))) {
+        const science = target.task || target.reference || target.image;
+        if (science) this.scienceMarker(cellXY(site, target.cell), target.name.split(' · ')[0]);
+        else this.marker(cellXY(site, target.cell), target.name.split(' · ')[0], colors.goal, 3);
+      }
     }
     if (start) this.marker(cellXY(site, start), '出发地', colors.start);
     stops.forEach((stop, i) => this.marker(cellXY(site, stop.cell), stops.length === 1 ? '目的地' : `停靠 ${i + 1}`, colors.goal));
@@ -164,6 +168,23 @@ export class MissionMap {
       first = false;
     }
     ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.setLineDash(dash); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  scienceMarker(xy, title) {
+    const [x, y] = this.screen(xy), ctx = this.ctx;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = colors.science;
+    ctx.strokeStyle = '#33291b';
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(-5, -5, 10, 10);
+    ctx.strokeRect(-5, -5, 10, 10);
+    ctx.restore();
+    ctx.font = '600 12px system-ui'; ctx.textAlign = x > this.w * 0.72 ? 'right' : 'left';
+    const labelX = x + (ctx.textAlign === 'left' ? 10 : -10);
+    ctx.lineWidth = 3; ctx.strokeStyle = '#272321'; ctx.fillStyle = '#fff1d9';
+    ctx.strokeText(`科学点 · ${title}`, labelX, y - 8); ctx.fillText(`科学点 · ${title}`, labelX, y - 8);
   }
 
   marker(xy, title, color, radius = 5) {
