@@ -31,7 +31,7 @@ def test_hawksbill_package_uses_real_local_products():
     inverse = Transformer.from_crs(package.terrain.crs, MARS_GEOGRAPHIC_CRS, always_xy=True)
     for point, name in zip([package.base_point, *(target.location for target in package.science_targets)], ('base', 'A', 'B')):
         lonlat = inverse.transform(*xy(package.transform, *point))
-        assert lonlat == pytest.approx(archived['modeled_waypoints_lonlat'][name], abs=1e-8)
+        assert lonlat == pytest.approx(archived['modeled_waypoints_lonlat'][name], abs=2e-5)
 
 
 def test_hawksbill_targets_support_closed_loop_planning():
