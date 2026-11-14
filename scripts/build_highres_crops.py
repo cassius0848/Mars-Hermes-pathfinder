@@ -121,5 +121,5 @@ def crop(page, name, lon, lat, span=520):
 with tifffile.TiffFile(RangeFile(SOURCE, SOURCE_SIZE)) as tif:
     page = tif.pages[0]
     crop(page, "hawksbill", 77.406, 18.4588)
-    crop(page, "neretva", 77.3030, 18.4945)
+    crop(page, "neretva", 77.3030, 18.4945, span=1120)
 
