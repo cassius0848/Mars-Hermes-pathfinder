@@ -265,6 +265,18 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
         rover = observation["rover_reference"]
         modeled_cell = _lonlat_to_local(observation["modeled_stop_lonlat"], transform, grid_crs, terrain.shape)
         rover_xy = project.transform(*rover["lonlat"])
+        ref_row, ref_col = rowcol(transform, *rover_xy)
+        search = max(1, int(round(25 / transform.a)))
+        best_cell, best_distance = modeled_cell, float("inf")
+        for row in range(max(0, ref_row - search), min(terrain.shape[0], ref_row + search + 1)):
+            for col in range(max(0, ref_col - search), min(terrain.shape[1], ref_col + search + 1)):
+                if not np.isfinite(terrain.slope[row, col]) or terrain.slope[row, col] > 10:
+                    continue
+                candidate_xy = xy(transform, row, col)
+                distance = float(np.linalg.norm(np.subtract(candidate_xy, rover_xy)))
+                if distance < best_distance:
+                    best_cell, best_distance = (row, col), distance
+        modeled_cell = best_cell
         modeled_xy = xy(transform, *modeled_cell)
         offset = float(np.linalg.norm(np.subtract(modeled_xy, rover_xy)))
         targets.append(ScienceTarget(
