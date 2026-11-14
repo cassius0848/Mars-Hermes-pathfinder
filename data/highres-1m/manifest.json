@@ -1,0 +1,41 @@
+{
+  "source": {
+    "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/mars2020_trn/HiRISE/JEZ_hirise_soc_006_DTM_MOLAtopography_DeltaGeoid_1m_Eqc_latTs0_lon0_blend40.tif",
+    "product": "JEZ_hirise_soc_006_DTM_MOLAtopography_DeltaGeoid_1m",
+    "source_sha256": "header-pinned-in-existing-neretva-manifest",
+    "method": "HTTP Range reads of uncompressed GeoTIFF strips; no full source download"
+  },
+  "grid": {
+    "resolution_m": 1,
+    "width_m": 520,
+    "height_m": 520,
+    "vertical_units": "m",
+    "quality_mask": "1=finite source pixel, 0=nodata/outside"
+  },
+  "sites": {
+    "hawksbill": {
+      "center_lon_lat": [77.406, 18.4588],
+      "source_window_col_row_width_height": [10591, 12218, 520, 520],
+      "coverage_pct": 100.0,
+      "elevation_m": [-2545.55, -2467.75],
+      "max_slope_deg": 56.52,
+      "sha256": {
+        "elevation-1m.tif": "7545BFEE36D5FD4DC39A0D1765A43E1C310490789EB70184F7A1DF12CFD8FC60",
+        "slope-1m.tif": "5CACCBA99A7F5F2FA284D086C52F55B741D305D7A3530E09FBD6433CEFDDABF1",
+        "quality-1m.tif": "3E1C53A0AD612C9CFB3F5AC9E937ACACE718C1B1F9B0E29AE0402D37349DB789"
+      }
+    },
+    "neretva": {
+      "center_lon_lat": [77.303, 18.4945],
+      "source_window_col_row_width_height": [4486, 10102, 520, 520],
+      "coverage_pct": 100.0,
+      "elevation_m": [-2366.17, -2295.56],
+      "max_slope_deg": 48.03,
+      "sha256": {
+        "elevation-1m.tif": "D0DEC2BC9C517693D4C8B53E8987524A88847514A77FA99BBB9349363F2F6779",
+        "slope-1m.tif": "6E85031BBB4B3BF47A0B33393B35A0CCEF7417512BBF2A0E239064F394C14B78",
+        "quality-1m.tif": "C2172799B3038EDB37274DB8C196BB2F5F4A47B0995943D3B7EEB2A9A3784B1B"
+      }
+    }
+  }
+}
