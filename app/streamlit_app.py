@@ -441,6 +441,10 @@ with st.expander("在线 NASA / USGS 数据（按需读取）"):
         st.warning(f"USGS 在线地质读取失败：{exc}")
     st.subheader("Curiosity Mount Sharp 在线路线参考")
     st.caption("该素材来自 NASA 页面，作为历史多任务路线参考，不参与当前 EVA 路线代价计算。")
+    try:
+        st.image(CURIOSITY_MOUNT_SHARP_ASSET, caption="NASA Curiosity Mount Sharp 路线参考（远程 GIF）")
+    except Exception as exc:
+        st.warning(f"Curiosity 远程 GIF 读取失败：{exc}")
     st.markdown(f"[打开 NASA 页面]({CURIOSITY_MOUNT_SHARP_PAGE}) · [打开 NASA 原始 GIF]({CURIOSITY_MOUNT_SHARP_ASSET})")
 
 # Evidence assets are shown with provenance and are never treated as DEM layers.
