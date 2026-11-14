@@ -39,11 +39,6 @@
         <label for="timeline">任务进度</label><input type="range" id="timeline" min="0" max="1000" value="0">
         <div class="nav-buttons"><button id="pause" type="button">暂停</button><button id="closure" type="button">报告前方封路</button><button id="return" type="button">重新规划返航</button></div>
         <p id="nav-notice" class="message" role="status"></p>
-        <section class="localization-box" aria-labelledby="localization-title">
-          <div class="panel-heading"><h4 id="localization-title">当前位置</h4><span id="localization-status" class="tag mono">未初始化</span></div>
-          <p id="localization-detail" class="muted">先在地图上确认出发地，再初始化定位。</p>
-          <div class="nav-buttons"><button id="localize-start" type="button">初始化出发地</button><button id="localize-now" type="button" disabled>模拟地形重定位</button></div>
-        </section>
       </section>
     </section>
     <aside class="side" aria-label="任务设置与计算结果">
@@ -63,6 +58,11 @@
         <button id="start-nav" class="secondary" type="button" disabled>开始导航 <span aria-hidden="true">→</span></button>
         <button id="export-route" class="text-button" type="button" disabled hidden>导出任务卡 ↓</button>
         <p id="scope-note" class="muted note"></p>
+      </section>
+      <section class="panel localization-panel">
+        <div class="panel-heading"><h2>当前位置</h2><span id="localization-status" class="tag mono">未初始化</span></div>
+        <p id="localization-detail" class="muted">先在地图上确认出发地，再初始化定位。</p>
+        <div class="nav-buttons"><button id="localize-start" type="button">初始化出发地</button><button id="localize-now" type="button" disabled>模拟地形重定位</button></div>
       </section>
       <section class="panel mission-data-panel">
         <div class="panel-heading"><h2>任务数据层</h2></div>
