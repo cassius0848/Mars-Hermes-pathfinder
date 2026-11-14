@@ -1,11 +1,13 @@
 import { MissionMap, profileChart } from './map.js';
 import { queryOfficial } from './official.js';
 import { cellOf, cellXY, decodeTerrain, geographic, indexOf, progressAt, SOL_RATIO } from './planner.js';
+import { missionData } from './mission-data.js';
 
 const $ = id => document.getElementById(id);
 const layerLabels = { optical: '正射影像', elevation: '高程', slope: '坡度', thermal: '热红外', light: '地形阴影', geology: '地质' };
 const profileLabels = { time: '时间优先', terrain: '坡度优先', light: '光照优先' };
-const state = { generation: 0, planningId: 0, queryId: 0, closures: [], complete: [], mode: 'idle' };
+const state = { generation: 0, planningId: 0, queryId: 0, closures: [], complete: [], mode: 'idle',
+  localization: { status: 'UNINITIALIZED', source: '未初始化', cell: null, confidence: null, updated: null } };
 const map = new MissionMap($('map'), pickPoint);
 const worker = new Worker(new URL('./planner-worker.js', import.meta.url), { type: 'module' });
 const dataUrl = id => `assets/${id}`;
@@ -39,6 +41,89 @@ async function get(url, type) {
   return response[type]();
 }
 
+const localizationLabels = {
+  UNINITIALIZED: '未初始化',
+  FIXED: '已定位',
+  DEAD_RECKONING: '里程计估计',
+  RELOCALIZATION: '重新定位中',
+  SAFE_STOP: '安全停车',
+};
+
+function renderMissionData() {
+  const root = $('mission-data');
+  if (!root || !state.site) return;
+  const available = layer => {
+    if (['terrain', 'optical', 'thermal', 'geology'].includes(layer.id)) return true;
+    if (layer.id === 'atmosphere') return Boolean(state.site.meda);
+    return false;
+  };
+  root.replaceChildren(...missionData.map(layer => {
+    const item = el('article', null, 'mission-data-item');
+    const heading = el('div', null, 'mission-data-heading');
+    heading.append(el('strong', layer.name), el('span', available(layer) ? '已接入' : '待栅格化',
+      available(layer) ? 'data-ready' : 'data-pending'));
+    item.append(heading, el('p', layer.role, 'muted'), link('官方数据 ↗', layer.source));
+    return item;
+  }));
+  const ready = missionData.filter(available).length;
+  $('mission-data-note').textContent = `当前区域有 ${ready} 类数据可用于背景或规划；光谱、辐射等未栅格化数据不会进入 A* 代价面。`;
+}
+
+function resetLocalization() {
+  state.localization = { status: 'UNINITIALIZED', source: '未初始化', cell: null, confidence: null, updated: null };
+  renderLocalization();
+}
+
+function renderLocalization() {
+  const localization = state.localization ?? {};
+  const status = $('localization-status');
+  const detail = $('localization-detail');
+  if (!status || !detail) return;
+  status.textContent = localizationLabels[localization.status] ?? localization.status ?? '未初始化';
+  if (localization.status === 'FIXED') {
+    const coordinate = localization.cell && state.site ? compass(geographic(state.site, cellXY(state.site, localization.cell))) : '—';
+    detail.textContent = `${coordinate} · ${localization.source} · 置信度 ${localization.confidence} · ${localization.updated}`;
+  } else {
+    detail.textContent = localization.source ?? '先在地图上确认出发地，再初始化定位。';
+  }
+  $('localize-start').disabled = !state.start || Boolean(state.nav);
+  $('localize-now').disabled = !state.start && !state.progress?.cell;
+}
+
+function initializeLocalization() {
+  if (!state.start || !state.site) {
+    $('pick-hint').textContent = '请先在地图上选择出发地。';
+    return;
+  }
+  state.localization = {
+    status: 'FIXED',
+    source: '已知起点 + 地图锚点（演示）',
+    cell: state.start,
+    confidence: `${state.site.step} m 网格内`,
+    updated: '当前任务时刻',
+  };
+  renderLocalization();
+  if (state.nav) $('nav-notice').textContent = '已用已知地形锚点更新当前位置。';
+}
+
+function relocalize() {
+  const cell = state.progress?.cell ?? state.start;
+  if (!cell || !state.site) return;
+  state.localization = {
+    status: 'FIXED',
+    source: '局部视觉/地形匹配（模拟）',
+    cell,
+    confidence: `${state.site.step} m 网格内`,
+    updated: '刚刚',
+  };
+  renderLocalization();
+  if (state.nav) {
+    $('nav-notice').textContent = '已完成模拟地形重定位，可从当前点继续或重新规划。';
+    updateNavigation();
+  }
+}
+
+
 function invalidate() {
   state.planningId++;
   state.current = null;
@@ -54,6 +139,7 @@ async function loadSite(site) {
   $('atlas-link').href = `atlas.html?area=${site.id}`;
   endNavigation();
   Object.assign(state, { site, start: null, stops: [], light: null, closures: [], complete: [], mode: 'idle', preset: false });
+  resetLocalization();
   $('map-title').textContent = site.name;
   $('map-caption').textContent = site.regional ? 'Jezero 陨石坑及周边 · 半径 40 km' : `Jezero 局部步行区 · ${distance(site.rows * site.step)} × ${distance(site.cols * site.step)}`;
   $('grid-detail').textContent = `${site.step} m / 格`;
@@ -68,7 +154,7 @@ async function loadSite(site) {
   $('roundtrip').disabled = false;
   state.queryId++;
   map.setSite(site);
-  renderLayers(); renderSettings(); renderSources(); renderEvidence(); renderSelections(); invalidate();
+  renderLayers(); renderSettings(); renderSources(); renderEvidence(); renderMissionData(); renderLocalization(); renderSelections(); invalidate();
   try {
     const [height, slope] = await Promise.all([get(`${dataUrl(site.id)}/elevation.bin`, 'arrayBuffer'), get(`${dataUrl(site.id)}/slope.bin`, 'arrayBuffer')]);
     if (generation !== state.generation) return;
@@ -137,6 +223,7 @@ function renderLayers() {
 function loadPreset() {
   const site = state.site;
   state.start = site.base;
+  resetLocalization();
   state.stops = site.targets.slice(0, site.regional ? 1 : 2).map(target => ({ cell: target.cell, name: target.name, minutes: site.regional ? 0 : 12 }));
   state.closures = [];
   state.preset = !site.regional;
@@ -181,6 +268,7 @@ function pickPoint(cell, xy) {
   if (picked === 'start') {
     if (state.stops.some(stop => isSame(stop.cell, cell))) { $('pick-hint').textContent = '出发地和目的地需要分开。'; return; }
     state.start = cell;
+    resetLocalization();
   } else {
     if (isSame(state.start, cell)) { $('pick-hint').textContent = '出发地和目的地需要分开。'; return; }
     state.stops = [{ cell, name: '自选目的地', minutes: 0 }];
@@ -445,6 +533,11 @@ async function show3D(nav) {
 
 function beginNavigation() {
   if (!state.current?.feasible || state.site.regional) return;
+  if (state.localization?.status !== 'FIXED') {
+    $('nav-notice').textContent = '请先初始化当前位置，再开始导航。';
+    $('localize-start').focus();
+    return;
+  }
   setMode('idle');
   const route = state.inputRoute;
   const nav = { time: 0, elapsed: 0, playing: true, base: state.start, route, replanning: false, done: false };
@@ -502,6 +595,10 @@ function endNavigation() {
 function replan(returnOnly) {
   const nav = state.nav, old = state.current;
   if (!nav || nav.replanning) return;
+  if (state.localization?.status !== 'FIXED') {
+    $('nav-notice').textContent = '当前定位不可用，请先完成地形重定位。';
+    return;
+  }
   const now = nav.elapsed + nav.time, oldRemaining = old.minutes - nav.time, start = state.progress.cell;
   let closures = [...state.closures];
   if (!returnOnly) {
@@ -561,6 +658,8 @@ function bindControls() {
   $('zoom-out').onclick = () => map.zoom(1 / 1.45);
   $('zoom-reset').onclick = () => map.zoom(1);
   $('start-nav').onclick = beginNavigation;
+  $('localize-start').onclick = initializeLocalization;
+  $('localize-now').onclick = relocalize;
   $('export-route').onclick = exportRoute;
   $('stop-nav').onclick = () => { endNavigation(); calculate(); };
   $('pause').onclick = () => { state.nav.playing = !state.nav.playing; updateNavigation(); };
