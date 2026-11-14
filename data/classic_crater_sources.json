@@ -1,0 +1,35 @@
+[
+  {
+    "id": "gale",
+    "name": "Gale",
+    "center": [137.4, -4.6],
+    "product": "Mars MSL Gale Merged DEM 1m v3",
+    "resolution_m": 1,
+    "source_page": "https://astrogeology.usgs.gov/search/map/mars_msl_gale_merged_dem_1m",
+    "download": "https://planetarymaps.usgs.gov/mosaic/Mars/MSL/MSL_Gale_DEM_Mosaic_1m_v3.tif",
+    "raw_size": "3.6 GB",
+    "status": "source-ready; crop before local packaging"
+  },
+  {
+    "id": "endeavour",
+    "name": "Endeavour",
+    "center": [-5.4, -2.3],
+    "product": "Endeavour Crater Western Rim HiRISE DTM",
+    "resolution_m": 1.01,
+    "source_page": "https://hirise.lpl.arizona.edu/dtm/dtm.php?ID=ESP_018701_1775",
+    "download": "https://hirise.lpl.arizona.edu/PDS/DTM/ESP/ORB_018700_018799/ESP_018701_1775_ESP_018846_1775/DTEEC_018701_1775_018846_1775_U01.IMG",
+    "raw_size": "675 MB",
+    "status": "source-ready; crop before local packaging"
+  },
+  {
+    "id": "eberswalde",
+    "name": "Eberswalde",
+    "center": [-33.3, -23.8],
+    "product": "Eberswalde Delta Structure HiRISE DTM",
+    "resolution_m": 1,
+    "source_page": "https://hirise.lpl.arizona.edu/dtm/dtm.php?ID=PSP_001336_1560",
+    "download": "https://hirise.lpl.arizona.edu/PDS/DTM/PSP/ORB_001300_001399/PSP_001336_1560_PSP_001534_1560/DTEEC_001336_1560_001534_1560_U01.IMG",
+    "raw_size": "412 MB",
+    "status": "source-ready; crop before local packaging"
+  }
+]
