@@ -10,7 +10,7 @@
       "coordinate inspection"
     ],
     "url": "https://trek.nasa.gov/mars/",
-    "integration": "MOLA terrain and Viking MDIM21 optical exports are integrated as bounded samples; additional CTX/HiRISE products should be added through documented service endpoints."
+    "integration": "保留小型本地 40 km 区域包用于离线路线计算；同时通过 Mars Trek ImageServer/WMTS 链接按当前视区按需读取或导出图层，不下载全球栅格。"
   },
   {
     "id": "mars-trek-bookmarked-view",
@@ -62,7 +62,7 @@
       "map products"
     ],
     "url": "https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars",
-    "integration": "USGS SIM 3464 Jezero geologic-unit polygons are stored as a simplified GeoJSON layer in data/raw/usgs/ and summarized in the Streamlit app."
+    "integration": "保留小型本地验证栅格；演示页通过 USGS SIM 3464 FeatureServer 按需查询少量 GeoJSON 地质要素。"
   },
   {
     "id": "perseverance-raw-images",
@@ -75,7 +75,7 @@
       "science evidence"
     ],
     "url": "https://mars.nasa.gov/mars2020/multimedia/raw-images/",
-    "integration": "A Sol 1934 SHERLOC_WATSON browse image is stored in data/raw/perseverance/ with provenance metadata; additional images should be selected with Sol, camera, image ID, and location."
+    "integration": "演示页通过 NASA Raw Images RSS JSON 按需读取最新 Sol、相机、缩略图 URL 和详情页；图片字节留在 NASA CDN。"
   },
   {
     "id": "curiosity-mount-sharp-path",
@@ -88,6 +88,6 @@
       "UX inspiration"
     ],
     "url": "https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/",
-    "integration": "The NASA route animation is stored in data/raw/references/ with metadata and shown as historical context; it is not used as a live navigation path."
+    "integration": "演示页保留 NASA 页面和原始 GIF 的远程链接；本地小样本仅作为离线回退，不作为导航路径。"
   }
 ]

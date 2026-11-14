@@ -75,3 +75,15 @@ reports the route and science-stop time, then marks resource safety as
 units and source are supplied. NASA EVA references are recorded in
 `docs/eva-resource-sources.md`; heritage values are not treated as Mars suit
 requirements.
+
+
+## On-demand official services
+
+The Streamlit demo reads selected official services on demand:
+
+- NASA Perseverance Raw Images RSS JSON returns a small page of current image metadata and remote thumbnail URLs;
+- NASA Mars Trek MOLA ImageServer provides bounded export URLs for the selected view;
+- USGS SIM 3464 FeatureServer returns a bounded GeoJSON query for live geology context;
+- NASA Science provides the Curiosity Mount Sharp route page and original GIF as a remote reference.
+
+These requests are cached briefly in memory by Streamlit and are not copied into the repository. The local regional package remains the reproducible route-planning substrate so the A* corridor and EVA calculations run offline. Remote services enrich current evidence and provenance; they do not silently replace the validated local route grid.
