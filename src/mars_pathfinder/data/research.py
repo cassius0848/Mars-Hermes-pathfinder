@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import base64
 import csv
 import json
 from dataclasses import dataclass
@@ -65,6 +66,17 @@ class ResearchPackage:
     thermal_transform: Affine | None = None
     observation_references: tuple[ObservationReference, ...] = ()
     quality: np.ndarray | None = None
+
+
+def _materialize(path: Path) -> Path | None:
+    """Decode a tracked .b64 crop into a local binary file when needed."""
+    if path.exists():
+        return path
+    encoded = Path(f"{path}.b64")
+    if not encoded.exists():
+        return None
+    path.write_bytes(base64.b64decode(encoded.read_text(encoding="ascii")))
+    return path
 
 
 def _read_raster(path: Path) -> np.ndarray:
@@ -142,18 +154,21 @@ def load_hawksbill_gap_package(root: str | Path) -> ResearchPackage:
     derived = root / "derived"
     raw = root / "raw"
     elevation_path = next((path for path in (
-        derived / "jezero-elevation-local-1m.tif",
-        derived / "jezero-elevation-local-2m.tif",
-    ) if path.exists()), None)
+        _materialize(derived / "jezero-elevation-local-1m.tif"),
+        _materialize(derived / "jezero-elevation-local-2m.tif"),
+    ) if path is not None), None)
     if elevation_path is None:
         raise FileNotFoundError("No local Hawksbill elevation package was found.")
     with rasterio.open(elevation_path) as dataset:
         elevation = dataset.read(1, masked=True).astype(float).filled(np.nan)
         transform, grid_crs = dataset.transform, dataset.crs
     suffix = "1m" if elevation_path.name.endswith("1m.tif") else "2m"
-    slope = _read_raster(derived / f"jezero-slope-local-{suffix}.tif")[0].astype(float)
-    quality_path = derived / f"jezero-quality-local-{suffix}.tif"
-    quality = _read_raster(quality_path)[0].astype(np.uint8) if quality_path.exists() else None
+    slope_path = _materialize(derived / f"jezero-slope-local-{suffix}.tif")
+    if slope_path is None:
+        raise FileNotFoundError(f"No local Hawksbill slope package was found for {suffix}.")
+    slope = _read_raster(slope_path)[0].astype(float)
+    quality_path = _materialize(derived / f"jezero-quality-local-{suffix}.tif")
+    quality = _read_raster(quality_path)[0].astype(np.uint8) if quality_path is not None else None
     if quality is not None:
         valid = quality > 0
         elevation[~valid] = np.nan
@@ -216,16 +231,16 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
     manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     extent = NERETVA_WIDTH_M / 2
     spacing = float(manifest.get("grid_spacing_m", {}).get("elevation", NERETVA_SPACING_M))
-    elevation_path = root / ("elevation-1m.tif" if (root / "elevation-1m.tif").exists() else "elevation.tif")
+    elevation_path = _materialize(root / "elevation-1m.tif") or root / "elevation.tif"
     with rasterio.open(elevation_path) as dataset:
         elevation = dataset.read(1, masked=True).astype(float).filled(np.nan)
         transform, grid_crs = dataset.transform, dataset.crs
         if (grid_crs != CRS.from_string(NERETVA_CRS) or dataset.res != (spacing,) * 2
                 or array_bounds(*dataset.shape, transform) != (-extent, -extent, extent, extent)):
             raise ValueError("Neretva Vallis elevation does not match the local planning grid.")
-    quality_path = root / "quality-1m.tif"
+    quality_path = _materialize(root / "quality-1m.tif")
     quality = None
-    if quality_path.exists():
+    if quality_path is not None:
         with rasterio.open(quality_path) as quality_source:
             quality = quality_source.read(1).astype(np.uint8)
         valid = quality > 0
