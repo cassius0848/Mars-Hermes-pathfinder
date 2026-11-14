@@ -64,6 +64,7 @@ class ResearchPackage:
     transform: Affine
     thermal_transform: Affine | None = None
     observation_references: tuple[ObservationReference, ...] = ()
+    quality: np.ndarray | None = None
 
 
 def _read_raster(path: Path) -> np.ndarray:
@@ -140,11 +141,23 @@ def load_hawksbill_gap_package(root: str | Path) -> ResearchPackage:
     root = Path(root)
     derived = root / "derived"
     raw = root / "raw"
-    elevation_path = derived / "jezero-elevation-local-2m.tif"
+    elevation_path = next((path for path in (
+        derived / "jezero-elevation-local-1m.tif",
+        derived / "jezero-elevation-local-2m.tif",
+    ) if path.exists()), None)
+    if elevation_path is None:
+        raise FileNotFoundError("No local Hawksbill elevation package was found.")
     with rasterio.open(elevation_path) as dataset:
         elevation = dataset.read(1, masked=True).astype(float).filled(np.nan)
         transform, grid_crs = dataset.transform, dataset.crs
-    slope = _read_raster(derived / "jezero-slope-local-2m.tif")[0].astype(float)
+    suffix = "1m" if elevation_path.name.endswith("1m.tif") else "2m"
+    slope = _read_raster(derived / f"jezero-slope-local-{suffix}.tif")[0].astype(float)
+    quality_path = derived / f"jezero-quality-local-{suffix}.tif"
+    quality = _read_raster(quality_path)[0].astype(np.uint8) if quality_path.exists() else None
+    if quality is not None:
+        valid = quality > 0
+        elevation[~valid] = np.nan
+        slope[~valid] = np.nan
     thermal = _read_raster(derived / "jezero-thermal-native.tif")[0].astype(float)
     optical_rgb = _read_rgb(derived / "jezero-ortho-native.tif", grid_crs, transform, elevation.shape)
     terrain = TerrainGrid(elevation, cell_size_m=transform.a, crs=LOCAL_CRS, source=str(elevation_path))
@@ -192,6 +205,7 @@ def load_hawksbill_gap_package(root: str | Path) -> ResearchPackage:
         meda_summary=meda_summary,
         source_root=str(root),
         transform=transform,
+        quality=quality,
     )
 
 
@@ -201,13 +215,21 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
     root = Path(root)
     manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     extent = NERETVA_WIDTH_M / 2
-    elevation_path = root / "elevation.tif"
+    spacing = float(manifest.get("grid_spacing_m", {}).get("elevation", NERETVA_SPACING_M))
+    elevation_path = root / ("elevation-1m.tif" if (root / "elevation-1m.tif").exists() else "elevation.tif")
     with rasterio.open(elevation_path) as dataset:
         elevation = dataset.read(1, masked=True).astype(float).filled(np.nan)
         transform, grid_crs = dataset.transform, dataset.crs
-        if (grid_crs != CRS.from_string(NERETVA_CRS) or dataset.res != (NERETVA_SPACING_M,) * 2
+        if (grid_crs != CRS.from_string(NERETVA_CRS) or dataset.res != (spacing,) * 2
                 or array_bounds(*dataset.shape, transform) != (-extent, -extent, extent, extent)):
             raise ValueError("Neretva Vallis elevation does not match the local planning grid.")
+    quality_path = root / "quality-1m.tif"
+    quality = None
+    if quality_path.exists():
+        with rasterio.open(quality_path) as quality_source:
+            quality = quality_source.read(1).astype(np.uint8)
+        valid = quality > 0
+        elevation[~valid] = np.nan
     terrain = TerrainGrid(elevation, transform.a, NERETVA_CRS, str(elevation_path))
     with rasterio.open(root / "optical.tif") as source:
         if (source.crs != grid_crs or source.res != (1, 1)
@@ -244,5 +266,5 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
         thermal=thermal, geology=None, science_targets=targets,
         base_point=_lonlat_to_local(manifest["simulated_base_lonlat"], transform, grid_crs, terrain.shape),
         route_preview={}, meda_summary={}, source_root=str(root), transform=transform,
-        thermal_transform=thermal_transform, observation_references=tuple(references),
+        thermal_transform=thermal_transform, observation_references=tuple(references), quality=quality,
     )
