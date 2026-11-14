@@ -7,7 +7,7 @@
   "width_m": 1120,
   "crs": "+proj=aeqd +lat_0=18.4945 +lon_0=77.303 +a=3396190 +b=3396190 +units=m +type=crs",
   "grid_spacing_m": {
-    "elevation": 2,
+    "elevation": 1,
     "optical": 1,
     "thermal": 100
   },
@@ -18,12 +18,12 @@
   },
   "dtm_source_crop": {
     "window_col_row_width_height": [
-      4153,
-      9800,
-      1186,
-      1125
+      4186,
+      9802,
+      1120,
+      1120
     ],
-    "range_transfer_bytes": 96472609
+    "range_transfer_bytes": 96000000
   },
   "optical_tile_crop": {
     "wmts_level": 16,
