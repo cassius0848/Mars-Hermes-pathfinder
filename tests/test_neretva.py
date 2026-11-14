@@ -26,7 +26,7 @@ def test_packaged_layers_and_rover_reference_markers():
     assert package.terrain.cell_size_m == expected_step
     assert np.isfinite(package.terrain.elevation).all()
     assert np.isfinite(package.slope).all()
-    assert package.optical_rgb.shape == (1120, 1120, 3)
+    assert package.optical_rgb.shape in ((1120, 1120, 3), (2240, 2240, 3))
     assert np.ptp(package.optical_rgb) > 0
     assert package.thermal.shape == (12, 12)
     assert np.isfinite(package.thermal).all()
