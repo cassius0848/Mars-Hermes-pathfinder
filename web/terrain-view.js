@@ -50,6 +50,7 @@ export class TerrainView {
     const marker = new THREE.Mesh(new THREE.SphereGeometry(Math.max(2.5, size / 170), 16, 12), new THREE.MeshBasicMaterial({ color: '#ffd6a1' }));
     marker.material.depthTest = false; marker.renderOrder = 5;
     this.scene.add(marker); this.marker = marker;
+    this.stations = new THREE.Group(); this.scene.add(this.stations);
     this.setPlan(plan);
     this.bindPointer();
     this.observer = new ResizeObserver(() => this.draw());
@@ -97,6 +98,24 @@ export class TerrainView {
       const [e, n] = cellXY(this.site, cellOf(this.site, index));
       return new THREE.Vector3(e, this.heightAt(e, n) + 1.5 * this.verticalScale, -n);
     }));
+    for (const object of [...this.stations.children]) {
+      object.geometry?.dispose(); object.material?.map?.dispose(); object.material?.dispose(); this.stations.remove(object);
+    }
+    const stops = plan.visits.filter(visit => !visit.returnLeg);
+    stops.forEach((stop, index) => {
+      const [e, n] = cellXY(this.site, cellOf(this.site, stop.cell)), y = this.heightAt(e, n);
+      const marker = new THREE.Mesh(new THREE.SphereGeometry(Math.max(2, this.site.step * 1.5), 10, 8), new THREE.MeshBasicMaterial({ color: '#ffd095', depthTest: false }));
+      marker.position.set(e, y + 2 * this.verticalScale, -n); marker.renderOrder = 5; this.stations.add(marker);
+      const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 64;
+      const ctx = canvas.getContext('2d'); ctx.fillStyle = '#211b18dd'; ctx.fillRect(0, 0, 512, 64);
+      ctx.fillStyle = '#ffe3bd'; ctx.font = '24px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText(`${index === stops.length - 1 ? '目的地' : `经停 ${index + 1}`} · ${stop.name}`, 256, 41, 490);
+      const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
+      const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, depthTest: false }));
+      const width = Math.max(34, this.site.cols * this.site.step / 12);
+      label.scale.set(width, width / 8, 1); label.position.set(e, y + 10 * this.verticalScale, -n); label.renderOrder = 6;
+      this.stations.add(label);
+    });
     this.draw();
   }
 
@@ -163,3 +182,4 @@ export class TerrainView {
     this.badge?.remove();
   }
 }
+

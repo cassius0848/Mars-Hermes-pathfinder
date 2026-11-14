@@ -146,7 +146,7 @@ export class MissionMap {
       }
     }
     if (start) this.marker(cellXY(site, start), '出发地', colors.start);
-    stops.forEach((stop, i) => this.marker(cellXY(site, stop.cell), stops.length === 1 ? '目的地' : `停靠 ${i + 1}`, colors.goal));
+    stops.forEach((stop, i) => this.marker(cellXY(site, stop.cell), i === stops.length - 1 ? '目的地' : `经停 ${i + 1} · ${stop.name}`, colors.goal));
     if (progress) this.marker(progress.xy, '模拟队员', colors.crew, 7);
     if (this.cursor && canvas === document.activeElement) {
       const [x, y] = this.screen(this.cursor);

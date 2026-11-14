@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { planMission } from '../web/planner.js';
+import { canAnimateRoute, indexOf, planMission, progressAt } from '../web/planner.js';
 
 function grid() {
   return { rows: 5, cols: 5, step: 10, left: 0, top: 50, height: new Float32Array(25), slope: new Float32Array(25) };
@@ -76,5 +76,45 @@ test('reserve alone can fail; relaxing a time budget cannot remove a slope viola
   const terrain = grid(); terrain.slope.fill(25);
   const slopeOnly = planMission(terrain, route({ mode: 'estimate', budget: 600 })).candidates[0];
   assert.deepEqual(slopeOnly.violations.map(v => v.code), ['SLOPE']);
+});
+
+test('over-limit estimates can animate without changing their feasibility', () => {
+  const terrain = grid(), input = route({ mode: 'estimate', budget: 1 });
+  const plan = planMission(terrain, input).candidates[0];
+  assert.equal(plan.feasible, false);
+  assert.equal(canAnimateRoute(plan, input, terrain), true);
+  assert.equal(canAnimateRoute(plan, { ...input, mode: 'constrained' }, terrain), false);
+  assert.equal(canAnimateRoute(plan, input, { ...terrain, regional: true }), false);
+  assert.equal(canAnimateRoute(null, input, terrain), false);
+  assert.ok(progressAt(terrain, plan, plan.minutes / 2).distance > 0);
+  assert.deepEqual(progressAt(terrain, plan, plan.minutes).cell, input.stops.at(-1).cell);
+});
+
+test('multiple ordered stops, dwell times and final destination survive estimation and playback', () => {
+  const terrain = grid(), input = route({ mode: 'estimate', budget: 1, returnToBase: true, stops: [
+    { cell: [0, 0], name: 'Via 1', minutes: 2 },
+    { cell: [0, 4], name: 'Via 2', minutes: 3 },
+    { cell: [2, 4], name: 'Goal', minutes: 0 },
+  ] });
+  const plan = planMission(terrain, input).candidates[0];
+  assert.deepEqual(plan.visits.map(v => v.name), ['Via 1', 'Via 2', 'Goal', '返航']);
+  assert.ok(Math.abs(plan.minutes - plan.movingMinutes - 5) < 1e-8);
+  for (const visit of plan.visits) {
+    assert.equal(indexOf(terrain, progressAt(terrain, plan, visit.arrival).cell), visit.cell);
+    if (visit.leave > visit.arrival) assert.equal(progressAt(terrain, plan, visit.arrival + 0.5).visit.name, visit.name);
+  }
+  assert.equal(canAnimateRoute(plan, input, terrain), true);
+  assert.equal(plan.feasible, false);
+});
+
+test('reference replanning still respects closures and does not invent routes through missing data', () => {
+  const terrain = grid(), input = route({ mode: 'estimate', budget: -2, returnOnly: true, returnToBase: true,
+    start: [2, 4], stops: [], closures: [{ cell: [2, 2], radius: 10 }] });
+  const plan = planMission(terrain, input).candidates[0];
+  assert.ok(plan.path.every(i => Math.hypot(Math.floor(i / 5) - 2, i % 5 - 2) > 1));
+  assert.equal(canAnimateRoute(plan, input, terrain), true);
+  assert.deepEqual(progressAt(terrain, plan, plan.minutes).cell, input.base);
+  for (let r = 0; r < 5; r++) terrain.height[r * 5 + 2] = NaN;
+  assert.equal(planMission(terrain, input).candidates.length, 0);
 });
 

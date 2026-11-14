@@ -308,6 +308,11 @@ export function planMission(grid, route, light) {
   return result;
 }
 
+export function canAnimateRoute(plan, route, grid) {
+  return !grid?.regional && Boolean(plan?.path?.length > 1 && Number.isFinite(plan.minutes) && plan.minutes > 0
+    && (plan.feasible || route?.mode === 'estimate'));
+}
+
 export function progressAt(grid, plan, minute) {
   const time = Math.max(0, Math.min(minute, plan.minutes));
   let lo = 0, hi = plan.times.length - 1;

@@ -1,6 +1,6 @@
 import { MissionMap, profileChart } from './map.js';
 import { queryOfficial } from './official.js';
-import { cellOf, cellXY, decodeTerrain, geographic, indexOf, isLit, progressAt, SOL_RATIO } from './planner.js';
+import { canAnimateRoute, cellOf, cellXY, decodeTerrain, geographic, indexOf, isLit, progressAt, SOL_RATIO } from './planner.js';
 import { missionData } from './mission-data.js';
 
 const $ = id => document.getElementById(id);
@@ -241,8 +241,9 @@ function setMode(mode) {
   state.mode = mode;
   $('pick-start').setAttribute('aria-pressed', mode === 'start');
   $('pick-goal').setAttribute('aria-pressed', mode === 'goal');
+  $('add-waypoint').setAttribute('aria-pressed', mode === 'waypoint');
   $('map').classList.toggle('selecting', mode !== 'idle');
-  $('pick-hint').textContent = { start: '在地图上点击出发地。', goal: '在地图上点击目的地。',
+  $('pick-hint').textContent = { start: '在地图上点击出发地。', goal: '在地图上点击目的地（保留已有经停点）。', waypoint: '在地图上点击新增经停点，它会插入目的地之前。',
     idle: state.site?.regional ? '点击步行区标记进入局部地图，或选择出发地和目的地。' : '可改选任意有高程覆盖的网格。' }[mode];
   if (mode !== 'idle') {
     $('map').focus({ preventScroll: true });
@@ -273,9 +274,17 @@ function pickPoint(cell, xy) {
     if (state.stops.some(stop => isSame(stop.cell, cell))) { $('pick-hint').textContent = '出发地和目的地需要分开。'; return; }
     state.start = cell;
     resetLocalization();
+  } else if (picked === 'waypoint') {
+    if (isSame(state.start, cell) || state.stops.some(stop => isSame(stop.cell, cell))) {
+      $('pick-hint').textContent = '经停点需要与出发地、目的地及已有经停点分开。'; return;
+    }
+    state.waypointSerial = (state.waypointSerial ?? 0) + 1;
+    state.stops.splice(-1, 0, { cell, name: `经停点 ${state.waypointSerial}`, minutes: 0 });
+    state.preset = false;
   } else {
     if (isSame(state.start, cell)) { $('pick-hint').textContent = '出发地和目的地需要分开。'; return; }
-    state.stops = [{ cell, name: '自选目的地', minutes: 0 }];
+    if (state.stops.slice(0, -1).some(stop => isSame(stop.cell, cell))) { $('pick-hint').textContent = '目的地需要与经停点分开。'; return; }
+    state.stops = [...state.stops.slice(0, -1), { cell, name: '自选目的地', minutes: 0 }];
     state.preset = false;
   }
   setMode(picked === 'start' && !state.stops.length ? 'goal' : 'idle');
@@ -290,11 +299,48 @@ function renderSelections() {
   const ready = Boolean(state.site?.height);
   $('pick-start').disabled = $('pick-goal').disabled = !ready || Boolean(state.nav);
   $('start-coord').textContent = state.start ? display(state.start) : '点击后在地图选点';
-  $('goal-coord').textContent = state.stops.length > 1 ? `${state.stops.length} 个预设科学站` : state.stops[0] ? display(state.stops[0].cell) : '点击后在地图选点';
+  $('goal-coord').textContent = state.stops.length ? display(state.stops.at(-1).cell) : '点击后在地图选点';
   $('live-query').disabled = !ready || !(state.stops.length || state.start);
   $('swap-points').disabled = !ready || Boolean(state.nav) || !state.start || state.stops.length !== 1;
   $('swap-points').title = state.stops.length > 1 ? '交换适用于单一起点和目的地；多站任务请先选一个目的地。' : '';
   $('clear-plan').disabled = !ready;
+  $('add-waypoint').disabled = !ready || Boolean(state.nav) || !state.start || !state.stops.length;
+  renderWaypoints();
+}
+
+function updateStops() {
+  state.preset = false;
+  state.queryId++; $('official-results').hidden = true;
+  setMode('idle'); renderSelections();
+  if (state.start && state.stops.length) calculate(); else invalidate();
+}
+
+function renderWaypoints() {
+  const waypoints = state.stops.slice(0, -1);
+  $('waypoint-count').textContent = String(waypoints.length);
+  $('waypoint-list').replaceChildren(...waypoints.map((stop, index) => {
+    const item = el('li', null, 'waypoint-item');
+    item.append(el('strong', `${index + 1}. ${stop.name}`), el('small', compass(geographic(state.site, cellXY(state.site, stop.cell))), 'muted'));
+    const controls = el('div', null, 'waypoint-controls'), label = el('label', '停留（分钟）'), input = el('input');
+    input.type = 'number'; input.min = 0; input.max = 180; input.step = 1; input.value = stop.minutes;
+    input.setAttribute('aria-label', `经停点 ${index + 1} 停留分钟`); input.disabled = Boolean(state.nav);
+    input.oninput = () => { state.stops[index].minutes = Number(input.value); state.preset = false; invalidate(); };
+    input.onchange = () => { if (input.value && input.checkValidity()) calculate(); };
+    label.append(input); controls.append(label);
+    for (const [title, delta] of [['上移', -1], ['下移', 1]]) {
+      const move = button(title, () => {
+        const other = index + delta;
+        [state.stops[index], state.stops[other]] = [state.stops[other], state.stops[index]];
+        updateStops();
+      });
+      move.setAttribute('aria-label', `${title}经停点 ${index + 1}`);
+      move.disabled = Boolean(state.nav) || index + delta < 0 || index + delta >= waypoints.length;
+      controls.append(move);
+    }
+    const remove = button('删除', () => { state.stops.splice(index, 1); updateStops(); });
+    remove.setAttribute('aria-label', `删除经停点 ${index + 1}`); remove.disabled = Boolean(state.nav);
+    controls.append(remove); item.append(controls); return item;
+  }));
 }
 
 function clearPlan() {
@@ -302,7 +348,7 @@ function clearPlan() {
   worker?.terminate(); worker = null;
   map.cursor = null;
   state.queryId++;
-  Object.assign(state, { start: null, stops: [], inputRoute: null, progress: null, closures: [], complete: [], preset: false });
+  Object.assign(state, { start: null, stops: [], inputRoute: null, progress: null, closures: [], complete: [], preset: false, waypointSerial: 0 });
   resetLocalization();
   $('official-results').hidden = true;
   invalidate(); renderSelections(); setMode('start');
@@ -321,9 +367,9 @@ function swapPoints() {
 
 function readRoute() {
   const regional = state.site.regional;
-  const inputs = [...$('settings').querySelectorAll('input[type=number]')];
+  const inputs = [...$('settings').querySelectorAll('input[type=number]'), ...$('waypoint-list').querySelectorAll('input[type=number]')];
   const invalid = inputs.filter(input => !input.value || !input.checkValidity());
-  if (invalid.length) throw Error(invalid.map(input => `${input.parentElement.firstChild.textContent}须为 ${input.min}–${input.max} 范围内的有效整数。`).join(' '));
+  if (invalid.length) throw Error(invalid.map(input => `${input.getAttribute('aria-label') ?? input.parentElement.firstChild.textContent}须为 ${input.min}–${input.max} 范围内的有效整数。`).join(' '));
   const route = { start: state.start, stops: state.stops, base: state.start, closures: state.closures,
     mode: $('planning-method').value, diagnose: true,
     limit: +$('slope-limit').value, speed: regional ? 1 : +$('speed').value,
@@ -408,7 +454,8 @@ function renderRoutes() {
   renderSciencePoints();
   renderRouteReport();
   $('route-count').textContent = candidates.length ? `${candidates.length} 条` : '';
-  $('start-nav').disabled = !current?.feasible || Boolean(nav) || Boolean(site?.regional);
+  $('start-nav').disabled = !canAnimateRoute(current, state.inputRoute, site) || Boolean(nav);
+  $('start-nav').replaceChildren(state.inputRoute?.mode === 'estimate' ? '播放反算导航动画 →' : '开始导航演示 →');
   $('export-route').hidden = !current || Boolean(nav) || Boolean(site?.regional);
   $('export-route').disabled = $('export-route').hidden;
   if (!candidates.length) { root.replaceChildren(el('p', '选取起终点后可比较候选路线。', 'muted')); return; }
@@ -453,7 +500,9 @@ function renderRouteReport() {
   if (plan) {
     messages.push(...(plan.violations ?? []).map(violationText));
     if (plan.estimated) messages.push('参考估算保留有效地形与封路约束，未强制满足所设坡度。此路线指标代表一个候选方案，并非全区域所需条件的理论最小值。');
-    if (!plan.feasible) messages.push('调整限制或起终点并重新计算后，满足限制的方案才可开始导航演示。');
+    if (!plan.feasible) messages.push(route?.mode === 'estimate'
+      ? '可播放此路线的反算参考动画；动画会保留全部超限提示，不代表路线满足当前限制。'
+      : '调整限制后可开始导航，或切换按起终点反算播放参考动画。');
   }
   diagnostics.replaceChildren(...messages.map(message => el('p', message)));
   $('route-report').hidden = !plan;
@@ -569,7 +618,10 @@ function renderSciencePoints() {
         return;
       }
       if (!state.start) { state.start = state.site.base; resetLocalization(); }
-      state.stops = [{ cell: target.cell, name: target.name, minutes: 12 }];
+      if (isSame(state.start, target.cell) || state.stops.slice(0, -1).some(stop => isSame(stop.cell, target.cell))) {
+        $('pick-hint').textContent = '该科学点已是出发地或经停点，请选择其他目的地。'; return;
+      }
+      state.stops = [...state.stops.slice(0, -1), { cell: target.cell, name: target.name, minutes: 12 }];
       state.preset = false;
       setMode('idle');
       state.queryId++;
@@ -579,6 +631,16 @@ function renderSciencePoints() {
     }, 'text-button');
     choose.disabled = Boolean(state.nav);
     actions.append(choose);
+    const via = button('添加为经停点', () => {
+      if (!state.start || !state.stops.length || !state.site.height) return;
+      if (isSame(state.start, target.cell) || state.stops.some(stop => isSame(stop.cell, target.cell))) {
+        $('pick-hint').textContent = '该科学点已在当前任务中，请勿重复添加。'; return;
+      }
+      state.stops.splice(-1, 0, { cell: target.cell, name: target.name, minutes: 12 });
+      updateStops();
+    }, 'text-button');
+    via.disabled = Boolean(state.nav) || !state.site.height || !state.start || !state.stops.length;
+    actions.append(via);
     card.append(actions);
     return card;
   }));
@@ -689,16 +751,17 @@ async function show3D(nav) {
 }
 
 function beginNavigation() {
-  if (!state.current?.feasible || state.site.regional) return;
+  if (!canAnimateRoute(state.current, state.inputRoute, state.site)) return;
   if (state.localization?.status !== 'FIXED') {
     initializeLocalization();
   }
   setMode('idle');
   const route = state.inputRoute;
-  const nav = { time: 0, elapsed: 0, playing: true, base: state.start, route, replanning: false, done: false };
+  const nav = { time: 0, elapsed: 0, playing: true, base: state.start, route, preview: route.mode === 'estimate', replanning: false, done: false };
   state.nav = nav;
   $('navigation').hidden = false; $('view-tools').hidden = false;
   $('nav-notice').textContent = '模拟回放 · 已用所选出发地初始化位置 · 时间加速。';
+  $('nav-title').textContent = nav.preview ? '反算导航动画（参考模拟）' : '模拟导航';
   $('camera').textContent = '俯瞰全区';
   setPlanningEnabled(false); renderRoutes(); updateNavigation(); show3D(nav);
   nav.frame = requestAnimationFrame(tick);
@@ -723,9 +786,14 @@ function updateNavigation() {
   const due = plan.visits.find(stop => stop.leave > nav.time);
   const totalTime = nav.elapsed + nav.time;
   const location = compass(geographic(state.site, state.progress.xy));
+  const violations = plan.violations ?? [];
+  $('simulation-label').hidden = !nav.preview;
+  $('simulation-label').textContent = `反算参考模拟${violations.length ? ` · ${violations.length} 项超限` : ''}`;
+  $('nav-warning').hidden = !nav.preview;
+  $('nav-warning').textContent = nav.preview ? `反算参考模拟。${violations.length ? violations.map(violationText).join(' ') : '当前方案满足所设限制。'}动画基于地图与模拟时间。` : '';
   const status = nav.blocked ? '路线暂停，等待返航或结束回放' : nav.done ? (plan.visits.at(-1)?.returnLeg ? '已抵达基地' : '已抵达目的地')
     : state.progress.visit ? `正在观察 ${state.progress.visit.name}` : `下一站 ${due?.name ?? '终点'}`;
-  $('nav-progress').textContent = `${status} · ${location} · 已用 ${minute(totalTime)} · 完成路线后余量 ${minute(plan.margin)}`;
+  $('nav-progress').textContent = `${status} · ${location} · 已用 ${minute(totalTime)} · ${plan.margin >= 0 ? '完成路线后余量' : '预计超出可用预算'} ${minute(Math.abs(plan.margin))}`;
   $('timeline').value = Math.round(nav.time / plan.minutes * 1000);
   $('timeline').disabled = nav.replanning || Boolean(nav.blocked);
   $('pause').textContent = nav.playing ? '暂停' : '继续';
@@ -745,6 +813,7 @@ function endNavigation() {
   nav.view?.destroy();
   state.nav = null; state.progress = null; state.closures = [];
   $('navigation').hidden = true; $('view-tools').hidden = true; $('terrain-fallback').hidden = true;
+  $('simulation-label').hidden = true; $('nav-warning').hidden = true;
   show2D(); setPlanningEnabled(true); renderRoutes();
 }
 
@@ -772,13 +841,13 @@ function replan(returnOnly) {
   }));
   const route = { ...nav.route, start, base: nav.base, stops: returnOnly ? [] : stops,
     budget: nav.route.budget - now, returnToBase: returnOnly || nav.route.returnToBase,
-    returnOnly, closures, allowSingleStop: false, mode: 'constrained', diagnose: false };
+    returnOnly, closures, allowSingleStop: false, mode: nav.preview ? 'estimate' : 'constrained', diagnose: false };
   const desired = old.profiles[0];
   nav.playing = false; nav.replanning = true;
   $('nav-notice').textContent = returnOnly ? '从当前位置计算返航路线…' : '加入前方封路，从当前位置重新规划…';
   updateNavigation();
   function apply(result, returning) {
-    const viable = result.candidates.filter(candidate => candidate.feasible);
+    const viable = nav.preview ? result.candidates : result.candidates.filter(candidate => candidate.feasible);
     const next = viable.find(candidate => candidate.profiles.includes(desired)) || viable[0] || (returning && result.candidates[0]);
     if (!next && !returning && !isSame(start, nav.base)) {
       requestPlan({ ...route, stops: [], returnToBase: true, returnOnly: true }, response => apply(response, true), now);
@@ -792,10 +861,10 @@ function replan(returnOnly) {
       show2D(); updateNavigation(); return;
     }
     state.current = next; state.candidates = [next];
-    nav.elapsed = now; nav.time = 0; nav.done = false; nav.blocked = !next.feasible; nav.playing = next.feasible;
+    nav.elapsed = now; nav.time = 0; nav.done = false; nav.blocked = !nav.preview && !next.feasible; nav.playing = nav.preview || next.feasible;
     nav.view?.setPlan(next);
-    $('nav-notice').textContent = next.feasible
-      ? `${returning ? '返航' : '绕行'}已重算 · 从当前点还有 ${distance(next.distance)} · 原路线剩余 ${minute(oldRemaining)}，新路线预计 ${minute(next.minutes)}。`
+    $('nav-notice').textContent = nav.preview || next.feasible
+      ? `${nav.preview ? '参考模拟 · ' : ''}${returning ? '返航' : '绕行'}已重算 · 从当前点还有 ${distance(next.distance)} · 原路线剩余 ${minute(oldRemaining)}，新路线预计 ${minute(next.minutes)}。`
       : `已找到返航路径。扣除预留后仍差 ${minute(-next.margin)}，模拟暂停。`;
     renderRoutes(); updateNavigation();
   }
@@ -807,6 +876,7 @@ function bindControls() {
   $('preset').onclick = loadPreset;
   $('pick-start').onclick = () => setMode('start');
   $('pick-goal').onclick = () => setMode('goal');
+  $('add-waypoint').onclick = () => setMode(state.mode === 'waypoint' ? 'idle' : 'waypoint');
   $('compute').onclick = calculate;
   $('clear-plan').onclick = clearPlan;
   $('swap-points').onclick = swapPoints;

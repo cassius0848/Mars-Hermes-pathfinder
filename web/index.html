@@ -30,6 +30,7 @@
         <div class="map-tools"><button id="zoom-in" class="square" aria-label="放大地图" type="button">+</button><button id="zoom-out" class="square" aria-label="缩小地图" type="button">−</button><button id="zoom-reset" class="square" aria-label="重置地图视野" type="button">⌖</button></div>
         <div id="view-tools" hidden><button id="view-toggle" type="button">返回二维</button><button id="camera" type="button" hidden>俯瞰全区</button></div>
         <p id="terrain-fallback" class="map-notice" role="status" hidden></p>
+        <span id="simulation-label" class="simulation-label" hidden>反算参考模拟</span>
       </div>
       <div class="map-footer"><label><input type="checkbox" id="show-rover" checked> 毅力号历史轨迹</label><span id="map-legend" role="status"></span></div>
       <div id="geology-key" class="geology-key" hidden></div>
@@ -39,6 +40,7 @@
         <label for="timeline">任务进度</label><input type="range" id="timeline" min="0" max="1000" value="0">
         <div class="nav-buttons"><button id="pause" type="button">暂停</button><button id="closure" type="button">报告前方封路</button><button id="return" type="button">重新规划返航</button></div>
         <p id="nav-notice" class="message" role="status"></p>
+        <p id="nav-warning" class="message" role="status" hidden></p>
       </section>
     </section>
     <aside class="side" aria-label="任务设置与计算结果">
@@ -49,6 +51,9 @@
         <div class="pickers"><button id="pick-start" type="button" aria-pressed="false"><span class="dot start"></span><span><strong>出发地</strong><small id="start-coord">点击后在地图选点</small></span></button>
           <button id="pick-goal" type="button" aria-pressed="false"><span class="dot goal"></span><span><strong>目的地</strong><small id="goal-coord">点击后在地图选点</small></span></button></div>
         <div class="plan-actions"><button id="swap-points" type="button" disabled>交换起终点</button><button id="clear-plan" type="button">清空本次规划</button></div>
+        <div class="waypoint-heading"><strong>经停点 <span id="waypoint-count">0</span></strong><button id="add-waypoint" type="button" aria-pressed="false" disabled>＋ 地图添加经停点</button></div>
+        <ol id="waypoint-list" class="waypoint-list" aria-label="经停点顺序"></ol>
+        <p class="muted note">按列表顺序经过经停点后抵达目的地；可设置每站停留时间。</p>
         <p class="message" id="pick-hint" role="status">正在读取 Jezero 地图…</p>
         <label id="roundtrip-field" class="roundtrip"><input id="roundtrip" type="checkbox" checked>规划回到出发地</label>
         <div class="params" id="settings"></div>
