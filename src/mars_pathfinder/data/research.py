@@ -16,7 +16,7 @@ import numpy as np
 import rasterio
 from pyproj import Transformer
 from rasterio.crs import CRS
-from rasterio.transform import Affine, array_bounds, from_origin, rowcol
+from rasterio.transform import Affine, array_bounds, from_origin, rowcol, xy
 from rasterio.warp import Resampling, reproject
 
 from mars_pathfinder.data.jezero_region import MARS_GEOGRAPHIC_CRS
