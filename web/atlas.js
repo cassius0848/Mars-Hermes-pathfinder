@@ -8,7 +8,7 @@ const ctx = canvas.getContext('2d');
 const atlasViews = {
   global: { center: [0, 0], span: 360 },
   jezero: { center: [77.74, 18.44], span: 1.7 },
-  gale: { center: [137.4, -5.4], span: 2.6 },
+  gale: { center: [137.4, -4.6], span: 2.6 },
   endeavour: { center: [-5.53, -1.95], span: 2.6 },
   eberswalde: { center: [-33.3, -23.8], span: 2.2 },
   hawksbill: { center: [77.406, 18.4588], span: 0.022 },
