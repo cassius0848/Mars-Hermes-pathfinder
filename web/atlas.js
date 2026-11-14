@@ -1,5 +1,6 @@
 import { layers, officialLayerUrl, readCapabilities, tilesInView, viewportGeology, hiRiseProducts, molaProfile, molaExport,
   CTX_DEM, ctxWindow, fetchCtxTerrain } from './mars-data.js';
+import { craterSources } from './crater-sources.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('surface');
@@ -413,6 +414,21 @@ const craterNames = {
   jezero: 'Jezero', gale: 'Gale', endeavour: 'Endeavour', eberswalde: 'Eberswalde',
   hawksbill: 'Hawksbill Gap', neretva: 'Neretva Vallis',
 };
+function renderCraterSources(id) {
+  const key = ['global', 'hawksbill', 'neretva'].includes(id) ? 'jezero' : id;
+  const source = craterSources[key] ?? craterSources.jezero;
+  const list = $('crater-sources');
+  if (!list) return;
+  const entries = source.links.map(item => {
+    const li = document.createElement('li');
+    li.append(link(item.label, item.url));
+    if (item.note) li.append(document.createTextNode(` · ${item.note}`));
+    return li;
+  });
+  list.replaceChildren(...entries);
+  $('crater-source-status').textContent = `${source.label} · ${source.resolution} · ${source.status}`;
+}
+
 function updateWalkLink(id) {
   const area = id === 'global' ? 'jezero' : id;
   const name = craterNames[area] ?? 'Jezero';
@@ -426,8 +442,10 @@ function updateWalkLink(id) {
 }
 
 updateWalkLink(initialView);
+renderCraterSources(initialView);
 for (const [id, view] of Object.entries(atlasViews)) $(id).onclick = () => {
   updateWalkLink(id);
+  renderCraterSources(id);
   state.viewId = id;
   state.center = [...view.center]; state.span = view.span; schedule();
 };
