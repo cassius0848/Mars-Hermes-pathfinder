@@ -29,3 +29,6 @@ main{max-width:1540px;margin:auto;padding:30px clamp(14px,4vw,65px) 70px}.page-i
 .science-point p{margin:4px 0;font-size:11px}
 .science-point a{font-size:11px}
 .science-point-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:3px}
+
+#terrain{position:relative}
+.terrain-quality{position:absolute;left:10px;bottom:10px;z-index:2;padding:6px 8px;border:1px solid #6e5b4a;border-radius:6px;background:#201b18e8;color:#f1ddc6;font:11px var(--mono);pointer-events:none}
