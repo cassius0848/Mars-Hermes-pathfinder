@@ -251,7 +251,7 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
                 or array_bounds(*source.shape, source.transform) != array_bounds(*terrain.shape, transform)):
             raise ValueError("Neretva Vallis orthophoto does not match the local planning extent.")
     optical_rgb = _read_rgb(root / "optical.tif", grid_crs, transform, elevation.shape,
-                             oversampling=max(1, int(round(2 / transform.a))))
+                             oversampling=max(1, int(round(transform.a))))
     with rasterio.open(root / "thermal.tif") as source:
         if source.crs != grid_crs or source.res != (100, 100):
             raise ValueError("Neretva Vallis thermal context does not match the 100 m display grid.")
