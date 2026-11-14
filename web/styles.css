@@ -10,3 +10,15 @@ main{max-width:1540px;margin:auto;padding:30px clamp(14px,4vw,65px) 70px}.page-i
   .topbar { padding-inline: 12px; }
   .topbar nav { gap: 8px; }
 }
+
+.localization-box{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.localization-box h4{margin:0;font-size:13px}
+.localization-box .panel-heading{padding:0 0 7px}
+.mission-data{display:grid;gap:7px}
+.mission-data-item{padding:8px;border:1px solid var(--line);border-radius:7px;background:var(--field)}
+.mission-data-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px}
+.mission-data-item p{margin:4px 0;font-size:11px}
+.mission-data-item a{font-size:11px}
+.data-ready,.data-pending{font:10px var(--mono);padding:2px 5px;border-radius:4px}
+.data-ready{color:var(--mint);background:#263229}
+.data-pending{color:#e4b18b;background:#392923}
