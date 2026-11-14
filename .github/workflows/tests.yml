@@ -19,4 +19,5 @@ jobs:
       - name: Run tests
         env:
           MPLCONFIGDIR: /tmp/matplotlib
-        run: pytest -q
+          PYTHONPATH: src
+        run: python -m pytest -q
