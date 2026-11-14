@@ -267,6 +267,8 @@ function renderRoutes() {
   const { site, candidates = [], current, nav } = state;
   $('route-count').textContent = candidates.length ? `${candidates.length} 条` : '';
   $('start-nav').disabled = !current?.feasible || Boolean(nav) || Boolean(site?.regional);
+  $('export-route').hidden = !current || Boolean(nav) || Boolean(site?.regional);
+  $('export-route').disabled = $('export-route').hidden;
   if (!candidates.length) { root.replaceChildren(el('p', '选取起终点后可比较候选路线。', 'muted')); return; }
   root.replaceChildren(...candidates.map(candidate => {
     const control = button(null, () => { state.current = candidate; renderRoutes(); redraw(); }, 'route-row');
@@ -295,6 +297,38 @@ function renderRoutes() {
       localStorage.removeItem('mars-pathfinder-profile'); $('plan-error').textContent = '已清除路线偏好。'; renderRoutes();
     }, 'text-button'));
   }
+}
+
+function exportRoute() {
+  const { current, site, inputRoute, nav } = state;
+  if (!current || site.regional || nav) return;
+  const card = document.implementation.createHTMLDocument('Mars Pathfinder AI · 任务卡');
+  card.documentElement.lang = 'zh-CN';
+  const style = el('style', 'body{font:14px/1.45 system-ui,sans-serif;margin:24px auto;width:min(96%,720px);color:#211b18}h1{font-size:24px;margin:0}h2{font-size:16px;margin:12px 0 4px}p,li{margin:3px 0}img{max-width:100%;display:block;margin:8px auto;max-height:280px}a{color:#844c2c}@media print{body{margin:0;width:100%}img{max-height:235px}}');
+  const viewport = el('meta'); viewport.name = 'viewport'; viewport.content = 'width=device-width, initial-scale=1';
+  card.head.append(viewport, style);
+  const start = compass(geographic(site, cellXY(site, inputRoute.start)));
+  const legs = el('ol');
+  for (const leg of current.visits) {
+    const coordinate = compass(geographic(site, cellXY(site, cellOf(site, leg.cell))));
+    legs.append(el('li', `${leg.name} · ${coordinate} · 到达 ${minute(leg.arrival)}${leg.science ? ` · 停留 ${minute(leg.leave - leg.arrival)}` : ''}`));
+  }
+  const conditions = `预算 ${minute(inputRoute.budget)}，预留 ${minute(inputRoute.reserve)}，坡度上限 ${inputRoute.limit}°，基础步速 ${inputRoute.speed} m/min。`;
+  const metrics = `${distance(current.distance)} · 预计 ${minute(current.minutes)} · 陡坡 ${distance(current.steep)} · 阴影 ${distance(current.shadow)} · 扣除预留 ${current.feasible ? '剩余' : '仍差'} ${minute(Math.abs(current.margin))}`;
+  card.body.append(el('h1', `${site.name} · 火星步行任务卡`), el('p', `OrionX · ${describe(current)} · 模拟出舱`), el('p', metrics),
+    el('h2', '路线与约束'), el('p', `出发地 ${start}`), legs, el('p', conditions),
+    el('p', `火星当地真太阳时 ${$('hour').selectedOptions[0].textContent} · 太阳黄经 ${$('season').value}°。`));
+  for (const [id, title] of [['map', '二维路线'], ['profile', '高程剖面']]) {
+    const picture = el('img'); picture.src = $(id).toDataURL('image/png'); picture.alt = title;
+    card.body.append(picture);
+  }
+  card.body.append(el('h2', '数据与局限'), el('p', $('scope-note').textContent));
+  const sources = el('p');
+  for (const [name, url] of Object.entries(site.sources)) sources.append(link(name, url), ' · ');
+  sources.append('OrionX'); card.body.append(sources);
+  const url = URL.createObjectURL(new Blob(['<!doctype html>\n', card.documentElement.outerHTML], { type: 'text/html;charset=UTF-8' }));
+  const download = el('a'); download.href = url; download.download = `${site.id}-marswalk.html`;
+  download.click(); setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
 function redraw() {
@@ -467,7 +501,7 @@ function endNavigation() {
 function replan(returnOnly) {
   const nav = state.nav, old = state.current;
   if (!nav || nav.replanning) return;
-  const now = nav.elapsed + nav.time, start = state.progress.cell;
+  const now = nav.elapsed + nav.time, oldRemaining = old.minutes - nav.time, start = state.progress.cell;
   let closures = [...state.closures];
   if (!returnOnly) {
     const ahead = old.path.find((cell, i) => i >= state.progress.index && old.lengths[i] >= state.progress.distance + 18);
@@ -507,7 +541,7 @@ function replan(returnOnly) {
     nav.elapsed = now; nav.time = 0; nav.done = false; nav.blocked = !next.feasible; nav.playing = next.feasible;
     nav.view?.setPlan(next);
     $('nav-notice').textContent = next.feasible
-      ? `${returning ? '返航' : '绕行'}已重算 · 从当前点还有 ${distance(next.distance)} · 预计 ${minute(next.minutes)}。`
+      ? `${returning ? '返航' : '绕行'}已重算 · 从当前点还有 ${distance(next.distance)} · 原路线剩余 ${minute(oldRemaining)}，新路线预计 ${minute(next.minutes)}。`
       : `已找到返航路径。扣除预留后仍差 ${minute(-next.margin)}，模拟暂停。`;
     renderRoutes(); updateNavigation();
   }
@@ -526,6 +560,7 @@ function bindControls() {
   $('zoom-out').onclick = () => map.zoom(1 / 1.45);
   $('zoom-reset').onclick = () => map.zoom(1);
   $('start-nav').onclick = beginNavigation;
+  $('export-route').onclick = exportRoute;
   $('stop-nav').onclick = () => { endNavigation(); calculate(); };
   $('pause').onclick = () => { state.nav.playing = !state.nav.playing; updateNavigation(); };
   $('timeline').oninput = event => {
