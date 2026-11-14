@@ -375,3 +375,27 @@ GitHub Actions installs the declared dependencies and runs the full `pytest` sui
 - Record source, version, coverage, resolution, CRS, units, and limitations;
 - Do not commit large raw datasets, secrets, or personal credentials;
 - Use branches such as `data`, `terrain`, `routing`, `analysis`, `ui`, `ai`, and `tests-docs`.
+
+
+## Judge-ready launch and deployment
+
+Windows:
+
+~~~powershell
+powershell -ExecutionPolicy Bypass -File .\\scripts\\run_demo.ps1 -OpenBrowser
+~~~
+
+Linux / macOS:
+
+~~~bash
+bash scripts/run_demo.sh
+~~~
+
+Docker:
+
+~~~bash
+docker build -t mars-pathfinder-ai .
+docker run --rm -p 8501:8501 mars-pathfinder-ai
+~~~
+
+The launch scripts verify the committed real-data assets before starting the app. The full 3–5 minute judge flow is in docs/demo-runbook.md.
