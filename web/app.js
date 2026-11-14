@@ -154,7 +154,7 @@ async function loadSite(site) {
   $('roundtrip').disabled = false;
   state.queryId++;
   map.setSite(site);
-  renderLayers(); renderSettings(); renderSources(); renderEvidence(); renderMissionData(); renderLocalization(); renderSelections(); invalidate();
+  renderLayers(); renderSettings(); renderSources(); renderEvidence(); renderMissionData(); renderSciencePoints(); renderLocalization(); renderSelections(); invalidate();
   try {
     const [height, slope] = await Promise.all([get(`${dataUrl(site.id)}/elevation.bin`, 'arrayBuffer'), get(`${dataUrl(site.id)}/slope.bin`, 'arrayBuffer')]);
     if (generation !== state.generation) return;
@@ -354,6 +354,7 @@ function describe(candidate) {
 function renderRoutes() {
   const root = $('routes');
   const { site, candidates = [], current, nav } = state;
+  renderSciencePoints();
   $('route-count').textContent = candidates.length ? `${candidates.length} 条` : '';
   $('start-nav').disabled = !current?.feasible || Boolean(nav) || Boolean(site?.regional);
   $('export-route').hidden = !current || Boolean(nav) || Boolean(site?.regional);
@@ -426,6 +427,46 @@ function redraw() {
   map.data = { start: state.start, stops: shownStops, closures: state.closures, plan: state.current, light: state.light, progress: state.progress };
   map.draw();
   profileChart($('profile'), state.site, state.current, state.progress);
+}
+
+function renderSciencePoints() {
+  const root = $('science-points');
+  if (!root || !state.site) return;
+  const targets = (state.site.targets ?? []).filter(target => target.task || target.reference || target.image);
+  $('science-point-count').textContent = targets.length ? `${targets.length} 个` : '';
+  if (!targets.length) {
+    root.replaceChildren(el('p', '当前区域暂无带 NASA/PDS 证据的局部科学点。', 'muted'));
+    return;
+  }
+  const visited = new Set((state.current?.visits ?? []).map(visit => visit.name));
+  root.replaceChildren(...targets.map(target => {
+    const card = el('article', null, 'science-point');
+    const heading = el('div', null, 'science-point-heading');
+    const included = visited.has(target.name);
+    heading.append(el('strong', target.name), el('span', included ? '路线已纳入' : '候选点',
+      included ? 'data-ready' : 'data-pending'));
+    const xy = target.reference ?? cellXY(state.site, target.cell);
+    card.append(heading, el('p', `${compass(geographic(state.site, xy))} · ${target.task ?? 'NASA 观测目标'}`, 'muted'));
+    if (target.credit) card.append(el('p', target.credit, 'muted'));
+    const actions = el('div', null, 'science-point-actions');
+    if (target.url) actions.append(link('NASA/PDS 证据 ↗', target.url));
+    const choose = button('设为目的地', () => {
+      if (!state.site.height) {
+        $('pick-hint').textContent = '地形仍在读取，请稍后再选择科学点。';
+        return;
+      }
+      state.start ??= state.site.base;
+      state.stops = [{ cell: target.cell, name: target.name, minutes: 12 }];
+      state.preset = false;
+      resetLocalization();
+      renderSelections();
+      calculate();
+    }, 'text-button');
+    choose.disabled = Boolean(state.nav);
+    actions.append(choose);
+    card.append(actions);
+    return card;
+  }));
 }
 
 function renderSources() {
