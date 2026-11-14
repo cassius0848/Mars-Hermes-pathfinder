@@ -97,17 +97,20 @@ def crop(page, name, lon, lat, span=520):
     slope_y, slope_x = np.gradient(values, 1.0, 1.0)
     slope = np.degrees(np.arctan(np.hypot(slope_x, slope_y))).astype("float32")
     quality = valid.astype("uint8")
-    out = Path("highres-1m") / name
+    out = (Path("docs/jezero-research/derived") if name == "hawksbill"
+           else Path("data/local/neretva-vallis"))
     out.mkdir(parents=True, exist_ok=True)
+    prefix = "jezero-" if name == "hawksbill" else ""
     transform = from_origin(-half, half, 1, 1)
     crs = LOCAL_CRS(lon, lat)
     profile = dict(driver="GTiff", width=span, height=span, count=1, dtype="float32",
                    crs=crs, transform=transform, nodata=np.nan, compress="deflate", predictor=3)
-    with rasterio.open(out / "elevation-1m.tif", "w", **profile) as dst:
+    with rasterio.open(out / f"{prefix}elevation-local-1m.tif" if prefix else out / "elevation-1m.tif", "w", **profile) as dst:
         dst.write(values, 1)
-    with rasterio.open(out / "slope-1m.tif", "w", **profile) as dst:
+    with rasterio.open(out / f"{prefix}slope-local-1m.tif" if prefix else out / "slope-1m.tif", "w", **profile) as dst:
         dst.write(slope, 1)
-    with rasterio.open(out / "quality-1m.tif", "w", **{**profile, "dtype": "uint8", "nodata": 0, "predictor": 2}) as dst:
+    with rasterio.open(out / f"{prefix}quality-local-1m.tif" if prefix else out / "quality-1m.tif", "w",
+                       **{**profile, "dtype": "uint8", "nodata": 0, "predictor": 2}) as dst:
         dst.write(quality, 1)
     print(name, {"source_window": [first_col, first_row, span, span],
                  "coverage": round(float(valid.mean() * 100), 3),
