@@ -1,6 +1,6 @@
 import { MissionMap, profileChart } from './map.js';
 import { queryOfficial } from './official.js';
-import { cellOf, cellXY, decodeTerrain, geographic, indexOf, progressAt, SOL_RATIO } from './planner.js';
+import { cellOf, cellXY, decodeTerrain, geographic, indexOf, isLit, progressAt, SOL_RATIO } from './planner.js';
 import { missionData } from './mission-data.js';
 
 const $ = id => document.getElementById(id);
@@ -129,6 +129,8 @@ function invalidate() {
   state.onPlan = null;
   state.current = null;
   state.candidates = [];
+  state.diagnostics = [];
+  state.reportRoute = null;
   $('compute').disabled = !state.site?.height || !state.start || !state.stops?.length;
   $('plan-error').textContent = '';
   renderRoutes(); redraw();
@@ -264,8 +266,7 @@ function pickPoint(cell, xy) {
   if (!Number.isFinite(state.site.height[i])) { $('pick-hint').textContent = '这个位置没有高程数据。请在地图覆盖内重新选点。'; return; }
   if (!Number.isFinite(state.site.slope[i])) { $('pick-hint').textContent = '这个位置没有有效坡度数据，请重新选点。'; return; }
   if (state.site.slope[i] > Number($('slope-limit').value)) {
-    $('pick-hint').textContent = `此处坡度 ${state.site.slope[i].toFixed(1)}°，超过当前上限。请重新选点。`;
-    return;
+    $('plan-error').textContent = `所选点坡度 ${state.site.slope[i].toFixed(1)}° 超过上限，将显示超限诊断与参考估算。`;
   }
   const picked = state.mode;
   if (picked === 'start') {
@@ -291,17 +292,43 @@ function renderSelections() {
   $('start-coord').textContent = state.start ? display(state.start) : '点击后在地图选点';
   $('goal-coord').textContent = state.stops.length > 1 ? `${state.stops.length} 个预设科学站` : state.stops[0] ? display(state.stops[0].cell) : '点击后在地图选点';
   $('live-query').disabled = !ready || !(state.stops.length || state.start);
+  $('swap-points').disabled = !ready || Boolean(state.nav) || !state.start || state.stops.length !== 1;
+  $('swap-points').title = state.stops.length > 1 ? '交换适用于单一起点和目的地；多站任务请先选一个目的地。' : '';
+  $('clear-plan').disabled = !ready;
+}
+
+function clearPlan() {
+  endNavigation();
+  worker?.terminate(); worker = null;
+  map.cursor = null;
+  state.queryId++;
+  Object.assign(state, { start: null, stops: [], inputRoute: null, progress: null, closures: [], complete: [], preset: false });
+  resetLocalization();
+  $('official-results').hidden = true;
+  invalidate(); renderSelections(); setMode('start');
+  $('pick-hint').textContent = '已清空起终点、路线和封路，规划参数已保留。请在地图上选择新的出发地。';
+}
+
+function swapPoints() {
+  if (state.nav || !state.start || state.stops.length !== 1) return;
+  const previous = state.start;
+  state.start = state.stops[0].cell;
+  state.stops = [{ cell: previous, name: '原出发地', minutes: 0 }];
+  state.preset = false; state.closures = [];
+  state.queryId++; $('official-results').hidden = true;
+  resetLocalization(); setMode('idle'); renderSelections(); calculate();
 }
 
 function readRoute() {
   const regional = state.site.regional;
   const inputs = [...$('settings').querySelectorAll('input[type=number]')];
-  if (inputs.some(input => !input.value || !input.checkValidity())) throw Error('请检查规划参数的范围。');
+  const invalid = inputs.filter(input => !input.value || !input.checkValidity());
+  if (invalid.length) throw Error(invalid.map(input => `${input.parentElement.firstChild.textContent}须为 ${input.min}–${input.max} 范围内的有效整数。`).join(' '));
   const route = { start: state.start, stops: state.stops, base: state.start, closures: state.closures,
+    mode: $('planning-method').value, diagnose: true,
     limit: +$('slope-limit').value, speed: regional ? 1 : +$('speed').value,
     budget: regional ? Infinity : +$('budget').value, reserve: regional ? 0 : +$('reserve').value,
     returnToBase: !regional && $('roundtrip').checked, allowSingleStop: state.preset && $('roundtrip').checked && state.stops.length > 1 };
-  if (route.reserve >= route.budget) throw Error('总预算须大于预留时间。');
   return route;
 }
 
@@ -311,6 +338,7 @@ function requestPlan(route, onResult, hourOffset = 0) {
     worker.postMessage({ type: 'terrain', site: state.site });
   }
   const id = ++state.planningId;
+  state.reportRoute = route;
   const localHour = Number($('hour')?.value ?? 12);
   state.onPlan = onResult;
   worker.postMessage({ id, route, hour: (localHour + hourOffset / (60 * SOL_RATIO)) % 24, season: +($('season')?.value ?? 0) });
@@ -361,9 +389,10 @@ function calculate() {
       $('compute').disabled = false;
       $('plan-error').textContent = result.error ?? '';
       state.candidates = result.candidates;
+      state.diagnostics = result.diagnostics ?? [];
       state.current = recommended(result.candidates);
       if (state.current?.shortened) $('plan-error').textContent = `双站任务在当前限制下不可行，推荐先访问 ${state.current.shortened}。`;
-      else if (state.current && !state.current.feasible) $('plan-error').textContent = '没有能在预算内完成的路线。可调整停靠点、预算或返航预留。';
+      else if (state.current && !state.current.feasible) $('plan-error').textContent = `${result.error ? result.error + ' ' : ''}所选路线有 ${state.current.violations.length} 项指标不满足限制，详情见路线方案。`;
       renderRoutes(); redraw();
     });
   } catch (error) { $('compute').disabled = false; $('plan-error').textContent = error.message; }
@@ -377,6 +406,7 @@ function renderRoutes() {
   const root = $('routes');
   const { site, candidates = [], current, nav } = state;
   renderSciencePoints();
+  renderRouteReport();
   $('route-count').textContent = candidates.length ? `${candidates.length} 条` : '';
   $('start-nav').disabled = !current?.feasible || Boolean(nav) || Boolean(site?.regional);
   $('export-route').hidden = !current || Boolean(nav) || Boolean(site?.regional);
@@ -388,11 +418,11 @@ function renderRoutes() {
     control.setAttribute('aria-pressed', candidate === current);
     const first = el('span', null, 'route-top'), summary = el('small', null, 'metric-line');
     const variant = candidate.shortened ? ` · ${candidate.shortened}` : '';
-    first.append(el('strong', `${describe(candidate)}${variant}`), el('span', site.regional ? distance(candidate.distance) : minute(candidate.minutes), 'route-time'));
+    first.append(el('strong', `${candidate.estimated ? '参考估算 · ' : ''}${describe(candidate)}${variant}`), el('span', site.regional ? distance(candidate.distance) : minute(candidate.minutes), 'route-time'));
     summary.append(el('span', site.regional ? `最大坡度 ${candidate.maxSlope.toFixed(1)}°`
       : `${distance(candidate.distance)} · 陡坡 ${distance(candidate.steep)} · 阴影 ${distance(candidate.shadow)}`));
     if (!site.regional) {
-      summary.append(el('span', candidate.feasible ? `余 ${candidate.margin.toFixed(1)} 分` : '超预算', `route-margin${candidate.feasible ? '' : ' late'}`));
+      summary.append(el('span', candidate.feasible ? `余 ${candidate.margin.toFixed(1)} 分` : `${candidate.violations?.length ?? 1} 项超限`, `route-margin${candidate.feasible ? '' : ' late'}`));
       control.append(first, summary, el('small', `累计爬升 ${distance(candidate.ascent)} · 最大坡度 ${candidate.maxSlope.toFixed(1)}°${candidate.pareto ? ' · 权衡方案' : ''}`));
     } else control.append(first, summary);
     return control;
@@ -409,6 +439,65 @@ function renderRoutes() {
       localStorage.removeItem('mars-pathfinder-profile'); $('plan-error').textContent = '已清除路线偏好。'; renderRoutes();
     }, 'text-button'));
   }
+}
+
+function violationText(item) {
+  if (item.code === 'RESERVE') return `返航预留不足：任务后剩余 ${item.actual.toFixed(1)} 分钟，要求至少 ${item.limit.toFixed(1)} 分钟，缺少 ${item.excess.toFixed(1)} 分钟。`;
+  return `${item.metric}：估算 ${item.actual.toFixed(1)} ${item.unit}，上限 ${item.limit.toFixed(1)} ${item.unit}，超出 ${item.excess.toFixed(1)} ${item.unit}。`;
+}
+
+function renderRouteReport() {
+  const plan = state.current, route = state.reportRoute ?? state.inputRoute, site = state.site;
+  const diagnostics = $('route-diagnostics');
+  const messages = [...(state.diagnostics ?? [])];
+  if (plan) {
+    messages.push(...(plan.violations ?? []).map(violationText));
+    if (plan.estimated) messages.push('参考估算保留有效地形与封路约束，未强制满足所设坡度。此路线指标代表一个候选方案，并非全区域所需条件的理论最小值。');
+    if (!plan.feasible) messages.push('调整限制或起终点并重新计算后，满足限制的方案才可开始导航演示。');
+  }
+  diagnostics.replaceChildren(...messages.map(message => el('p', message)));
+  $('route-report').hidden = !plan;
+  $('export-samples').disabled = !plan || Boolean(state.nav);
+  if (!plan || !route) { $('route-metrics').replaceChildren(); return; }
+  const scienceTime = plan.minutes - plan.movingMinutes;
+  const returnVisit = plan.visits.find(visit => visit.returnLeg);
+  const startHeight = site.height[plan.path[0]], endHeight = site.height[plan.path.at(-1)];
+  const rows = [['计算结果', plan.feasible ? '满足当前限制' : '参考路线，存在超限'],
+    ['路线总长', distance(plan.distance)], ['总用时 / 行走 / 停留', site.regional ? '区域筛选不估算 EVA 用时' : `${minute(plan.minutes)} / ${minute(plan.movingMinutes)} / ${minute(scienceTime)}`],
+    ['去程含停留 / 返程时间', !site.regional && returnVisit ? `${minute(plan.visits.at(-2)?.leave ?? 0)} / ${minute(returnVisit.arrival - (plan.visits.at(-2)?.leave ?? 0))}` : '单程'],
+    ['累计爬升 / 下降', `${distance(plan.ascent)} / ${distance(plan.descent)}`],
+    ['起点 / 终点高程', `${startHeight.toFixed(2)} / ${endHeight.toFixed(2)} m`],
+    ['任务站高程', plan.visits.filter(visit => !visit.returnLeg).map(visit => `${visit.name} ${site.height[visit.cell].toFixed(2)} m`).join('；') || '—'],
+    ['沿途最低 / 最高高程', `${plan.minElevation.toFixed(2)} / ${plan.maxElevation.toFixed(2)} m`],
+    ['最大 / 距离加权平均通行坡度', `${plan.maxSlope.toFixed(1)}° / ${plan.averageSlope.toFixed(1)}°`],
+    ['陡坡路段（≥12°）', distance(plan.steep)],
+    ['模型阴影 / 日照路段', site.regional ? '未计算局部光照' : `${distance(plan.shadow)} / ${distance(plan.distance - plan.shadow)}`],
+    ['站点', plan.visits.map(visit => visit.name).join(' → ') || '—'],
+    ['基础步速 / 地形格网', site.regional ? `${site.step} m / 格` : `${route.speed} m/分 · ${site.step} m / 格`],
+    ['沿线样本数', `${plan.path.length} 个（含停留记录）`]];
+  if (!site.regional) rows.push(['预算 / 返航预留', `${minute(route.budget)} / ${minute(route.reserve)}`],
+    ['此路线所需总预算（含预留）', minute(plan.minutes + route.reserve)],
+    ['完成后可留时间 / 扣除预留后余量', `${minute(route.budget - plan.minutes)} / ${minute(plan.margin)}`]);
+  $('route-metrics').replaceChildren(...rows.flatMap(([label, value]) => [el('dt', label), el('dd', value)]));
+}
+
+function downloadText(contents, filename, type) {
+  const url = URL.createObjectURL(new Blob([contents], { type }));
+  const download = el('a'); download.href = url; download.download = filename; download.click();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+function exportSamples() {
+  const { current: plan, site } = state;
+  if (!plan || state.nav) return;
+  const rows = [['sample', 'row', 'col', 'longitude_deg_E', 'latitude_deg_N', 'elevation_m', 'cell_slope_deg', 'elapsed_min', 'distance_m', 'modeled_sunlit', 'station', 'constraint_status']];
+  plan.path.forEach((index, i) => {
+    const cell = cellOf(site, index), coordinate = geographic(site, cellXY(site, cell));
+    rows.push([i, ...cell, ...coordinate, site.height[index], site.slope[index], site.regional ? '' : plan.times[i], plan.lengths[i],
+      state.light ? Number(isLit(site, state.light, index)) : '', plan.visits.filter(visit => visit.cell === index).map(visit => visit.name).join(';'), plan.feasible ? 'within_limits' : 'reference_exceeds_limits']);
+  });
+  const quote = value => `"${String(value).replaceAll('"', '""')}"`;
+  downloadText('\uFEFF' + rows.map(row => row.map(quote).join(',')).join('\r\n'), `${site.id}-route-samples.csv`, 'text/csv;charset=UTF-8');
 }
 
 function exportRoute() {
@@ -435,6 +524,8 @@ function exportRoute() {
     card.body.append(picture);
   }
   card.body.append(el('h2', '数据与局限'), el('p', $('scope-note').textContent));
+  card.body.append(el('h2', '完整指标与限制核对'), $('route-metrics').cloneNode(true), $('route-diagnostics').cloneNode(true));
+  if (!current.feasible) card.body.append(el('p', '此卡为超限参考估算，不可作为满足当前约束的导航方案。'));
   const sources = el('p');
   for (const [name, url] of Object.entries(site.sources)) sources.append(link(name, url), ' · ');
   sources.append('OrionX'); card.body.append(sources);
@@ -562,7 +653,7 @@ async function runOfficialQuery() {
 }
 
 function setPlanningEnabled(enabled) {
-  for (const control of [...$('settings').querySelectorAll('input, select'), $('preset'), $('roundtrip')]) control.disabled = !enabled;
+  for (const control of [...$('settings').querySelectorAll('input, select'), $('preset'), $('roundtrip'), $('planning-method')]) control.disabled = !enabled;
   $('compute').disabled = !enabled || !state.start || !state.stops?.length;
   renderSelections();
   renderLocalization();
@@ -681,7 +772,7 @@ function replan(returnOnly) {
   }));
   const route = { ...nav.route, start, base: nav.base, stops: returnOnly ? [] : stops,
     budget: nav.route.budget - now, returnToBase: returnOnly || nav.route.returnToBase,
-    returnOnly, closures, allowSingleStop: false };
+    returnOnly, closures, allowSingleStop: false, mode: 'constrained', diagnose: false };
   const desired = old.profiles[0];
   nav.playing = false; nav.replanning = true;
   $('nav-notice').textContent = returnOnly ? '从当前位置计算返航路线…' : '加入前方封路，从当前位置重新规划…';
@@ -717,6 +808,15 @@ function bindControls() {
   $('pick-start').onclick = () => setMode('start');
   $('pick-goal').onclick = () => setMode('goal');
   $('compute').onclick = calculate;
+  $('clear-plan').onclick = clearPlan;
+  $('swap-points').onclick = swapPoints;
+  $('export-samples').onclick = exportSamples;
+  $('planning-method').onchange = () => {
+    $('method-note').textContent = $('planning-method').value === 'estimate'
+      ? '先按起终点估算候选路线、时间与全部沿线指标，再逐项核对当前坡度、预算和返航预留。'
+      : '在坡度限制内比较路线，并检查时间预算与返航预留。';
+    if (state.start && state.stops.length) calculate(); else invalidate();
+  };
   $('roundtrip').onchange = calculate;
   $('show-rover').onchange = event => { map.rover = event.target.checked; map.draw(); };
   $('zoom-in').onclick = () => map.zoom(1.45);

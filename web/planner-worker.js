@@ -18,14 +18,15 @@ self.onmessage = ({ data }) => {
     }
     const light = lightCache.get(key);
     const result = planMission(grid, route, light);
-    if (route.allowSingleStop && !result.candidates.some(candidate => candidate.feasible)) {
+    if (route.mode !== 'estimate' && route.allowSingleStop && !result.candidates.some(candidate => candidate.feasible)) {
       const alternatives = route.stops.flatMap(stop => {
-        const single = planMission(grid, { ...route, stops: [stop] }, light);
+        const single = planMission(grid, { ...route, stops: [stop], diagnose: false }, light);
         return single.candidates.map(candidate => ({ ...candidate, shortened: stop.name }));
       }).filter(candidate => candidate.feasible).sort((a, b) => a.minutes - b.minutes);
       if (alternatives.length) {
         result.candidates = [...alternatives, ...result.candidates];
         delete result.error;
+        delete result.diagnostics;
       }
     }
     self.postMessage({ id, light, ...result });

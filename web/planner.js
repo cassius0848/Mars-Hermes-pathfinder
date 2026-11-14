@@ -126,7 +126,7 @@ class MinHeap {
 }
 
 function openCells(grid, limit, closures) {
-  const open = Uint8Array.from(grid.slope, (slope, i) => Number.isFinite(grid.height[i]) && slope <= limit);
+  const open = Uint8Array.from(grid.slope, (slope, i) => Number.isFinite(grid.height[i]) && Number.isFinite(slope) && slope >= 0 && slope <= limit);
   for (const { cell: [row, col], radius } of closures) {
     const cells = radius / grid.step, n = Math.ceil(cells);
     for (let y = Math.max(0, row - n); y <= Math.min(grid.rows - 1, row + n); y++) {
@@ -193,7 +193,8 @@ export function solveLeg(grid, route, from, to, profile, open, light) {
 function itinerary(grid, route, stops, profile, open, light) {
   const path = [indexOf(grid, route.start)];
   const times = [0], lengths = [0], visits = [];
-  let from = route.start, shadow = 0, steep = 0, ascent = 0, maxSlope = 0;
+  let from = route.start, shadow = 0, steep = 0, ascent = 0, descent = 0, slopeSum = 0;
+  let maxSlope = grid.slope[path[0]], minElevation = grid.height[path[0]], maxElevation = minElevation;
   for (const stop of stops) {
     const leg = solveLeg(grid, route, from, stop.cell, profile, open, light);
     if (!leg) return null;
@@ -202,9 +203,15 @@ function itinerary(grid, route, stops, profile, open, light) {
       const distance = Math.hypot(...cellOf(grid, cell).map((v, j) => v - cellOf(grid, previous)[j])) * grid.step;
       const rise = grid.height[cell] - grid.height[previous];
       const grade = Math.atan2(Math.abs(rise), distance) / DEG;
-      const slope = Math.max(grade, grid.slope[previous], grid.slope[cell]);
+      const [pr, pc] = cellOf(grid, previous), [cr, cc] = cellOf(grid, cell);
+      const cornerSlope = pr !== cr && pc !== cc ? Math.max(grid.slope[pr * grid.cols + cc], grid.slope[cr * grid.cols + pc]) : 0;
+      const slope = Math.max(grade, grid.slope[previous], grid.slope[cell], cornerSlope);
       maxSlope = Math.max(maxSlope, slope);
       ascent += Math.max(0, rise);
+      descent += Math.max(0, -rise);
+      slopeSum += slope * distance;
+      minElevation = Math.min(minElevation, grid.height[cell]);
+      maxElevation = Math.max(maxElevation, grid.height[cell]);
       if (slope >= SLOPE_EXPOSURE_DEG) steep += distance;
       shadow += distance * (Number(!isLit(grid, light, previous)) + Number(!isLit(grid, light, cell))) / 2;
       path.push(cell);
@@ -222,12 +229,15 @@ function itinerary(grid, route, stops, profile, open, light) {
   }
   const minutes = times.at(-1), margin = route.budget - route.reserve - minutes;
   return { path, times, lengths, visits, profiles: [profile], distance: lengths.at(-1), minutes,
-    margin, shadow, steep, ascent, maxSlope, feasible: margin >= -1e-8 };
+    margin, shadow, steep, ascent, descent, maxSlope, minElevation, maxElevation,
+    averageSlope: lengths.at(-1) ? slopeSum / lengths.at(-1) : maxSlope,
+    movingMinutes: minutes - visits.reduce((sum, visit) => sum + visit.leave - visit.arrival, 0),
+    feasible: margin >= -1e-8 };
 }
 
 const samePath = (a, b) => a.path.length === b.path.length && a.path.every((cell, i) => cell === b.path[i]);
 
-export function planMission(grid, route, light) {
+function searchMission(grid, route, light) {
   if (route.start == null || (!route.stops.length && !route.returnToBase)) return { error: "请在地图上选取出发地和目的地。", candidates: [] };
   const open = openCells(grid, route.limit, route.closures);
   const stops = [...route.stops];
@@ -256,6 +266,48 @@ export function planMission(grid, route, light) {
   return { candidates };
 }
 
+export function assessCandidate(candidate, route) {
+  const violations = [];
+  if (candidate.maxSlope > route.limit + 1e-8) violations.push({ metric: '最大通行坡度', actual: candidate.maxSlope,
+    limit: route.limit, excess: candidate.maxSlope - route.limit, unit: '°', code: 'SLOPE' });
+  if (candidate.minutes > route.budget + 1e-8) violations.push({ metric: '任务总用时', actual: candidate.minutes,
+    limit: route.budget, excess: candidate.minutes - route.budget, unit: '分钟', code: 'BUDGET' });
+  const remaining = route.budget - candidate.minutes;
+  if (remaining < route.reserve - 1e-8) violations.push({ metric: '返航预留不足', actual: remaining,
+    limit: route.reserve, excess: route.reserve - remaining, unit: '分钟', code: 'RESERVE' });
+  return { ...candidate, margin: remaining - route.reserve, violations, feasible: violations.length === 0 };
+}
+
+export function planMission(grid, route, light) {
+  if (!route.start || (!route.stops.length && !route.returnToBase)) return { candidates: [], error: '请在地图上选取出发地和目的地。' };
+  const points = [{ cell: route.start, name: '出发地' }, ...route.stops];
+  if (route.returnToBase) points.push({ cell: route.base, name: '返航点' });
+  const diagnostics = [];
+  for (const point of points) {
+    if (!point.cell) continue;
+    const i = indexOf(grid, point.cell);
+    if (i < 0 || !Number.isFinite(grid.height[i]) || !Number.isFinite(grid.slope[i]) || grid.slope[i] < 0) {
+      diagnostics.push(`${point.name}缺少有效高程或坡度数据，请重新选点。`);
+    } else if ((route.closures ?? []).some(({ cell, radius }) => Math.hypot(cell[0] - point.cell[0], cell[1] - point.cell[1]) * grid.step <= radius)) {
+      diagnostics.push(`${point.name}位于封路区域内，请移动该点或清空封路。`);
+    }
+  }
+  if (diagnostics.length) return { candidates: [], diagnostics, error: diagnostics.join(' ') };
+  const estimating = route.mode === 'estimate';
+  let result = searchMission(grid, estimating ? { ...route, limit: 90 } : route, light);
+  let relaxed = estimating;
+  if (!result.candidates.length && route.start && route.stops.length && route.diagnose === true && !estimating && !route.returnOnly) {
+    result = searchMission(grid, { ...route, limit: 90 }, light);
+    relaxed = true;
+  }
+  if (!result.candidates.length) return { ...result,
+    error: relaxed ? '有效地形覆盖或封路使起终点不连通，无法可靠估算完整路线及用时。' : '当前坡度限制或封路使起终点不连通。',
+    diagnostics: [relaxed ? '已检查有效高程、坡度与封路。放宽坡度后仍无完整通路；请移动选点或清空封路。' : '当前坡度与封路约束下没有完整通路；可使用按起终点反算查看参考条件。'] };
+  result.candidates = result.candidates.map(candidate => ({ ...assessCandidate(candidate, route), estimated: relaxed }));
+  if (relaxed) result.error = estimating ? '按起终点反算：先求参考路线，再核对当前限制。' : '当前坡度限制下无连通路线，以下为放宽坡度后的参考估算。';
+  return result;
+}
+
 export function progressAt(grid, plan, minute) {
   const time = Math.max(0, Math.min(minute, plan.minutes));
   let lo = 0, hi = plan.times.length - 1;
@@ -271,3 +323,4 @@ export function progressAt(grid, plan, minute) {
     visit: plan.visits.find(stop => time >= stop.arrival && time < stop.leave),
     distance: plan.lengths[lo] + (plan.lengths[hi] - plan.lengths[lo]) * ratio };
 }
+

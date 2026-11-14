@@ -37,7 +37,7 @@ jobs:
       - name: Export the browser data and check route planning
         run: |
           python scripts/build_web.py
-          node --test tests/web_planner.test.mjs
+          node --test tests/web_planner.test.mjs tests/route-requirements.test.mjs
 
       - name: Verify judge demo assets
         env:

@@ -44,8 +44,11 @@
     <aside class="side" aria-label="任务设置与计算结果">
       <section class="panel plan-panel">
         <div class="panel-heading"><h2>任务规划</h2><button id="preset" class="text-button" type="button">载入示例</button></div>
+        <label class="planning-method">计算方式<select id="planning-method"><option value="constrained">按限制规划</option><option value="estimate">按起终点反算需求</option></select></label>
+        <p id="method-note" class="muted note">在坡度限制内比较路线，并检查时间预算与返航预留。</p>
         <div class="pickers"><button id="pick-start" type="button" aria-pressed="false"><span class="dot start"></span><span><strong>出发地</strong><small id="start-coord">点击后在地图选点</small></span></button>
           <button id="pick-goal" type="button" aria-pressed="false"><span class="dot goal"></span><span><strong>目的地</strong><small id="goal-coord">点击后在地图选点</small></span></button></div>
+        <div class="plan-actions"><button id="swap-points" type="button" disabled>交换起终点</button><button id="clear-plan" type="button">清空本次规划</button></div>
         <p class="message" id="pick-hint" role="status">正在读取 Jezero 地图…</p>
         <label id="roundtrip-field" class="roundtrip"><input id="roundtrip" type="checkbox" checked>规划回到出发地</label>
         <div class="params" id="settings"></div>
@@ -55,6 +58,8 @@
       <section class="panel routes-panel">
         <div class="panel-heading"><h2>路线方案</h2><span id="route-count" class="mono muted"></span></div>
         <div id="routes"><p class="muted">选取起终点后可比较候选路线。</p></div>
+        <div id="route-diagnostics" role="status" aria-live="polite"></div>
+        <details id="route-report" hidden open><summary>路线完整指标与所需条件</summary><dl id="route-metrics"></dl><p class="muted note">坡度含相邻格高差与对角通行格检查；光照为所选时刻的模型估计。热学、地质等数据可在图层中查看，未提供逐点定量值。</p><button id="export-samples" type="button" class="text-button">导出沿线逐点数据 CSV ↓</button></details>
         <button id="start-nav" class="secondary" type="button" disabled>开始导航演示 <span aria-hidden="true">→</span></button>
         <button id="export-route" class="text-button" type="button" disabled hidden>导出任务卡 ↓</button>
         <p id="scope-note" class="muted note"></p>
