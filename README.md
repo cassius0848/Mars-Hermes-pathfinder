@@ -4,6 +4,8 @@
 >
 > **A local EVA mission-planning tool for Martian astronauts**
 
+**队友入口**：[在线演示](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/) · [离线网页 ZIP](releases/mars-pathfinder-jezero-offline.zip) · [使用说明与校验](releases/README.md)
+
 ## 中文版
 
 ### 项目定位
@@ -146,6 +148,8 @@ mars-pathfinder-ai/
 
 ### 技术栈与运行
 
+中文版浏览器导航支持地图选点、路线对比、三维回放、封路绕行和在线查询 NASA / USGS。可从已核验的 GeoTIFF 导出静态网页，在本机或托管站点运行。[网页操作、数据自查与复现](docs/web-navigation-audit.md)
+
 Python 3.11+、NumPy、SciPy、Pandas、Rasterio、PyProj、NetworkX、Streamlit、Plotly、Pytest。AI API 为可选依赖。
 
 ```bash
@@ -154,11 +158,15 @@ PYTHONPATH=src pytest
 streamlit run app/streamlit_app.py
 ```
 
-启动后默认进入 Jezero 40 km 区域地图。可切换 CTX 光学影像、高程、坡度、THEMIS 红外和 USGS 地质，查看毅力号历史路线，或在 100 m 网格上试算区域走廊。进入 Hawksbill Gap 可用 2 m 网格计算局部步行任务并查看三维地形。团队的 MOLA 样本和 Mars Trek 书签仍可通过研究区选择器访问。 [首版导航范围与数据来源](docs/jezero-navigation-scope.md)
+启动后默认进入 Jezero 40 km 区域地图。可切换 CTX 光学影像、高程、坡度、THEMIS 红外和 USGS 地质，查看毅力号历史路线，或在 100 m 网格上试算区域走廊。区域图可打开 Hawksbill Gap 和 Neretva Vallis 两个 2 m 步行规划器，均支持离线二维地图、高程剖面和三维地形。团队的 MOLA 样本和 Mars Trek 书签可通过研究区选择器访问。 [首版导航范围与数据来源](docs/jezero-navigation-scope.md)
 
 ### Hawksbill Gap 研究包
 
 队友的 `docs/jezero-research/` 归档已经接入 Streamlit 的研究包模式。选择 `Hawksbill Gap research package` 后，应用读取真实的 2 m HiRISE DTM、派生坡度、配套正射图、THEMIS 区域热红外、USGS SIM 3464 局部地质和 Perseverance/PDS 科学证据点。归档路线只用于对照，实时路线仍由当前 A* 规划器重新计算。MEDA 作为时间序列证据显示，不会被复制成虚假的空间天气栅格。
+
+### Neretva Vallis 两岸任务
+
+从 Streamlit 区域图点击「打开 Neretva Vallis EVA 规划器」。在 1.12 × 1.12 km 的 HiRISE 地图上，可以比较北岸 Cheyava Falls 和南岸 Malgosa Crest 的岩石纹理。默认预算为 100 分钟，包含 8 分钟返航预留和每站 12 分钟观察。把预算改为 45 分钟，可以看到推荐路线改成南岸单站。 [数据切片、来源与实测路线](docs/neretva-vallis.md)
 
 ### MVP 实机演示脚本
 
@@ -331,7 +339,7 @@ PYTHONPATH=src pytest
 streamlit run app/streamlit_app.py
 ```
 
-The app opens the 40 km Jezero map. Switch among CTX imagery and elevation, terrain slope, THEMIS infrared imagery, and USGS geology. The regional map can screen corridors on a 100 m grid and open the 2 m Hawksbill Gap EVA planner with georeferenced imagery, a route profile, and a 3D terrain view. The study-area selector also includes the earlier MOLA samples. [Navigation scope and data sources](docs/jezero-navigation-scope.md)
+The app opens the 40 km Jezero map. Switch among CTX imagery and elevation, terrain slope, THEMIS infrared imagery, and USGS geology. Screen corridors on a 100 m grid, then open the Hawksbill Gap or Neretva Vallis EVA planner for 2 m route planning, georeferenced imagery, a route profile, and 3D terrain. The study-area selector also includes the earlier MOLA samples. [Navigation scope and data sources](docs/jezero-navigation-scope.md) · [Neretva Vallis walkthrough](docs/neretva-vallis.md)
 
 ### MVP Live Demo Script
 
