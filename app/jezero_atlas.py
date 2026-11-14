@@ -6,23 +6,29 @@ from pathlib import Path
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
+from pyproj import Transformer
 
 from mars_pathfinder.data.jezero_region import (
     JezeroRegion,
     REGIONAL_SLOPE_LIMIT_DEG,
     REGION_CENTER,
+    REGION_CRS,
     REGION_RADIUS_M,
     grid_axes,
     load_jezero_region,
 )
+from mars_pathfinder.data.research import NERETVA_CENTER, NERETVA_CRS, NERETVA_WIDTH_M
 
 
 REGIONAL_VIEW = "Jezero region · 40 km"
 LOCAL_VIEW = "Hawksbill Gap research package"
+NERETVA_VIEW = "Neretva Vallis · Bright Angel"
 LANDING = "Perseverance landing area"
 PLACES = {
     LANDING: (77.45088572, 18.44462715),  # First drive localization in the bundled NASA archive
     "Hawksbill Gap": (77.406, 18.4588),
+    NERETVA_VIEW: NERETVA_CENTER,
+    "Lookout Hill · Sol 1354": (77.26852677, 18.45752781),
     "Western traverse · Sol 2022": (77.23322287, 18.43559434),
 }
 LAYERS = {
@@ -53,8 +59,8 @@ def find_corridor(_region: JezeroRegion, start, goal):
     return _region.plan_corridor(start, goal)
 
 
-def open_local_planner():
-    st.session_state["study_area"] = LOCAL_VIEW
+def open_local_planner(view):
+    st.session_state["study_area"] = view
 
 
 def render_jezero_atlas(project_root: Path):
@@ -70,7 +76,8 @@ def render_jezero_atlas(project_root: Path):
         show_traverse = st.toggle("Perseverance traverse", value=True)
         if show_traverse:
             st.caption(f"Archived points · {np.count_nonzero(np.isfinite(rover_x)):,} · through Sol {rover_sols.max()}")
-        st.button("Open Hawksbill Gap EVA planner", on_click=open_local_planner, type="primary")
+        st.button("Open Hawksbill Gap EVA planner", on_click=open_local_planner, args=(LOCAL_VIEW,), type="primary")
+        st.button("Open Neretva Vallis EVA planner", on_click=open_local_planner, args=(NERETVA_VIEW,))
 
         st.subheader("Regional route screening")
         st.caption(
@@ -165,6 +172,15 @@ def regional_map(region, layer, rover_x, rover_y, rover_sols, show_traverse, res
         x=np.asarray(place_x) / 1000, y=np.asarray(place_y) / 1000, text=list(PLACES),
         mode="markers", marker={"color": "#fff2da", "line": {"color": "#281d18", "width": 1.5}, "size": 9},
         hovertemplate="%{text}<extra></extra>", name="Mission landmarks",
+    ))
+    extent = NERETVA_WIDTH_M / 2
+    edge = [-extent, extent, extent, -extent, -extent]
+    footprint_x, footprint_y = Transformer.from_crs(NERETVA_CRS, REGION_CRS, always_xy=True).transform(
+        edge, [-extent, -extent, extent, extent, -extent],
+    )
+    figure.add_trace(go.Scatter(
+        x=np.asarray(footprint_x) / 1000, y=np.asarray(footprint_y) / 1000, mode="lines",
+        line={"color": "#62e3d0", "width": 2}, name="Neretva walking area", hoverinfo="skip",
     ))
     if result is not None:
         cx, cy, _, _ = result

@@ -1,7 +1,8 @@
-"""Plan and display Hawksbill Gap routes on the archived local Mars grid."""
+"""Display EVA routes on georeferenced local Mars grids."""
 
 import base64
 from io import BytesIO
+from math import ceil
 
 import numpy as np
 import plotly.graph_objects as go
@@ -9,6 +10,10 @@ from PIL import Image
 from rasterio.transform import xy
 
 from mars_pathfinder.data.jezero_region import grid_axes
+
+
+def _waypoint_label(package, target):
+    return target.name.split(" · ", 1)[0] if package.observation_references else target.name
 
 
 def _local_points(package, points):
@@ -29,6 +34,11 @@ def route_layers(package, layer):
             x0=left + step / 2, y0=top - step / 2, dx=step, dy=-step, hoverinfo="skip",
         )
 
+    if layer == "THEMIS thermal context":
+        x, y = grid_axes(package.thermal_transform, package.thermal.shape)
+        return go.Heatmap(x=x, y=y, z=package.thermal, colorscale="Inferno",
+                          colorbar={"title": "THEMIS DN"}, zsmooth=False, hoverongaps=False)
+
     values = package.slope if layer == "Slope" else package.terrain.elevation
     color_title = "Slope (°)" if layer == "Slope" else "Elevation (m)"
     return go.Heatmap(x=x, y=y, z=values, colorscale="Cividis", colorbar={"title": color_title}, hoverongaps=False)
@@ -43,12 +53,22 @@ def render_map(package, layer, path, stops):
     marked = [package.base_point, *(target.location for target in stops)]
     x, y = _local_points(package, marked)
     figure.add_trace(go.Scatter(
-        x=x, y=y, text=["Simulated base", *(target.name for target in stops)],
-        mode="markers+text", textposition="top right", name="Mission waypoints",
+        x=x, y=y, text=["Simulated base", *(_waypoint_label(package, target) for target in stops)],
+        hovertext=["Simulated base", *(target.name for target in stops)],
+        mode="markers+text", textposition="top right", name="Simulated waypoints",
         marker={"size": 10, "color": "#ffce89", "line": {"color": "#322219", "width": 1}},
         textfont={"color": "#ffdcad", "size": 12},
-        hovertemplate="%{text}<extra></extra>",
+        hovertemplate="%{hovertext}<extra></extra>",
     ))
+    if package.observation_references:
+        references = package.observation_references
+        east, north = zip(*(reference.xy_m for reference in references))
+        figure.add_trace(go.Scatter(
+            x=east, y=north, text=[reference.rover_reference for reference in references],
+            mode="markers", name="Rover reference positions",
+            marker={"size": 19, "color": "#9de1ff", "symbol": "circle-open", "line": {"width": 1.5}},
+            hovertemplate="%{text}<extra></extra>",
+        ))
     left, top = package.transform.c, package.transform.f
     width = package.terrain.shape[1] * package.transform.a
     height = package.terrain.shape[0] * abs(package.transform.e)
@@ -57,7 +77,7 @@ def render_map(package, layer, path, stops):
         xaxis={"title": "East · m", "range": [left, left + width], "constrain": "domain"},
         yaxis={"title": "North · m", "range": [top - height, top], "scaleanchor": "x", "scaleratio": 1,
                "constrain": "domain"},
-        legend={"orientation": "h", "y": -0.14}, uirevision="hawksbill_2d",
+        legend={"orientation": "h", "y": -0.14}, uirevision=package.name,
     )
     return figure
 
@@ -65,8 +85,10 @@ def render_map(package, layer, path, stops):
 def render_terrain(package, path, stops):
     x, y = grid_axes(package.transform, package.terrain.shape)
     elevation = package.terrain.elevation
-    step = 2
-    figure = go.Figure(go.Surface(x=x[::step], y=y[::step], z=elevation[::step, ::step],
+    step = max(2, ceil(max(elevation.shape) / 150))
+    draw_rows = np.r_[np.arange(0, len(y) - 1, step), len(y) - 1]
+    draw_cols = np.r_[np.arange(0, len(x) - 1, step), len(x) - 1]
+    figure = go.Figure(go.Surface(x=x[draw_cols], y=y[draw_rows], z=elevation[np.ix_(draw_rows, draw_cols)],
                                   colorscale="Earth", showscale=False, name="HiRISE terrain"))
     if path:
         x_path, y_path = _local_points(package, path)
@@ -78,13 +100,15 @@ def render_terrain(package, path, stops):
     x_marked, y_marked = _local_points(package, marked)
     figure.add_trace(go.Scatter3d(
         x=x_marked, y=y_marked, z=elevation[rows, cols] + 0.4,
-        text=["Simulated base", *(target.name for target in stops)], mode="markers+text",
-        marker={"size": 4, "color": "#ffce89"}, name="Mission waypoints",
+        text=["Simulated base", *(_waypoint_label(package, target) for target in stops)], mode="markers+text",
+        textfont={"color": "#302017", "size": 12},
+        marker={"size": 4, "color": "#ffce89"}, name="Simulated waypoints",
     ))
     figure.update_layout(
-        height=560, margin={"l": 8, "r": 8, "t": 8, "b": 24}, uirevision="hawksbill_3d",
+        height=560, margin={"l": 8, "r": 8, "t": 8, "b": 24}, uirevision=package.name,
+        legend={"orientation": "h", "y": 1.01, "x": 0.02},
         scene={"xaxis_title": "East · m", "yaxis_title": "North · m", "zaxis_title": "Elevation · m",
-               "aspectmode": "data"},
+               "aspectmode": "data", "camera": {"eye": {"x": 1.5, "y": -1.5, "z": 1.35}}},
     )
     return figure
 

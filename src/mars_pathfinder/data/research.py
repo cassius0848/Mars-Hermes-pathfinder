@@ -1,4 +1,4 @@
-"""Adapters for the archived Hawksbill Gap research package.
+"""Adapters for offline local EVA research packages.
 
 研究归档适配器：把队友取得的 HiRISE、THEMIS、USGS 和任务航点数据转换为
 项目可以直接消费的模型。该模块只读取固定版本的本地资料，不重新下载数据。
@@ -14,15 +14,36 @@ from pathlib import Path
 import numpy as np
 import rasterio
 from pyproj import Transformer
-from rasterio.transform import Affine, from_origin, rowcol
+from rasterio.crs import CRS
+from rasterio.transform import Affine, array_bounds, from_origin, rowcol
 from rasterio.warp import Resampling, reproject
 
 from mars_pathfinder.data.jezero_region import MARS_GEOGRAPHIC_CRS
 from mars_pathfinder.data.loaders import load_geojson_layer
-from mars_pathfinder.models import Point, ScienceTarget, TerrainGrid, VectorLayer
+from mars_pathfinder.models import Point, ScienceTarget, SurfaceImageEvidence, TerrainGrid, VectorLayer
+from mars_pathfinder.terrain.derivatives import slope_degrees
 
 
 LOCAL_CRS = "+proj=aeqd +lat_0=18.4588 +lon_0=77.406 +a=3396190 +b=3396190 +units=m +type=crs"
+NERETVA_CENTER = (77.3030, 18.4945)
+NERETVA_WIDTH_M = 1120
+NERETVA_SPACING_M = 2
+NERETVA_CRS = (
+    f"+proj=aeqd +lat_0={NERETVA_CENTER[1]} +lon_0={NERETVA_CENTER[0]} "
+    "+a=3396190 +b=3396190 +units=m +type=crs"
+)
+
+
+@dataclass(frozen=True)
+class ObservationReference:
+    """Archive a rover reference independently of the modeled walking stop."""
+
+    target_id: str
+    xy_m: tuple[float, float]
+    rover_reference: str
+    rover_source_url: str
+    modeled_stop_offset_m: float
+    photograph: SurfaceImageEvidence
 
 
 @dataclass(frozen=True)
@@ -34,13 +55,15 @@ class ResearchPackage:
     slope: np.ndarray
     optical_rgb: np.ndarray
     thermal: np.ndarray
-    geology: VectorLayer
+    geology: VectorLayer | None
     science_targets: list[ScienceTarget]
     base_point: Point
     route_preview: dict
     meda_summary: dict[str, dict[str, float]]
     source_root: str
     transform: Affine
+    thermal_transform: Affine | None = None
+    observation_references: tuple[ObservationReference, ...] = ()
 
 
 def _read_raster(path: Path) -> np.ndarray:
@@ -53,10 +76,9 @@ def _read_raster(path: Path) -> np.ndarray:
         return dataset.read()
 
 
-def _read_rgb(path: Path, grid_crs, transform: Affine, shape: tuple[int, int]) -> np.ndarray:
-    """Resample the orthophoto to 0.5 m cells within the DTM extent."""
+def _read_rgb(path: Path, grid_crs, transform: Affine, shape: tuple[int, int], *, oversampling=4) -> np.ndarray:
+    """Resample and contrast-stretch the orthophoto within the DTM extent."""
 
-    oversampling = 4
     display_transform = from_origin(transform.c, transform.f, transform.a / oversampling, -transform.e / oversampling)
     display_shape = tuple(length * oversampling for length in shape)
     rgb = np.zeros((*display_shape, 3), dtype=np.uint8)
@@ -87,7 +109,7 @@ def _lonlat_to_local(point: tuple[float, float], transform: Affine, grid_crs, sh
     project = Transformer.from_crs(MARS_GEOGRAPHIC_CRS, grid_crs, always_xy=True)
     row, col = rowcol(transform, *project.transform(*point))
     if not (0 <= row < shape[0] and 0 <= col < shape[1]):
-        raise ValueError(f"Archived waypoint {point} is outside the Hawksbill Gap DTM.")
+        raise ValueError(f"Archived waypoint {point} is outside the local DTM.")
     return int(row), int(col)
 
 
@@ -170,4 +192,57 @@ def load_hawksbill_gap_package(root: str | Path) -> ResearchPackage:
         meda_summary=meda_summary,
         source_root=str(root),
         transform=transform,
+    )
+
+
+def load_neretva_package(root: str | Path) -> ResearchPackage:
+    """Load the Bright Angel and Serpentine Rapids walking area."""
+
+    root = Path(root)
+    manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+    extent = NERETVA_WIDTH_M / 2
+    elevation_path = root / "elevation.tif"
+    with rasterio.open(elevation_path) as dataset:
+        elevation = dataset.read(1, masked=True).astype(float).filled(np.nan)
+        transform, grid_crs = dataset.transform, dataset.crs
+        if (grid_crs != CRS.from_string(NERETVA_CRS) or dataset.res != (NERETVA_SPACING_M,) * 2
+                or array_bounds(*dataset.shape, transform) != (-extent, -extent, extent, extent)):
+            raise ValueError("Neretva Vallis elevation does not match the local planning grid.")
+    terrain = TerrainGrid(elevation, transform.a, NERETVA_CRS, str(elevation_path))
+    with rasterio.open(root / "optical.tif") as source:
+        if (source.crs != grid_crs or source.res != (1, 1)
+                or array_bounds(*source.shape, source.transform) != array_bounds(*terrain.shape, transform)):
+            raise ValueError("Neretva Vallis orthophoto does not match the local planning extent.")
+    optical_rgb = _read_rgb(root / "optical.tif", grid_crs, transform, elevation.shape, oversampling=2)
+    with rasterio.open(root / "thermal.tif") as source:
+        if source.crs != grid_crs or source.res != (100, 100):
+            raise ValueError("Neretva Vallis thermal context does not match the 100 m display grid.")
+        thermal = source.read(1, masked=True).astype(np.float32).filled(np.nan)
+        thermal_transform = source.transform
+
+    project = Transformer.from_crs(MARS_GEOGRAPHIC_CRS, grid_crs, always_xy=True)
+    targets, references = [], []
+    for observation in manifest["observations"]:
+        image = observation["image"]
+        rover = observation["rover_reference"]
+        targets.append(ScienceTarget(
+            observation["id"], observation["name"],
+            _lonlat_to_local(observation["modeled_stop_lonlat"], transform, grid_crs, terrain.shape),
+            1.0, observation["science_task"], "NASA Perseverance / PDS PLACES",
+            stop_duration_min=observation["stop_duration_min"],
+        ))
+        references.append(ObservationReference(
+            observation["id"], project.transform(*rover["lonlat"]), rover["description"],
+            rover["source"], observation["modeled_stop_offset_m"],
+            SurfaceImageEvidence(
+                image["id"], str(root / image["file"]), image["asset_url"], image["page_url"],
+                "Perseverance", "SHERLOC WATSON", image["sol"], "NASA/JPL-Caltech",
+            ),
+        ))
+    return ResearchPackage(
+        name="Neretva Vallis", terrain=terrain, slope=slope_degrees(terrain), optical_rgb=optical_rgb,
+        thermal=thermal, geology=None, science_targets=targets,
+        base_point=_lonlat_to_local(manifest["simulated_base_lonlat"], transform, grid_crs, terrain.shape),
+        route_preview={}, meda_summary={}, source_root=str(root), transform=transform,
+        thermal_transform=thermal_transform, observation_references=tuple(references),
     )

@@ -18,7 +18,7 @@ PROJECT_ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from hawksbill_map import elevation_profile, render_map, render_terrain  # noqa: E402
-from jezero_atlas import LOCAL_VIEW, REGIONAL_VIEW, render_jezero_atlas  # noqa: E402
+from jezero_atlas import LOCAL_VIEW, NERETVA_VIEW, REGIONAL_VIEW, render_jezero_atlas  # noqa: E402
 from mars_pathfinder.analysis.mission import STEEP_TERRAIN_DEG  # noqa: E402
 from mars_pathfinder.data.loaders import (  # noqa: E402
     load_geojson_layer,
@@ -28,7 +28,7 @@ from mars_pathfinder.data.loaders import (  # noqa: E402
     load_synthetic_mission,
     science_targets_from_vector,
 )
-from mars_pathfinder.data.research import load_hawksbill_gap_package  # noqa: E402
+from mars_pathfinder.data.research import load_hawksbill_gap_package, load_neretva_package  # noqa: E402
 from mars_pathfinder.ai.context_builder import build_mission_context  # noqa: E402
 from mars_pathfinder.ai.provider import MockProvider  # noqa: E402
 from mars_pathfinder.models import EVAState, MissionConstraints, ScienceTarget  # noqa: E402
@@ -39,6 +39,8 @@ from mars_pathfinder.terrain.derivatives import slope_degrees  # noqa: E402
 
 st.set_page_config(page_title="Mars Pathfinder AI — EVA Planner", layout="wide")
 load_hawksbill_gap_package = st.cache_data(show_spinner=False)(load_hawksbill_gap_package)
+load_neretva_package = st.cache_data(show_spinner=False)(load_neretva_package)
+generate_candidates = st.cache_data(show_spinner=False, max_entries=16)(generate_candidates)
 
 catalog = json.loads((PROJECT_ROOT / "data" / "source_catalog.json").read_text())
 with st.sidebar.expander("NASA / mission resources", expanded=False):
@@ -53,13 +55,15 @@ bookmarked_sample = PROJECT_ROOT / "data" / "raw" / "mars_trek_views" / "view_-9
 geology_path = PROJECT_ROOT / "data" / "raw" / "usgs" / "jezero_geologic_units_100m.geojson"
 optical_path = PROJECT_ROOT / "data" / "raw" / "mars_trek" / "jezero_viking_mdim21_512.jpg"
 research_root = PROJECT_ROOT / "docs" / "jezero-research"
+neretva_root = PROJECT_ROOT / "data" / "local" / "neretva-vallis"
 research_photo_path = research_root / "raw" / "perseverance-sol518-mastcam-z.png"
 science_mosaic = research_root / "raw" / "perseverance-pia24924-fig-a.png"
 
 with st.sidebar:
     st.header("Mission settings")
     study_area = st.selectbox(
-        "Study area", [REGIONAL_VIEW, LOCAL_VIEW, "Jezero (primary)", "Mars Trek bookmarked view"], key="study_area",
+        "Study area", [REGIONAL_VIEW, LOCAL_VIEW, NERETVA_VIEW, "Jezero (primary)", "Mars Trek bookmarked view"],
+        key="study_area",
     )
 
 if study_area == REGIONAL_VIEW:
@@ -69,21 +73,22 @@ if study_area == REGIONAL_VIEW:
 selected_sample = bookmarked_sample if study_area == "Mars Trek bookmarked view" else jezero_sample
 selected_bbox = (-93.0, -16.8, -92.0, -15.8) if study_area == "Mars Trek bookmarked view" else (77.0, 18.0, 78.0, 19.0)
 
-if study_area == LOCAL_VIEW:
-    # Research mode consumes the teammate's measured local package directly.
-    # 研究包模式直接读取队友取得的真实局部数据。
-    research_package = load_hawksbill_gap_package(research_root)
+is_neretva = study_area == NERETVA_VIEW
+if study_area in (LOCAL_VIEW, NERETVA_VIEW):
+    research_package = load_neretva_package(neretva_root) if is_neretva else load_hawksbill_gap_package(research_root)
     terrain = research_package.terrain
     slope = research_package.slope
     geology = research_package.geology
     targets = research_package.science_targets
     research_thermal = research_package.thermal
     start = research_package.base_point
-    selected_sample = research_root / "derived" / "jezero-elevation-local-2m.tif"
     has_official_environment_layers = False
     weather = np.zeros(terrain.shape, dtype=float)
     radiation = np.zeros(terrain.shape, dtype=float)
-    data_caption = "REAL Hawksbill Gap package · HiRISE DTM + USGS geology + THEMIS context"
+    data_caption = (
+        "Neretva Vallis · 1.12 × 1.12 km · HiRISE terrain and imagery · THEMIS · Perseverance"
+        if is_neretva else "REAL Hawksbill Gap package · HiRISE DTM + USGS geology + THEMIS context"
+    )
 elif selected_sample.exists():
     # Real-data mode: do not create the synthetic mission fixture here.
     # 真实数据模式：这里不再创建合成任务 fixture。
@@ -139,7 +144,7 @@ with st.sidebar:
     mission_targets = targets if mission_scope == "All science targets" else [selected_target]
     max_slope = st.slider("Maximum slope (degrees)", 5, 30, 18)
     if research_package is not None:
-        budget_minutes = st.slider("Simulated EVA budget (min)", 35, 120, 80, 5)
+        budget_minutes = st.slider("Simulated EVA budget (min)", 35, 120, 100 if is_neretva else 80, 5)
         reserve_minutes = st.number_input("Return reserve (min)", min_value=0, max_value=20, value=8)
         eva_hours, reserve = budget_minutes / 60, reserve_minutes / budget_minutes
         speed = 900.0
@@ -158,20 +163,30 @@ st.title("Mars Pathfinder AI")
 st.caption(f"Local Martian EVA mission planner — {data_caption}")
 
 with st.expander("Mission brief / 任务简报", expanded=True):
-    st.markdown(
-        "**Scenario:** Two astronauts leave a simulated base, investigate Swift Run and Hazeltop, "
-        "then return through a closed-loop route.\n\n"
-        "**场景：** 两名宇航员从模拟基地出发，调查 Swift Run 与 Hazeltop，随后沿闭环路线返航。"
-    )
+    if is_neretva:
+        st.markdown(
+            "Two astronauts set out from a simulated base to compare ancient rock textures at Bright Angel "
+            "on the north side and Serpentine Rapids on the south side of Neretva Vallis. They return to the base.\n\n"
+            "两名宇航员从模拟基地出发，对照北岸 Bright Angel 和南岸 Serpentine Rapids 的岩石纹理，完成观察后返回基地。"
+        )
+    elif study_area == LOCAL_VIEW:
+        st.markdown(
+            "Two astronauts leave a simulated base, investigate Swift Run and Hazeltop, then return to base.\n\n"
+            "两名宇航员从模拟基地出发，调查 Swift Run 与 Hazeltop，随后返航。"
+        )
+    else:
+        st.markdown("Two astronauts visit the selected stops and return to the simulated base.")
     brief_cols = st.columns(4)
     brief_cols[0].metric("Crew / 人员", "2 astronauts")
-    brief_cols[1].metric("Study area / 区域", "Hawksbill Gap")
+    area = "Neretva Vallis" if is_neretva else "Hawksbill Gap" if study_area == LOCAL_VIEW else study_area
+    brief_cols[1].metric("Study area / 区域", area)
     brief_cols[2].metric("Requested stops / 计划站点", str(len(mission_targets)))
     brief_cols[3].metric("Route type / 路线", "Closed loop")
-    st.caption(
-        "Observed: HiRISE, USGS, Perseverance, THEMIS · Derived: slope, route, profile "
-        "· Unavailable: spatial weather/radiation and configured life-support capacity"
-    )
+    if is_neretva:
+        st.caption("Route computed on 2 m HiRISE terrain. See Science evidence for the rover reference positions and images.")
+        st.caption("The 2 m slope grid can miss individual rocks, sand hazards and abrupt steps.")
+    elif study_area == LOCAL_VIEW:
+        st.caption("Observed HiRISE, USGS, Perseverance and THEMIS · Derived slope, route and profile")
 
 # The base point is a mission-planning input, not an observed rover location.
 # 基地位置是任务规划输入，不应被描述成真实火星车观测位置。
@@ -210,7 +225,7 @@ try:
     candidates = generate_candidates(cost_grid, start, mission_targets, terrain, slope, eva, constraints,
                                      gentle_cost_grid=gentle_cost_grid)
     pareto_candidates = pareto_filter(candidates)
-    recommended = select_recommended(candidates)
+    recommended = select_recommended(pareto_candidates if is_neretva else candidates)
     route_ids = [candidate.route_id for candidate in candidates]
     target_names = {target.target_id: target.name for target in targets}
     labels = {
@@ -247,7 +262,7 @@ with left:
     route_rows, route_cols = zip(*path)
     if research_package is not None and display_layer == "3D terrain":
         figure = render_terrain(research_package, path, route_targets)
-    elif display_layer == "THEMIS thermal context" and research_thermal is not None:
+    elif display_layer == "THEMIS thermal context" and research_thermal is not None and not is_neretva:
         # THEMIS is regional context at 100 m/pixel; do not pretend it is route-resolution.
         # THEMIS 是 100 m 区域背景，不能伪装成米级路线图层。
         figure = go.Figure(go.Heatmap(z=research_thermal, colorbar_title="THEMIS DN"))
@@ -271,6 +286,8 @@ with left:
         figure.add_trace(go.Scatter(x=[goal[1]], y=[goal[0]], mode="markers", name="Science target", marker={"color": "yellow", "size": 12}))
         figure.update_layout(title=f"{display_layer} — {terrain.source}", yaxis_autorange="reversed")
     st.plotly_chart(figure, use_container_width=True)
+    if is_neretva and display_layer == "THEMIS thermal context":
+        st.caption("Mars Odyssey THEMIS · 100 m cells · relative infrared intensity for regional context.")
     if research_package is not None:
         st.plotly_chart(elevation_profile(research_package, path, segments), use_container_width=True)
 
@@ -300,7 +317,7 @@ with right:
         st.warning(f"Target alignment requires review; recorded uncertainty up to {report['max_position_uncertainty_m']:.1f} m")
     st.caption("Sources · " + ", ".join(sorted({target.source for target in route_targets})))
     if not has_official_environment_layers:
-        st.info("Weather and radiation have no selected official layer; their weights are 0 and they are not presented as observations.")
+        st.info("Weather and radiation are unavailable in this view. Route scoring assigns both a weight of 0.")
 
 with st.expander("Offline mission assistant (MockProvider)"):
     # This provider is deterministic and does not call DeepSeek yet.
@@ -343,7 +360,21 @@ with st.expander("Route candidate comparison / 候选路线对比"):
     st.dataframe(candidate_rows, use_container_width=True, hide_index=True)
     st.caption("Routes are deterministic candidates. AI does not choose or alter hard constraints.")
 
-if research_package is not None:
+if is_neretva:
+    st.caption("[USGS HiRISE terrain](https://doi.org/10.5066/P9REJ9JN) · "
+               "[NASA Mars Trek imagery](https://trek.nasa.gov/mars/) · "
+               "[Mars Odyssey THEMIS](https://stac.astrogeology.usgs.gov/docs/data/mars/themis_controlled_mosaics/)")
+    with st.expander("Science evidence · Bright Angel and Serpentine Rapids"):
+        st.caption("Rover references locate the observations approximately. The route markers are simulated stops.")
+        for target, reference, column in zip(targets, research_package.observation_references, st.columns(2)):
+            with column:
+                st.markdown(f"**{target.name}**")
+                st.write(target.rationale)
+                image = reference.photograph
+                st.image(image.local_path, caption=f"Sol {image.sol} · {image.instrument} · {image.attribution}")
+                st.caption(f"{reference.rover_reference} · Modeled stop offset {reference.modeled_stop_offset_m:.1f} m")
+                st.markdown(f"[NASA observation]({image.page_url}) · [Rover reference data]({reference.rover_source_url})")
+elif study_area == LOCAL_VIEW:
     with st.expander("Science evidence · Swift Run and Hazeltop"):
         first, second = st.columns(2)
         with first:
@@ -367,14 +398,14 @@ if research_package is not None:
 
 # Evidence assets are shown with provenance and are never treated as DEM layers.
 # 证据素材始终显示溯源信息，不会被误当作 DEM 图层。
-if research_photo_path.exists():
+if not is_neretva and research_photo_path.exists():
     with st.expander("Research-package surface evidence — Perseverance Sol 518"):
         st.image(str(research_photo_path), caption="Real Perseverance Mastcam-Z image · Sol 518")
         st.caption("Source and provenance: docs/jezero-research/raw/perseverance-sol518.html")
 
 image_metadata_path = PROJECT_ROOT / "data" / "raw" / "perseverance" / "sol1934_sample.json"
 image_evidence = load_surface_image_evidence(image_metadata_path) if image_metadata_path.exists() else None
-if image_evidence is not None:
+if not is_neretva and image_evidence is not None:
     with st.expander("Surface image evidence — Perseverance"):
         st.image(str(PROJECT_ROOT / image_evidence.local_path), caption=f"Sol {image_evidence.sol} · {image_evidence.instrument} · {image_evidence.attribution}")
         st.caption(f"Image ID: {image_evidence.image_id}")

@@ -22,8 +22,10 @@ Jezero 的同一区域有 MRO CTX 区域高程与影像、HiRISE 立体高程、
 
 Hawksbill Gap 提供约 **520 × 520 m、2 m** 的步行任务计算。HiRISE 正射影像按其真实 CRS 和仿射变换重投影到 DTM 边界内的显示网格，二维、剖面和三维共用实际高程。采样地点的历史坐标和靠近露头的模拟观察航点仍以来源与距离说明。默认 80 min 预算和 8 min 预留下，双站最短路线约 583 m，坡度加权路线约 611 m。以 12° 作为暴露比较阈值，坡度加权路线上的陡坡段从约 172 m 降到约 55 m。将预算改为 55 min，推荐约 495 m 的 Hazeltop 单站，时间余量约 2.0 min。步速和停留属于模拟情景。 [Hawksbill Gap 研究包](jezero-research/README.md)
 
+Neretva Vallis 提供 **1,120 × 1,120 m、2 m** 的步行任务计算。北岸 Bright Angel 和南岸 Serpentine Rapids 各有毅力号现场照片与可追溯的火星车参考坐标。地图可在真实正射、高程、坡度、THEMIS 红外和三维地形之间切换。 [Neretva Vallis 步行区](neretva-vallis.md)
+
 ## 复现与扩展
 
-四个 GeoTIFF 和清单合计约 3.4 MB，应用运行时从仓库中的文件读取。安装项目依赖后，从仓库根目录运行 `streamlit run app/streamlit_app.py`。选择 `Jezero region · 40 km`，可以切换地图图层、试算走廊，然后进入 `Hawksbill Gap research package`。
+区域图的四个 GeoTIFF 和清单合计约 3.4 MB，应用运行时从仓库中的文件读取。安装项目依赖后，从仓库根目录运行 `streamlit run app/streamlit_app.py`。选择 `Jezero region · 40 km`，可以切换地图图层、试算走廊，然后进入两个步行规划器中的任意一个。
 
-联网重建数据时运行 `python scripts/build_jezero_region.py --cache survey-cache`。命令下载一次约 90 MB 的 CTX 源高程，获取 25 张小瓦片、一块 THEMIS 切片及 USGS 地质要素。最终包裁到 40 km 并附产品 URL 和 SHA-256。可按局部数据的覆盖、配准误差、DTM 质量和科学证据选择下一块步行区，先核验 Neretva Vallis 或西缘 HiRISE 数据，再将合格的局部区接入区域图。 [USGS 西缘 HiRISE 数据发布](https://www.usgs.gov/data/mars-sample-return-hirise-mosaics-terrain-relative-navigation)
+联网重建区域数据时运行 `python scripts/build_jezero_region.py --cache survey-cache`。命令下载一次约 90 MB 的 CTX 源高程，获取 25 张小瓦片、一块 THEMIS 切片及 USGS 地质要素。区域包裁到 40 km 并附产品 URL 和 SHA-256。 [区域数据清单](../data/regional/jezero-40km/manifest.json)
