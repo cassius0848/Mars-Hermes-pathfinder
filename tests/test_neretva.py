@@ -20,8 +20,10 @@ ROOT = Path("data/local/neretva-vallis")
 def test_packaged_layers_and_rover_reference_markers():
     package = load_neretva_package(ROOT)
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
-    assert package.terrain.shape == (560, 560)
-    assert package.terrain.cell_size_m == 2
+    expected_step = float(manifest["grid_spacing_m"]["elevation"])
+    expected_size = 1120 if expected_step == 1 else 560
+    assert package.terrain.shape == (expected_size, expected_size)
+    assert package.terrain.cell_size_m == expected_step
     assert np.isfinite(package.terrain.elevation).all()
     assert np.isfinite(package.slope).all()
     assert package.optical_rgb.shape == (1120, 1120, 3)
@@ -45,6 +47,12 @@ def test_packaged_layers_and_rover_reference_markers():
             assert abs(actual - observation["rover_reference"]["elevation_m"]) < 1.5
     for name, expected in manifest["sha256"].items():
         assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == expected, name
+    if expected_step == 1:
+        assert (ROOT / "elevation-1m.tif").is_file()
+        assert (ROOT / "slope-1m.tif").is_file()
+        assert (ROOT / "quality-1m.tif").is_file()
+        assert np.isfinite(package.quality).all()
+        assert package.quality.shape == package.terrain.shape
 
 
 @pytest.mark.parametrize("budget,expected_stops", [(100, 2), (45, 1)])
