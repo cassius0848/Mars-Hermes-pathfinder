@@ -56,6 +56,16 @@ from mars_pathfinder.data.loaders import (  # noqa: E402
     science_targets_from_vector,
 )
 from mars_pathfinder.data.research import load_hawksbill_gap_package  # noqa: E402
+from mars_pathfinder.data.remote_sources import (  # noqa: E402
+    CURIOSITY_MOUNT_SHARP_ASSET,
+    CURIOSITY_MOUNT_SHARP_PAGE,
+    MARS_TREK_VIEW,
+    PERSEVERANCE_RAW_IMAGES_PAGE,
+    build_mola_export_url,
+    build_usgs_geology_query_url,
+    fetch_perseverance_latest,
+    fetch_usgs_geology,
+)
 from mars_pathfinder.ai.context_builder import build_mission_context  # noqa: E402
 from mars_pathfinder.ai.provider import MockProvider  # noqa: E402
 from mars_pathfinder.models import EVAState, MissionConstraints, ScienceTarget  # noqa: E402
@@ -66,8 +76,10 @@ from mars_pathfinder.terrain.derivatives import slope_degrees  # noqa: E402
 
 st.set_page_config(page_title="火星探路者 AI — EVA 规划器", layout="wide")
 load_hawksbill_gap_package = st.cache_data(show_spinner=False)(load_hawksbill_gap_package)
+fetch_perseverance_latest = st.cache_data(ttl=900, show_spinner=False)(fetch_perseverance_latest)
+fetch_usgs_geology = st.cache_data(ttl=900, show_spinner=False)(fetch_usgs_geology)
 
-catalog = json.loads((PROJECT_ROOT / "data" / "source_catalog.json").read_text())
+catalog = json.loads((PROJECT_ROOT / "data" / "source_catalog.json").read_text(encoding="utf-8"))
 with st.sidebar.expander("NASA / 任务数据来源", expanded=False):
     for source in catalog:
         st.markdown(f"**[{source['name']}]({source['url']})**")
@@ -390,6 +402,46 @@ if research_package is not None:
         st.write(", ".join(route_names) if route_names else "没有归档路线预览")
         st.json(research_package.meda_summary)
         st.caption("MEDA 数值来自真实 Sol 518 时间序列探测；仅作为背景信息，不是空间风险栅格。")
+
+with st.expander("在线 NASA / USGS 数据（按需读取）"):
+    st.caption("以下内容从官方服务实时读取；仅缓存少量元数据和缩略图链接，不下载完整任务档案。")
+    st.markdown(
+        f"[打开 NASA Mars Trek 在线地图]({MARS_TREK_VIEW}) · "
+        f"[打开 NASA Perseverance Raw Images]({PERSEVERANCE_RAW_IMAGES_PAGE}) · "
+        f"[打开 USGS Mars Interactive Maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars)"
+    )
+    st.markdown(f"[当前 Jezero MOLA 按需导出链接]({build_mola_export_url((77.0, 18.0, 78.0, 19.0))})")
+    try:
+        live_images = fetch_perseverance_latest(limit=4)
+        st.subheader("Perseverance 最新 Raw Images")
+        if live_images:
+            image_columns = st.columns(min(4, len(live_images)))
+            for column, record in zip(image_columns, live_images):
+                with column:
+                    if record.small_url:
+                        st.image(record.small_url, caption=f"Sol {record.sol} · {record.instrument}")
+                    st.caption(record.date_taken_utc[:10] if record.date_taken_utc else "日期未提供")
+                    st.markdown(f"[NASA 图像详情]({record.page_url})")
+        else:
+            st.info("NASA 当前没有返回可展示的图片记录。")
+    except Exception as exc:
+        st.warning(f"NASA Raw Images 在线读取失败：{exc}")
+    try:
+        live_geology = fetch_usgs_geology(limit=20)
+        live_features = live_geology.get("features", [])
+        st.subheader("USGS SIM 3464 在线地质要素")
+        st.caption(f"本次按需读取 {len(live_features)} 个要素；查询链接：[GeoJSON 查询]({build_usgs_geology_query_url(limit=20)})")
+        live_names = sorted({
+            str((feature.get("properties") or {}).get("name", "未命名单元"))
+            for feature in live_features
+        })
+        if live_names:
+            st.write("、".join(live_names[:12]))
+    except Exception as exc:
+        st.warning(f"USGS 在线地质读取失败：{exc}")
+    st.subheader("Curiosity Mount Sharp 在线路线参考")
+    st.caption("该素材来自 NASA 页面，作为历史多任务路线参考，不参与当前 EVA 路线代价计算。")
+    st.markdown(f"[打开 NASA 页面]({CURIOSITY_MOUNT_SHARP_PAGE}) · [打开 NASA 原始 GIF]({CURIOSITY_MOUNT_SHARP_ASSET})")
 
 # Evidence assets are shown with provenance and are never treated as DEM layers.
 # 证据素材始终显示溯源信息，不会被误当作 DEM 图层。
