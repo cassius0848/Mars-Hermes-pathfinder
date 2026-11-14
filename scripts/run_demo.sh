@@ -7,10 +7,11 @@ cd "$ROOT"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 VENV_PYTHON="$ROOT/.venv/bin/python"
 
+if [[ ! -x "$VENV_PYTHON" ]]; then
+  "$PYTHON_BIN" -m venv "$ROOT/.venv"
+fi
+
 if [[ "${SKIP_INSTALL:-0}" != "1" ]]; then
-  if [[ ! -x "$VENV_PYTHON" ]]; then
-    "$PYTHON_BIN" -m venv "$ROOT/.venv"
-  fi
   "$VENV_PYTHON" -m pip install -r "$ROOT/requirements.txt"
 fi
 
