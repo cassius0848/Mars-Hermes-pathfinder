@@ -7,15 +7,25 @@ const ctx = canvas.getContext('2d');
 const atlasViews = {
   global: { center: [0, 0], span: 360 },
   jezero: { center: [77.74, 18.44], span: 1.7 },
+  gale: { center: [137.4, -5.4], span: 2.6 },
+  endeavour: { center: [-5.53, -1.95], span: 2.6 },
+  eberswalde: { center: [-33.3, -23.8], span: 2.2 },
   hawksbill: { center: [77.406, 18.4588], span: 0.022 },
   neretva: { center: [77.303, 18.4945], span: 0.035 },
 };
+const classicCraters = [
+  { id: 'jezero', label: 'Jezero', center: [77.74, 18.44] },
+  { id: 'gale', label: 'Gale', center: [137.4, -5.4] },
+  { id: 'endeavour', label: 'Endeavour', center: [-5.53, -1.95] },
+  { id: 'eberswalde', label: 'Eberswalde', center: [-33.3, -23.8] },
+];
+const classicRoute = ['jezero', 'gale', 'endeavour', 'eberswalde'];
 const tileCache = new Map();
 const shown = new Map();
 const colors = ['#e8a47d', '#8ad5b5', '#e9d088', '#b9b9ed', '#96bcdb', '#eaa6bb'];
 const requested = new URLSearchParams(location.search).get('area');
 const initialView = Object.hasOwn(atlasViews, requested) ? requested : 'jezero';
-const state = { ...atlasViews[initialView], center: [...atlasViews[initialView].center], epoch: 0, points: [], picking: false };
+const state = { ...atlasViews[initialView], center: [...atlasViews[initialView].center], viewId: initialView, epoch: 0, points: [], picking: false };
 const overlays = [...document.querySelectorAll('[data-overlay]')];
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
@@ -50,6 +60,38 @@ function geologicColor(unit) {
   return colors[Math.abs(id) % colors.length];
 }
 
+function drawClassicNetwork() {
+  if (state.viewId !== 'global') return;
+  const byId = new Map(classicCraters.map(crater => [crater.id, crater]));
+  ctx.save();
+  ctx.setLineDash([8, 6]);
+  ctx.strokeStyle = '#f5d892';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  classicRoute.forEach((id, index) => {
+    const [x, y] = screen(byId.get(id).center);
+    if (index) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font = '600 12px system-ui';
+  ctx.textAlign = 'left';
+  for (const crater of classicCraters) {
+    const [x, y] = screen(crater.center);
+    if (x < -80 || x > state.w + 80 || y < -40 || y > state.h + 40) continue;
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#f5d892';
+    ctx.fill();
+    ctx.strokeStyle = '#241f1b';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#fff1c7';
+    ctx.fillText(crater.label, x + 10, y - 9);
+  }
+  ctx.restore();
+}
+
 function paint() {
   ctx.fillStyle = '#191715'; ctx.fillRect(0, 0, state.w, state.h);
   for (const [id, tiles] of shown) {
@@ -63,6 +105,7 @@ function paint() {
     }
   }
   ctx.globalAlpha = 1;
+  drawClassicNetwork();
   if (state.ctxTerrain) {
     const { data, image } = state.ctxTerrain;
     const [x, y] = screen([data.lon, data.lat]);
@@ -350,16 +393,26 @@ new ResizeObserver(() => {
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   schedule();
 }).observe(canvas);
+const craterNames = {
+  jezero: 'Jezero', gale: 'Gale', endeavour: 'Endeavour', eberswalde: 'Eberswalde',
+  hawksbill: 'Hawksbill Gap', neretva: 'Neretva Vallis',
+};
 function updateWalkLink(id) {
   const area = id === 'global' ? 'jezero' : id;
-  $('walk-link').href = `./?area=${area}`;
-  const name = { hawksbill: 'Hawksbill Gap', neretva: 'Neretva Vallis', jezero: 'Jezero' }[area];
-  $('walk-link').textContent = `打开 ${name} 任务地图 →`;
+  const name = craterNames[area] ?? 'Jezero';
+  if (['jezero', 'hawksbill', 'neretva'].includes(area)) {
+    $('walk-link').href = `./?area=${area}`;
+    $('walk-link').textContent = `打开 ${name} 任务地图 →`;
+  } else {
+    $('walk-link').href = `./atlas.html?area=${area}`;
+    $('walk-link').textContent = `查看 ${name} 区域图和高程剖面 →`;
+  }
 }
 
 updateWalkLink(initialView);
 for (const [id, view] of Object.entries(atlasViews)) $(id).onclick = () => {
   updateWalkLink(id);
+  state.viewId = id;
   state.center = [...view.center]; state.span = view.span; schedule();
 };
 $('base').onchange = () => { shown.clear(); $('image-opacity').value = $('base').value === 'viking' ? 100 : 0; schedule(); };
