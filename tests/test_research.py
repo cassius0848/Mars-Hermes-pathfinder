@@ -16,14 +16,17 @@ def test_hawksbill_package_uses_real_local_products():
     pytest.importorskip('rasterio')
     pytest.importorskip('pyproj')
     package = load_hawksbill_gap_package(Path('docs/jezero-research'))
-    assert package.terrain.shape == (260, 260)
-    assert package.terrain.cell_size_m == 2.0
-    assert package.terrain.source.endswith('jezero-elevation-local-2m.tif')
+    expected_step = 1.0 if Path('docs/jezero-research/derived/jezero-elevation-local-1m.tif.b64').exists() else 2.0
+    expected_size = 520 if expected_step == 1.0 else 260
+    assert package.terrain.shape == (expected_size, expected_size)
+    assert package.terrain.cell_size_m == expected_step
+    assert package.terrain.source.endswith(f'jezero-elevation-local-{int(expected_step)}m.tif')
     assert package.science_targets
     assert package.science_targets[0].source.startswith('NASA PDS')
     assert package.geology.source == 'USGS SIM 3464'
     assert package.meda_summary['pressure']['PRESSURE'] > 0
-    assert package.optical_rgb.shape == (1040, 1040, 3)
+    expected_optical = expected_size * (4 if expected_step == 1.0 else 4)
+    assert package.optical_rgb.shape == (expected_optical, expected_optical, 3)
     archived = json.loads(Path('docs/jezero-research/derived/validation.json').read_text())
     inverse = Transformer.from_crs(package.terrain.crs, MARS_GEOGRAPHIC_CRS, always_xy=True)
     for point, name in zip([package.base_point, *(target.location for target in package.science_targets)], ('base', 'A', 'B')):
