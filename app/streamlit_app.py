@@ -76,7 +76,7 @@ from mars_pathfinder.terrain.costs import build_eva_cost  # noqa: E402
 from mars_pathfinder.terrain.derivatives import slope_degrees  # noqa: E402
 
 
-st.set_page_config(page_title="火星探路者 AI — EVA 规划器", layout="wide")
+st.set_page_config(page_title="火星探路者 AI — EVA 规划器", layout="wide", initial_sidebar_state="collapsed")
 load_hawksbill_gap_package = st.cache_data(show_spinner=False)(load_hawksbill_gap_package)
 load_neretva_package = st.cache_data(show_spinner=False)(load_neretva_package)
 generate_candidates = st.cache_data(show_spinner=False, max_entries=16)(generate_candidates)
