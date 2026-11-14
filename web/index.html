@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1d1917">
+  <meta name="description" content="OrionX 火星出舱任务规划器。使用 NASA 和 USGS 实测资料，在 Jezero 选点、比较路线并进行三维回放。">
+  <title>Mars Pathfinder AI · Jezero 火星导航</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">⤢</span><span>MARS PATHFINDER<span class="brand-ai"> AI</span></span></a>
+  <nav aria-label="页面入口"><a href="#mission">任务地图</a><a href="#sources">数据来源</a></nav>
+  <span class="team">ORIONX <span> / </span> NASA SPACE APPS</span>
+</header>
+<main id="mission">
+  <div class="page-intro">
+    <div><p class="eyebrow">JEZERO CRATER <span> / </span> MARS 2020</p><h1>火星步行导航</h1><p>在真实火星地形上选点、比较路线，并回放出舱任务。</p></div>
+    <label class="area-label">地图范围<select id="area" aria-label="地图范围" disabled></select></label>
+  </div>
+  <div class="console">
+    <section class="map-panel" aria-labelledby="map-title">
+      <div class="panel-heading"><div><h2 id="map-title">Jezero</h2><div id="map-caption" class="muted"></div></div><span id="grid-detail" class="tag mono"></span></div>
+      <div class="layer-bar" id="layers" aria-label="地图图层"></div>
+      <div class="maps">
+        <canvas id="map" tabindex="0" role="img" aria-label="火星地图。选择选点模式后点击地图，或使用方向键移动光标，按回车确认。"></canvas>
+        <div id="terrain" hidden></div>
+        <div class="map-tools"><button id="zoom-in" class="square" aria-label="放大地图" type="button">+</button><button id="zoom-out" class="square" aria-label="缩小地图" type="button">−</button><button id="zoom-reset" class="square" aria-label="重置地图视野" type="button">⌖</button></div>
+        <div id="view-tools" hidden><button id="view-toggle" type="button">返回二维</button><button id="camera" type="button" hidden>俯瞰全区</button></div>
+        <p id="terrain-fallback" class="map-notice" role="status" hidden></p>
+      </div>
+      <div class="map-footer"><label><input type="checkbox" id="show-rover" checked> 毅力号历史轨迹</label><span id="map-legend" role="status"></span></div>
+      <div id="geology-key" class="geology-key" hidden></div>
+      <div class="profile"><div class="panel-heading"><h3>高程剖面</h3><span class="muted">沿路线累计距离</span></div><canvas id="profile" role="img" aria-label="选中路线的高程剖面"></canvas></div>
+      <section class="navigation" id="navigation" aria-labelledby="nav-title" hidden>
+        <div class="panel-heading"><div><h3 id="nav-title">模拟导航</h3><p class="muted" id="nav-progress"></p></div><button id="stop-nav" type="button">结束回放</button></div>
+        <label for="timeline">任务进度</label><input type="range" id="timeline" min="0" max="1000" value="0">
+        <div class="nav-buttons"><button id="pause" type="button">暂停</button><button id="closure" type="button">报告前方封路</button><button id="return" type="button">重新规划返航</button></div>
+        <p id="nav-notice" class="message" role="status"></p>
+      </section>
+    </section>
+    <aside class="side" aria-label="任务设置与计算结果">
+      <section class="panel plan-panel">
+        <div class="panel-heading"><h2>任务规划</h2><button id="preset" class="text-button" type="button">载入示例</button></div>
+        <div class="pickers"><button id="pick-start" type="button" aria-pressed="false"><span class="dot start"></span><span><strong>出发地</strong><small id="start-coord">点击后在地图选点</small></span></button>
+          <button id="pick-goal" type="button" aria-pressed="false"><span class="dot goal"></span><span><strong>目的地</strong><small id="goal-coord">点击后在地图选点</small></span></button></div>
+        <p class="message" id="pick-hint" role="status">正在读取 Jezero 地图…</p>
+        <label id="roundtrip-field" class="roundtrip"><input id="roundtrip" type="checkbox" checked>规划回到出发地</label>
+        <div class="params" id="settings"></div>
+        <button id="compute" class="primary" type="button" disabled>计算路线 <span aria-hidden="true">↗</span></button>
+        <p id="plan-error" class="message" role="status" aria-live="polite"></p>
+      </section>
+      <section class="panel routes-panel">
+        <div class="panel-heading"><h2>路线方案</h2><span id="route-count" class="mono muted"></span></div>
+        <div id="routes"><p class="muted">选取起终点后可比较候选路线。</p></div>
+        <button id="start-nav" class="secondary" type="button" disabled>开始导航 <span aria-hidden="true">→</span></button>
+        <p id="scope-note" class="muted note"></p>
+      </section>
+    </aside>
+  </div>
+  <section id="evidence" class="section" hidden><h2>科学观察</h2><div id="cards" class="science-grid"></div></section>
+  <section id="sources" class="section">
+    <div class="source-heading"><div><p class="eyebrow">NASA / USGS</p><h2>数据来源与覆盖</h2></div><button id="live-query" class="secondary" type="button" disabled>按选点查询官方数据 ↗</button></div>
+    <p id="source-note" class="muted"></p>
+    <div id="source-grid" class="source-grid"></div>
+    <section id="official-results" class="official-results" aria-live="polite" hidden></section>
+    <details class="reference"><summary>竞赛提供的五个资源</summary><ul>
+      <li><a href="https://trek.nasa.gov/mars/" target="_blank" rel="noreferrer">NASA Mars Trek</a> 提供火星影像和产品查询。</li>
+      <li><a href="https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars" target="_blank" rel="noreferrer">USGS–NASA 火星互动地图</a> 提供官方地质制图背景。</li>
+      <li><a href="https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/" target="_blank" rel="noreferrer">Curiosity Mount Sharp 路线</a> 用作路线和科学站的呈现示例。</li>
+      <li><a href="https://worldview.earthdata.nasa.gov/" target="_blank" rel="noreferrer">NASA Worldview</a> 提供地球遥感浏览，图层切换方式用于界面参考。</li>
+      <li><a href="https://mars.nasa.gov/mars2020/multimedia/raw-images/" target="_blank" rel="noreferrer">毅力号影像图库</a> 提供站点科学观测的照片与档案入口。</li>
+    </ul><a href="https://www.spaceappschallenge.org/2026/challenges/interplanetary-survival-guide-martian-map/?tab=details" target="_blank" rel="noreferrer">查看官方挑战 →</a></details>
+  </section>
+</main>
+<footer>OrionX · Mars Pathfinder AI <span>基于真实地形的任务模拟</span></footer>
+<script type="module" src="app.js"></script>
+</body>
+</html>
