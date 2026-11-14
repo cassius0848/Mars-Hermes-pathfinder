@@ -263,15 +263,18 @@ def load_neretva_package(root: str | Path) -> ResearchPackage:
     for observation in manifest["observations"]:
         image = observation["image"]
         rover = observation["rover_reference"]
+        modeled_cell = _lonlat_to_local(observation["modeled_stop_lonlat"], transform, grid_crs, terrain.shape)
+        rover_xy = project.transform(*rover["lonlat"])
+        modeled_xy = xy(transform, *modeled_cell)
+        offset = float(np.linalg.norm(np.subtract(modeled_xy, rover_xy)))
         targets.append(ScienceTarget(
-            observation["id"], observation["name"],
-            _lonlat_to_local(observation["modeled_stop_lonlat"], transform, grid_crs, terrain.shape),
+            observation["id"], observation["name"], modeled_cell,
             1.0, observation["science_task"], "NASA Perseverance / PDS PLACES",
             stop_duration_min=observation["stop_duration_min"],
         ))
         references.append(ObservationReference(
-            observation["id"], project.transform(*rover["lonlat"]), rover["description"],
-            rover["source"], observation["modeled_stop_offset_m"],
+            observation["id"], rover_xy, rover["description"],
+            rover["source"], offset,
             SurfaceImageEvidence(
                 image["id"], str(root / image["file"]), image["asset_url"], image["page_url"],
                 "Perseverance", "SHERLOC WATSON", image["sol"], "NASA/JPL-Caltech",
