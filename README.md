@@ -146,6 +146,8 @@ mars-pathfinder-ai/
 
 ### 技术栈与运行
 
+中文版浏览器导航支持地图选点、路线对比、三维回放、封路绕行和在线查询 NASA / USGS。可从已核验的 GeoTIFF 导出静态网页，在本机或托管站点运行。[网页操作、数据自查与复现](docs/web-navigation-audit.md)
+
 Python 3.11+、NumPy、SciPy、Pandas、Rasterio、PyProj、NetworkX、Streamlit、Plotly、Pytest。AI API 为可选依赖。
 
 ```bash
