@@ -116,7 +116,6 @@ main{max-width:1540px;margin:auto;padding:30px clamp(14px,4vw,65px) 70px}.page-i
 }
 
 
-.language-switch { margin-inline-start:auto; flex:none; padding:5px 9px; font-size:12px; }
 .vertical-scale { display:grid; gap:4px; margin:8px 0; max-width:365px; }
 .vertical-scale label { color:var(--muted); font-size:12px; }
 .scale-inputs { display:grid; grid-template-columns:minmax(52px,1fr) 4.25rem auto; gap:7px; align-items:center; }

@@ -1,4 +1,4 @@
-import { t as uiText, initLanguage, language, localizeData } from './locale.js';
+import { t as uiText, initLanguage, localizeData } from './locale.js';
 import { MissionMap, profileChart } from './map.js';
 import { bindVerticalScale } from './vertical-scale.js';
 import { queryOfficial } from './official.js';
@@ -420,7 +420,7 @@ function requestPlan(route, onResult, hourOffset = 0) {
 }
 
 function createPlanner() {
-  const planner = new Worker(new URL('./planner-worker.js?lang='+language, import.meta.url), { type: 'module' });
+  const planner = new Worker(new URL('./planner-worker.js', import.meta.url), { type: 'module' });
   planner.onmessage = ({ data }) => {
     if (data.id !== state.planningId) return;
     state.light = data.light ?? state.light;
@@ -1012,7 +1012,7 @@ async function restoreTask(task){
   const site=state.sites.find(s=>s.id===task.siteId),valid=cell=>Array.isArray(cell)&&cell.length===2&&cell.every(Number.isInteger)&&cell[0]>=0&&cell[0]<site.rows&&cell[1]>=0&&cell[1]<site.cols;
   if(!valid(task.start)||!Array.isArray(task.stops)||!task.stops.length||task.stops.length>12||task.stops.some(t=>!valid(t.cell)||!Number.isFinite(t.minutes)||t.minutes<0||t.minutes>180))throw Error(uiText("任务起终点、停留时间或经停站数量无效。"));
   await loadSite(site);
-  state.start=task.start;state.stops=task.stops.map(t=>({cell:t.cell,name:String(t.name??uiText("导入站点")).slice(0,120),minutes:t.minutes}));
+  state.start=task.start;state.stops=task.stops.map(t=>({cell:t.cell,name:uiText(String(t.name??uiText("导入站点")).slice(0,120)),minutes:t.minutes}));
   await operations.restoreConfig(task.configuration);operations.restoreNotes(task.records);state.events=Array.isArray(task.events)?task.events.slice(-100):[];
   const plan=task.planning??{};
   if(plan.base&&!valid(plan.base))throw Error(uiText("导入任务的返航点不在本区域。"));state.returnBase=plan.base??null;

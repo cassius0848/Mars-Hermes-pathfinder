@@ -43,7 +43,7 @@ test('missing elevation and closures remain hard constraints in estimate mode', 
   const terrain = grid(); terrain.height[10] = NaN;
   const missing = planMission(terrain, route({ mode: 'estimate' }));
   assert.equal(missing.candidates.length, 0);
-  assert.match(missing.error, /出发地.*高程/);
+  assert.match(missing.error, /Start.*elevation/);
   const blocked = planMission(grid(), route({ mode: 'estimate', closures: [{ cell: [2, 2], radius: 10 }] }));
   assert.ok(blocked.candidates.every(p => p.path.every(i => Math.hypot(Math.floor(i / 5) - 2, i % 5 - 2) > 1)));
 });
@@ -53,7 +53,7 @@ test('a disconnected data footprint produces no invented complete route or time'
   for (let row = 0; row < 5; row++) terrain.height[row * 5 + 2] = NaN;
   const result = planMission(terrain, route({ mode: 'estimate' }));
   assert.equal(result.candidates.length, 0);
-  assert.match(result.error, /不连通/);
+  assert.match(result.error, /disconnected/);
 });
 
 test('direction changes time and ascent/descent; round trips include stops and return', () => {
@@ -97,7 +97,7 @@ test('multiple ordered stops, dwell times and final destination survive estimati
     { cell: [2, 4], name: 'Goal', minutes: 0 },
   ] });
   const plan = planMission(terrain, input).candidates[0];
-  assert.deepEqual(plan.visits.map(v => v.name), ['Via 1', 'Via 2', 'Goal', '返航']);
+  assert.deepEqual(plan.visits.map(v => v.name), ['Via 1', 'Via 2', 'Goal', 'Return']);
   assert.ok(Math.abs(plan.minutes - plan.movingMinutes - 5) < 1e-8);
   for (const visit of plan.visits) {
     assert.equal(indexOf(terrain, progressAt(terrain, plan, visit.arrival).cell), visit.cell);

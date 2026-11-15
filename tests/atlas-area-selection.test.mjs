@@ -40,7 +40,7 @@ test('out-of-cache fixed selections offer recovery and auto routes Gale to HRSC/
   try {
     const points = [atlasExamples.gale.start, atlasExamples.gale.goal];
     const signal = new AbortController().signal;
-    await assert.rejects(loadAtlasTerrain('jezero', points, signal, () => {}), error => error.suggestedSource === 'auto' && error.message.includes('当前固定使用'));
+    await assert.rejects(loadAtlasTerrain('jezero', points, signal, () => {}), error => error.suggestedSource === 'auto' && /Currently using Jezero.*out of coverage/.test(error.message));
     await assert.rejects(loadAtlasTerrain('local', points, signal, () => {}), error => error.suggestedSource === 'auto');
     await assert.rejects(loadAtlasTerrain('hrsc', points, signal, () => {}), /HRSC request reached/);
     await assert.rejects(loadAtlasTerrain('auto', points, signal, () => {}), /MOLA fallback reached/);

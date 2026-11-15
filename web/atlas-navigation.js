@@ -1,4 +1,4 @@
-import { t as uiText, language } from './locale.js';
+import { t as uiText } from './locale.js';
 import { cellOf, cellXY, elevationAt, isLit, pathXY, progressAt, project } from './planner.js';
 import { atlasCell, atlasLonLat, atlasSites, atlasTexture, loadAtlasContext, loadAtlasTerrain } from './atlas-terrain.js';
 import { environmentSettings, medaSun } from './atlas-environment.js';
@@ -454,7 +454,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
         }
       }
       if (task !== pending) return;
-      pending.worker = new Worker('planner-worker.js?lang='+language, { type: 'module' });
+      pending.worker = new Worker('planner-worker.js', { type: 'module' });
       pending.worker.onmessage = ({ data }) => {
         if (task !== pending) return;
         try {

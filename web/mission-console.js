@@ -103,7 +103,8 @@ export class MissionConsole {
       if(this.isAutomatic()&&!targets.length)throw Error(uiText("请至少纳入一个科学点。"));
       const weights=Object.fromEntries(['terrain','light','thermal','inertia','uv','pressure'].map(k=>[k,numeric(`ops-weight-${k}`)]));
       return {resources,scienceSelection:{enabled:this.isAutomatic(),targets,objective:$('ops-objective').value},
-        loadKg:numeric('ops-load'),loadPenalty:numeric('ops-load-rate'),scene:$('ops-scene').value,snapshot:$('ops-snapshot').value,weights};
+        loadKg:numeric('ops-load'),loadPenalty:numeric('ops-load-rate'),scene:$('ops-scene').value,snapshot:$('ops-snapshot').value,weights,
+        lighting:{hour:Number($('hour')?.value??12),season:Number($('season')?.value??0)}};
     }catch(error){this.host.open=true;throw error;}
   }
   environment(config){return missionEnvironment(config.scene,config.snapshot,this.site,config.weights);}
@@ -164,10 +165,18 @@ export class MissionConsole {
       $(`ops-source-${r.id}`).value=String(r.source??'').slice(0,300);
     }
     $('ops-load').value=Number(config.loadKg)||0;$('ops-load-rate').value=Number(config.loadPenalty)||0;
-    if([...$('ops-objective').options].some(o=>o.value===config.scienceSelection?.objective))$('ops-objective').value=config.scienceSelection.objective;
+    if(config.scienceSelection)$('ops-auto').checked=Boolean(config.scienceSelection.enabled&&!this.site.regional);
+    const objective=uiText(config.scienceSelection?.objective);
+    if([...$('ops-objective').options].some(o=>o.value===objective))$('ops-objective').value=objective;
     for(const [i,target]of this.targets.entries()){
-      const saved=config.scienceSelection?.targets?.find(t=>t.name===target.name);if(!saved)continue;
+      const targets=config.scienceSelection?.targets;
+      const saved=targets?.find(t=>t.cell&&target.cell?t.cell[0]===target.cell[0]&&t.cell[1]===target.cell[1]:t.name===target.name);
+      if(!saved){if(Array.isArray(targets))$(`ops-target-${i}`).value='ignore';continue;}
       $(`ops-target-${i}`).value=saved.required?'required':'optional';$(`ops-priority-${i}`).value=saved.priority;$(`ops-dwell-${i}`).value=saved.minutes;
+    }
+    for(const id of ['hour','season']){
+      const control=$(id),value=config.lighting?.[id];
+      if(Number.isFinite(value)&&control&&[...control.options].some(o=>Number(o.value)===value))control.value=String(value);
     }
     if([...$('ops-scene').options].some(o=>o.value===config.scene)){
       $('ops-scene').value=config.scene;await this.refreshScenes();

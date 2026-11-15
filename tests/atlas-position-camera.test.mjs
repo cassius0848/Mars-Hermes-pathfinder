@@ -57,7 +57,7 @@ test('missing elevation around an exact anchor is diagnosed without shifting the
   assert.ok(!Number.isFinite(elevationAt(grid,route.startXY)));
   const result=planMission(grid,route);
   assert.equal(result.candidates.length,0);
-  assert.match(result.error,/实际坐标缺少有效高程/);
+  assert.match(result.error,/actual coordinates.*lack effective elevation/i);
 });
 
 test('surroundings extend at least eight kilometres past these edge routes without unbounded meshes',()=>{
