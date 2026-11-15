@@ -577,7 +577,7 @@ function exportRoute() {
   }
   const conditions = `预算 ${minute(inputRoute.budget)}，预留 ${minute(inputRoute.reserve)}，坡度上限 ${inputRoute.limit}°，基础步速 ${inputRoute.speed} m/min。`;
   const metrics = `${distance(current.distance)} · 预计 ${minute(current.minutes)} · 陡坡 ${distance(current.steep)} · 阴影 ${distance(current.shadow)} · 扣除预留 ${current.feasible ? '剩余' : '仍差'} ${minute(Math.abs(current.margin))}`;
-  card.body.append(el('h1', `${site.name} · 火星步行任务卡`), el('p', `OrionX · ${describe(current)} · 模拟出舱`), el('p', metrics),
+  card.body.append(el('h1', `${site.name} · 火星步行任务卡`), el('p', `HermesX · ${describe(current)} · 模拟出舱`), el('p', metrics),
     el('h2', '路线与约束'), el('p', `出发地 ${start}`), legs, el('p', conditions),
     el('p', site.regional ? '100 m 区域地形粗略估时；区域光照未建模。' : `火星当地真太阳时 ${$('hour').selectedOptions[0].textContent} · 太阳黄经 ${$('season').value}°。`));
   for (const [id, title] of [['map', '二维路线'], ['profile', '高程剖面']]) {
@@ -589,7 +589,7 @@ function exportRoute() {
   if (!current.feasible) card.body.append(el('p', '此卡为超限参考估算，不可作为满足当前约束的导航方案。'));
   const sources = el('p');
   for (const [name, url] of Object.entries(site.sources)) sources.append(link(name, url), ' · ');
-  sources.append('OrionX'); card.body.append(sources);
+  sources.append('HermesX'); card.body.append(sources);
   const url = URL.createObjectURL(new Blob(['<!doctype html>\n', card.documentElement.outerHTML], { type: 'text/html;charset=UTF-8' }));
   const download = el('a'); download.href = url; download.download = `${site.id}-marswalk.html`;
   download.click(); setTimeout(() => URL.revokeObjectURL(url), 30000);

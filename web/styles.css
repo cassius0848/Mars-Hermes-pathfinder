@@ -6,6 +6,10 @@ main{max-width:1540px;margin:auto;padding:30px clamp(14px,4vw,65px) 70px}.page-i
 @media(max-width:880px){.team{display:none}.console{grid-template-columns:minmax(0,1fr) minmax(235px,278px)}.section{padding:14px}.params{gap:6px}.topbar{height:56px}main{padding-top:20px}}
 @media(max-width:640px){.console{grid-template-columns:1fr}.side{grid-row:1;grid-template-columns:1fr}.topbar nav{gap:11px;font-size:11px}.topbar{gap:14px}.brand{gap:6px;font-size:11px}.brand-mark{width:25px;height:25px;font-size:17px}.page-intro{align-items:start;flex-direction:column;gap:10px;margin-bottom:14px}.page-intro p{font-size:12px}.area-label{min-width:0;width:100%}.routes-panel:has(#routes:empty){display:none}#map,#terrain{height:350px}.science-grid{grid-template-columns:1fr}.map-footer{align-items:start}.source-heading{align-items:start}.source-heading button{padding:7px;max-width:140px}}
 .topbar nav a { white-space: nowrap; }
+.task-area-switch { min-width:230px; padding:10px 12px; border:1px solid #b48360; border-radius:9px; background:#34271f; }
+.task-area-switch > span { display:flex; justify-content:space-between; color:var(--sand); font-weight:700; }
+.task-area-switch select { border-color:#b48360; color:var(--text); cursor:pointer; }
+.task-area-switch:focus-within { outline:2px solid var(--mint); outline-offset:3px; }
 @media (max-width: 390px) {
   .topbar { padding-inline: 12px; }
   .topbar nav { gap: 8px; }

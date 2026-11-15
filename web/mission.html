@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#1d1917">
-  <meta name="description" content="OrionX 火星出舱任务规划器。使用 NASA 和 USGS 实测资料，在 Jezero 选点、比较路线并进行三维回放。">
+  <meta name="description" content="HermesX 火星出舱任务规划器。使用 NASA 和 USGS 实测资料，在 Jezero 选点、比较路线并进行三维回放。">
   <title>Mars Pathfinder AI · Jezero 火星导航</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="styles.css">
@@ -13,12 +13,12 @@
 <header class="topbar">
   <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">⤢</span><span>MARS PATHFINDER<span class="brand-ai"> AI</span></span></a>
   <nav aria-label="页面入口"><a id="atlas-link" href="atlas.html">在线火星地图</a><a href="#mission">任务地图</a><a href="#sources">数据来源</a></nav>
-  <span class="team">ORIONX <span> / </span> NASA SPACE APPS</span>
+  <span class="team">HermesX <span> / </span> NASA SPACE APPS</span>
 </header>
 <main id="mission">
   <div class="page-intro">
     <div><p class="eyebrow">JEZERO CRATER <span> / </span> MARS 2020</p><h1>火星步行导航</h1><p>在真实火星地形上选点、比较路线，并回放出舱任务。</p></div>
-    <label class="area-label">地图范围<select id="area" aria-label="地图范围" disabled></select></label>
+    <label class="area-label task-area-switch"><span>切换任务区域 <span aria-hidden="true">⌄</span></span><select id="area" aria-label="切换任务区域" disabled></select></label>
   </div>
   <div class="console">
     <section class="map-panel" aria-labelledby="map-title">
@@ -103,7 +103,7 @@
     </ul><a href="https://www.spaceappschallenge.org/2026/challenges/interplanetary-survival-guide-martian-map/?tab=details" target="_blank" rel="noreferrer">查看官方挑战 →</a></details>
   </section>
 </main>
-<footer>OrionX · Mars Pathfinder AI <span>基于真实地形的任务模拟</span></footer>
+<footer>HermesX · Mars Pathfinder AI <span>基于真实地形的任务模拟</span></footer>
 <script type="module" src="app.js"></script>
 </body>
 </html>
