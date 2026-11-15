@@ -1,3 +1,4 @@
+import { t as uiText } from './locale.js';
 const DEG = Math.PI / 180;
 const KEYS = ['terrain', 'light', 'thermal', 'uv', 'pressure'];
 
@@ -14,14 +15,14 @@ export function medaSun(observation) {
 
 export function environmentSettings(catalog, sclk, input, pressureTarget, grid) {
   const observation = catalog.observations.find(sample => sample.sclk === sclk);
-  if (!observation) throw Error('找不到所选的 MEDA 历史观测。');
+  if (!observation) throw Error(uiText("找不到所选的 MEDA 历史观测。"));
   if (grid.id !== catalog.siteId) {
-    throw Error('此组 MEDA 历史观测适用于 Hawksbill Gap 的 HiRISE 验证区。请在该区设点并使用米级高程，或切回地形规划。');
+    throw Error(uiText("此组 MEDA 历史观测适用于 Hawksbill Gap 的 HiRISE 验证区。请在该区设点并使用米级高程，或切回地形规划。"));
   }
   const weights = Object.fromEntries(KEYS.map(key => [key, input[key]]));
   if (Object.values(weights).some(weight => !Number.isFinite(weight) || weight < 0 || weight > 5)
       || !Number.isFinite(pressureTarget) || pressureTarget < 0 || pressureTarget > 1500) {
-    throw Error('请检查环境权重和气压参考值。');
+    throw Error(uiText("请检查环境权重和气压参考值。"));
   }
   const { groundLongwaveWm2, uvWm2, pressurePa } = observation;
   const deficitPa = Math.max(0, pressureTarget - pressurePa);
