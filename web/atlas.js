@@ -478,7 +478,7 @@ function updateWalkLink(id) {
   const area = id === 'global' ? 'jezero' : id;
   const name = craterNames[area] ?? 'Jezero';
   if (['jezero', 'hawksbill', 'neretva'].includes(area)) {
-    $('walk-link').href = `./?area=${area}`;
+    $('walk-link').href = `./mission.html?area=${area}`;
     $('walk-link').textContent = `打开 ${name} 任务地图 →`;
   } else {
     $('walk-link').href = `./atlas.html?area=${area}`;
@@ -545,3 +545,4 @@ canvas.addEventListener('keydown', e => {
   else if (e.key === 'Enter') { e.preventDefault(); pick(state.center); }
   else if (e.key === 'Escape') navigation.cancelPick();
 });
+
