@@ -1,4 +1,4 @@
-**Live demo** · [Open the Mars Atlas](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/atlas?area=jezero) · [Open Walking Navigation](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/mission?area=hawksbill)
+**Live demo** · [Open the Mars Atlas](https://hermesxmarthpathfinder.dev/atlas?area=jezero) · [Open Walking Navigation](https://hermesxmarthpathfinder.dev/mission?area=hawksbill)
 
 # Marth Hermes Pathfinder
 
@@ -10,7 +10,7 @@ Explore real terrain in the Mars Atlas, add ordered waypoints, compare weighted 
 
 Current capabilities include constraint-based and requirements-estimation modes, science-stop selection, return planning, field notes, mid-route replanning, linked environmental profiles, user-configured resource estimates, and offline mission packages. Environmental layers identify historical observations, reanalysis, simulated sunlight, and user assumptions. Live astronaut localization, real-time Mars weather, ionizing-radiation routing, and flight-qualified life-support models are outside the prototype's scope. See the [mission workflow and limits](docs/mission-workflow.md).
 
-GitHub `main` is the source of record. The [live build manifest](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/build-info.json) records the deployed commit and checksums. See the [build and deployment workflow](docs/deployment.md).
+GitHub `main` is the source of record. The [live build manifest](https://hermesxmarthpathfinder.dev/build-info.json) records the deployed commit and checksums. See the [build and deployment workflow](docs/deployment.md).
 
 ## English Version
 
