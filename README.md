@@ -24,7 +24,7 @@ Current web release: 1 m local mission grids, bounded science-stop selection, fi
 
 ### 项目定位
 
-Mars Pathfinder AI 是 HermesX 面向 NASA Space Apps Challenge 2026 开发的研究与演示型原型。项目服务于火星表面宇航员探测任务：在一个有限的局部区域中，叠加多种 NASA 数据，帮助任务团队规划科学目标、选择安全路线并准备返航方案。
+Mars Hermes Pathfinder 是 HermesX 面向 NASA Space Apps Challenge 2026 开发的研究与演示型原型。项目服务于火星表面宇航员探测任务：在一个有限的局部区域中，叠加多种 NASA 数据，帮助任务团队规划科学目标、选择安全路线并准备返航方案。
 
 项目不是飞行级导航或安全系统。真实数据必须记录来源、版本、空间分辨率、坐标系、单位、时间和限制；合成数据只用于算法和界面测试，并明确标记为 `synthetic`。
 
@@ -112,18 +112,6 @@ Mars Pathfinder AI 是 HermesX 面向 NASA Space Apps Challenge 2026 开发的�
 - EVA 总时长；
 - 生命支持、电池和返航资源储备；
 - 数据缺失或置信度不足的区域（按任务策略处理）。
-
-### AI 与自学习策略
-
-AI 是任务助手，不是未经验证的导航器：
-
-1. 用户用自然语言描述科学目标和任务偏好；
-2. DeepSeek 等模型通过 `AIProvider` 转换为结构化参数；
-3. 程序校验硬约束和数据范围；
-4. A* / Dijkstra 计算候选路线；
-5. AI 解释路线差异、风险和证据来源。
-
-初期不训练完整 Agent。真实火星任务数据不足，强化学习也容易受到模拟与现实差异影响。后续可用遥测校准能源和风险模型，但硬约束、路线检查和模型版本必须由程序控制。
 
 ### 官方资源入口
 
@@ -296,17 +284,6 @@ Total cost = distance + terrain risk + weather risk + radiation risk
 
 Hard constraints include maximum slope, impassable terrain, environmental thresholds, EVA duration, life-support and battery reserves, and a defined policy for missing or low-confidence data.
 
-### AI and Learning Strategy
-
-AI is a mission assistant, not an unchecked navigation authority:
-
-1. The user describes a science objective and mission preference;
-2. DeepSeek or another model converts it through `AIProvider`;
-3. The program validates ranges and hard constraints;
-4. A* / Dijkstra computes candidate routes;
-5. The model explains route differences, risks, and evidence.
-
-Do not train a full Agent initially. Real Martian mission data is limited, and simulation-to-reality gaps are significant. Later, telemetry can calibrate energy and risk models, while constraints, route validation, and model versions remain program-controlled.
 
 ### Official Resource Entry Points
 
