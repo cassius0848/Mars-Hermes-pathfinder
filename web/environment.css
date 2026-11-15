@@ -3,6 +3,7 @@
 .env-position,.env-reading { font-variant-numeric:tabular-nums; font-size:12px; }
 .env-charts { display:grid; gap:14px; }
 .env-track { position:relative; --env-color:var(--mint); }
+.env-track[data-field=elevation] .env-layer:disabled { opacity:1; }
 .env-track[data-field=thermal] { --env-color:#efb07e; }
 .env-track[data-field=pressure] { --env-color:#9ccafa; }
 .env-track[data-field=inertia] { --env-color:#c7b7ed; }

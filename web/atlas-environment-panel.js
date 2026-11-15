@@ -1,6 +1,7 @@
-import { isLit } from './planner.js';
+import { elevationAt, isLit, pathXY } from './planner.js';
 
 const definitions = {
+  elevation: ['高程剖面', 'm', 0, 1],
   thermal: ['地表温度', 'K', 1, 1], pressure: ['地表气压', 'Pa', 1, 10],
   inertia: ['热惯量', 'J m⁻² K⁻¹ s⁻½', 0, 20], uv: ['太阳辐照潜势', 'W/m²', 1, 80],
   terrain: ['坡度', '°', 1, 2], light: ['直射日照', '', 0, 1],
@@ -13,25 +14,28 @@ export function environmentTracks(grid, candidate, light, context = {}) {
   const make = (key, values, source, options = {}) => ({key, values, source,
     label: definitions[key][0], unit: definitions[key][1], digits: definitions[key][2], span: definitions[key][3],
     active: context.coverage ? context.coverage.active.includes(names[key]) : observation ? (context.weights?.[key] ?? 1)>0 : true, ...options});
-  if (environment?.kind === 'regional') return ['thermal','pressure','inertia','uv'].map(key => make(key,
+  const elevation=make('elevation',Float32Array.from(candidate.path,(_,i)=>grid.height&&grid.cols&&grid.rows
+    ?elevationAt(grid,pathXY(grid,candidate,i)):NaN),`当前路线真实高程 · 原始网格 ${grid.step??'未知'} m · 沿路采样，不使用三维垂直夸张`,{active:true});
+  const withElevation=tracks=>[elevation,...tracks];
+  if (environment?.kind === 'regional') return withElevation(['thermal','pressure','inertia','uv'].map(key => make(key,
     environment.values[key], key === 'thermal' || key === 'pressure' ? 'OpenMARS 再分析 · 源网格 5° · 空间插值'
       : key === 'inertia' ? `TES 夜侧观测 · 源网格 ${context.coverage?.thermalSpacing || '未知'}°`
         : '太阳几何 + DEM · 固定场景模型',
-    {model:key !== 'inertia', step:key === 'inertia', flags:key === 'inertia' ? environment.interpolated : null}));
+    {model:key !== 'inertia', step:key === 'inertia', flags:key === 'inertia' ? environment.interpolated : null})));
   const lit = Float32Array.from(candidate.path, index => Number(isLit(grid,light,index)));
   if (observation) {
     const constant = value => new Float32Array(candidate.path.length).fill(finite(value) ? value : NaN);
-    return [
+    return withElevation([
       make('thermal',constant(observation.groundLongwaveWm2),'MEDA 历史点测 · 沿路引用同一读数',
         {label:'地表长波辐照',unit:'W/m²',model:true,reference:true,uncertainty:observation.groundLongwaveUncertaintyWm2}),
       make('pressure',constant(observation.pressurePa),'MEDA 历史点测 · 沿路引用同一读数',{model:true,reference:true}),
       make('uv',constant(observation.uvWm2),'MEDA 历史点测 · 不代表各路段实测',
         {label:'紫外观测参考',unit:'W/m²',digits:4,span:0.005,model:true,reference:true}),
       make('light',lit,'太阳位置观测 + DEM · 地形遮挡模型',{step:true,model:true}),
-    ];
+    ]);
   }
-  return [make('terrain',Float32Array.from(candidate.path,index=>grid.slope[index]),'当前路线高程包 · 网格坡度'),
-    make('light',lit,'太阳几何 + DEM · 地形遮挡模型',{step:true,model:true})];
+  return withElevation([make('terrain',Float32Array.from(candidate.path,index=>grid.slope[index]),'当前路线高程包 · 网格坡度'),
+    make('light',lit,'太阳几何 + DEM · 地形遮挡模型',{step:true,model:true})]);
 }
 
 export function minuteAtDistance(candidate, distance) {
@@ -106,7 +110,7 @@ export class EnvironmentPanel {
     this.host.hidden=false;this.hud.hidden=false;
     this.width=Math.round(this.host.clientWidth);
     const chartWidth=Math.max(260,this.width-28),plotWidth=chartWidth-70;
-    const heading=node('div','env-heading');heading.append(node('h2',null,'沿途环境与导航'));
+    const heading=node('div','env-heading');heading.append(node('h2',null,'高程剖面与沿途环境'));
     this.position=node('output','env-position');heading.append(this.position);this.host.append(heading);
     const snapshot=context.snapshot,observation=context.observation;
     const scene=observation?`MEDA · Sol ${observation.sol} · ${observation.localTrueSolarTime} LTST · 历史测站参考`
@@ -158,7 +162,7 @@ export class EnvironmentPanel {
       };
       section.append(chart,tooltip);charts.append(section);
       const availability=track.reference ? (finiteValues.length?'历史测站参考已载入 · 沿路复用同一读数':'历史观测缺失') : `${Math.round(ratio*100)}% 沿路采样可用`;
-      const quality=node('p','env-quality',`${availability} · ${track.active?'参与寻路比较':'未启用该项权重'}`);
+      const quality=node('p','env-quality',`${availability} · ${track.key==='elevation'?'真实地形与高差估算':track.active?'参与寻路比较':'未启用该项权重'}`);
       if(track.key==='inertia'&&finite(candidate.environment?.interpolatedPercent))quality.append(` · ${candidate.environment.interpolatedPercent.toFixed(0)}% 行进时间使用插值`);
       section.append(quality);
       const coverage=node('div','env-coverage-row');coverage.append(node('strong',null,track.label),node('span','muted',`${track.reference?'单点历史参考，非沿途实测':Math.round(ratio*100)+'% 采样可用'} · ${track.source}`));

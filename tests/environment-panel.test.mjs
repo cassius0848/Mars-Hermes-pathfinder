@@ -7,6 +7,24 @@ import { TerrainView } from '../dist/terrain-view.js';
 
 const candidate={path:[0,1,1,2],times:[0,10,20,30],lengths:[0,100,100,200],distance:200,minutes:30};
 
+test('every environment mode starts with true elevation sampled at the selected route anchors',()=>{
+  const grid={rows:3,cols:3,step:10,left:0,top:30,height:Float32Array.from([-100,-90,-80,-90,-80,-70,-80,-70,-60]),slope:new Float32Array(9)};
+  const anchored={...candidate,xy:[[8,24],[15,25],[15,25],[25,25]]};
+  const regional={kind:'regional',values:Object.fromEntries(['thermal','pressure','inertia','uv'].map(k=>[k,new Float32Array(4)]))};
+  for(const [environment,context]of [[undefined,{}],[regional,{}],[undefined,{observation:{pressurePa:700,groundLongwaveWm2:200,uvWm2:.01}}]]){
+    const track=environmentTracks(grid,{...anchored,environment},null,context)[0];
+    assert.equal(track.key,'elevation');assert.equal(track.unit,'m');assert.deepEqual([...track.values],[-96,-90,-90,-80]);
+    assert.equal(track.model,undefined);assert.match(track.source,/原始网格 10 m/);
+    assert.equal(trackAtMinute(track,anchored,30).value,-80);
+  }
+});
+
+test('an unavailable elevation package stays missing instead of borrowing temperature or zero height',()=>{
+  const regional={kind:'regional',values:Object.fromEntries(['thermal','pressure','inertia','uv'].map(k=>[k,new Float32Array(4).fill(270)]))};
+  const track=environmentTracks({}, {...candidate,environment:regional},null)[0];
+  assert.ok([...track.values].every(Number.isNaN));assert.equal(trackAtMinute(track,candidate,15).value,null);
+});
+
 test('distance selection uses arrival time at a dwell and preserves later travel time',()=>{
   assert.equal(minuteAtDistance(candidate,100),10);
   assert.equal(minuteAtDistance(candidate,150),25);
