@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.min.js';
 import { cellOf, cellXY, geographic, pathXY, project } from './planner.js';
+import { frameTask } from './render-runtime.js';
 
 export function walkingPose(xy, heading, ground, yaw = 0, pitch = 0) {
   const bearing = Math.atan2(heading[0], -heading[1]) + yaw;
@@ -137,12 +138,14 @@ export class TerrainView {
   }
 
   setDisplay(mode, scale) {
+    const modeChanged = this.mode !== mode;
     this.mode = mode;
     const next = scale === 'auto' ? this.autoScale : Math.max(1, Math.min(6, Number(scale)));
     const changed = this.verticalScale !== next;
+    if (!changed && !modeChanged) return;
     this.verticalScale = next;
     this.surface.scale.y = this.verticalScale / this.meshScale;
-    this.configureMaterial();
+    if (modeChanged) this.configureMaterial();
     this.describe();
     if (changed) {
       const distance = this.distance;
@@ -249,10 +252,14 @@ export class TerrainView {
   }
 
   setPlan(plan) {
+    if (this.plan === plan) { this.refreshRouteHeights(); return; }
     this.plan = plan;
+    this.routeAnchors = [];
+    this.stationAnchors = [];
     this.route.geometry.dispose();
     this.route.geometry = new THREE.BufferGeometry().setFromPoints(plan.path.map((index, i) => {
       const [e, n] = this.routeToTerrain(pathXY(this.routeGrid, plan, i));
+      this.routeAnchors.push({e,n,elevation:this.routeGrid.height[index]});
       return new THREE.Vector3(e, this.heightAt(e, n, this.routeGrid.height[index]) + (this.perspective === 'first-person' ? 0.12 : 1.5) * this.verticalScale, -n);
     }));
     if (this.atlas) {
@@ -283,6 +290,7 @@ export class TerrainView {
       pen.lineWidth = 5; pen.strokeStyle = '#211b18'; pen.stroke();
       const marker = stationSprite(dot);
       marker.position.set(e, y + 0.25, -n); marker.renderOrder = 5; this.stations.add(marker);
+      this.stationAnchors.push({object:marker,e,n,elevation:this.routeGrid.height[stop.cell],offset:0.25,scaled:false});
       const canvas = document.createElement('canvas');
       canvas.width = this.atlas ? 192 : 512;
       canvas.height = 64;
@@ -300,6 +308,19 @@ export class TerrainView {
       label.scale.set(width, width * canvas.height / canvas.width, 1);
       label.position.set(e, y + 10 * this.verticalScale, -n); label.renderOrder = 6;
       this.stations.add(label);
+      this.stationAnchors.push({object:label,e,n,elevation:this.routeGrid.height[stop.cell],offset:10,scaled:true});
+    });
+    this.draw();
+  }
+
+  refreshRouteHeights() {
+    const positions=this.route.geometry.getAttribute('position');
+    const lift=this.perspective==='first-person'?0.12:1.5;
+    this.routeAnchors.forEach(({e,n,elevation},i)=>positions.setY(i,this.heightAt(e,n,elevation)+lift*this.verticalScale));
+    positions.needsUpdate=true;
+    this.route.geometry.computeBoundingBox();this.route.geometry.computeBoundingSphere();
+    this.stationAnchors.forEach(({object,e,n,elevation,offset,scaled})=>{
+      object.position.y=this.heightAt(e,n,elevation)+offset*(scaled?this.verticalScale:1);
     });
     this.draw();
   }
@@ -351,6 +372,7 @@ export class TerrainView {
   }
 
   setPerspective(mode) {
+    if (this.perspective === (mode === 'first-person' ? mode : 'orbit')) return;
     this.perspective = mode === 'first-person' ? mode : 'orbit';
     this.walkYaw = 0; this.walkPitch = 0;
     this.camera.fov = this.perspective === 'first-person' ? 75 : 45;
@@ -365,16 +387,25 @@ export class TerrainView {
   }
 
   draw() {
+    if (this.disposed) return;
+    this.requestDraw ??= frameTask(() => this.renderFrame());
+    this.requestDraw();
+  }
+
+  renderFrame() {
     if (!this.host.clientWidth || this.disposed) return;
     const { camera, renderer, host } = this;
     const { clientWidth: width, clientHeight: height } = host;
     if (!height) return;
     const pixelRatio = renderer.getPixelRatio();
     if (Math.abs(renderer.domElement.width - width * pixelRatio) > 1 || Math.abs(renderer.domElement.height - height * pixelRatio) > 1) renderer.setSize(width, height, false);
-    camera.aspect = width / height;
+    const aspect = width / height;
     // A cropped, coarse route may be small while the camera needs a much wider overview.
-    camera.far = Math.max(this.size * 6, this.distance * 4, 50000);
-    camera.updateProjectionMatrix();
+    const far = Math.max(this.size * 6, this.distance * 4, 50000);
+    const projection = `${aspect}/${far}/${camera.fov}/${camera.near}`;
+    if (this.projection !== projection) {
+      camera.aspect=aspect; camera.far=far; camera.updateProjectionMatrix(); this.projection=projection;
+    }
     this.target.copy(this.follow ? this.focus : this.overview);
     if (this.perspective === 'first-person') {
       const pose = walkingPose([this.focus.x, -this.focus.z], this.heading,
@@ -405,6 +436,7 @@ export class TerrainView {
 
   destroy() {
     this.disposed = true;
+    this.requestDraw?.cancel();
     this.observer.disconnect();
     this.texture?.dispose();
     this.scene.traverse(object => {
@@ -419,4 +451,5 @@ export class TerrainView {
     this.badge?.remove();
   }
 }
+
 

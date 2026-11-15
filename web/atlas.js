@@ -2,6 +2,7 @@ import { layers, officialLayerUrl, readCapabilities, tilesInView, viewportGeolog
   CTX_DEM, ctxWindow, fetchCtxTerrain } from './mars-data.js';
 import { attachAtlasNavigation } from './atlas-navigation.js';
 import { craterSources } from './crater-sources.js';
+import { frameTask } from './render-runtime.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('surface');
@@ -28,6 +29,7 @@ const colors = ['#e8a47d', '#8ad5b5', '#e9d088', '#b9b9ed', '#96bcdb', '#eaa6bb'
 const requested = new URLSearchParams(location.search).get('area');
 const initialView = Object.hasOwn(atlasViews, requested) ? requested : 'jezero';
 const state = { ...atlasViews[initialView], center: [...atlasViews[initialView].center], viewId: initialView, epoch: 0, points: [], picking: false };
+const paint = frameTask(renderMap);
 const overlays = [...document.querySelectorAll('[data-overlay]')];
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const toolTabs = [...document.querySelectorAll('.atlas-tabs [role="tab"]')];
@@ -134,7 +136,7 @@ function drawClassicNetwork() {
   ctx.restore();
 }
 
-function paint() {
+function renderMap() {
   ctx.fillStyle = '#191715'; ctx.fillRect(0, 0, state.w, state.h);
   for (const [id, tiles] of shown) {
     ctx.globalAlpha = id === 'ctx' || id === 'hirise' ? Number($('image-opacity').value) / 100 : 1;
@@ -229,7 +231,8 @@ async function refresh() {
   const epoch = ++state.epoch;
   const base = $('base').value, bbox = frame();
   state.loading = true; state.layerErrors = [];
-  const keys = [base, ...overlays.filter(el => el.checked && state.span <= 7 && Number($('image-opacity').value) > 0).map(el => el.value)];
+  const keys = [base, ...overlays.filter(el => el.checked && state.span <= 7 && Number($('image-opacity').value) > 0
+    && (el.value !== 'hirise' || state.span <= 0.25)).map(el => el.value)];
   $('base-source').href = officialLayerUrl(layers[base]);
   $('dem-export').hidden = state.span > 60;
   if (state.span <= 60) $('dem-export').href = molaExport(bbox);
@@ -479,22 +482,27 @@ function updateWalkLink(id) {
   const name = craterNames[area] ?? 'Jezero';
   if (['jezero', 'hawksbill', 'neretva'].includes(area)) {
     $('walk-link').href = `./mission.html?area=${area}`;
-    $('walk-link').textContent = `打开 ${name} 任务地图 →`;
+    $('walk-link').textContent = `${name} 任务区 →`;
   } else {
     $('walk-link').href = `./atlas.html?area=${area}`;
-    $('walk-link').textContent = `查看 ${name} 区域图和高程剖面 →`;
+    $('walk-link').textContent = `${name} 资料与剖面 →`;
   }
 }
 
 updateWalkLink(initialView);
 renderCraterSources(initialView);
 navigation.setArea(initialView);
-for (const [id, view] of Object.entries(atlasViews)) $(id).onclick = () => {
+$('atlas-area').value = initialView;
+$('atlas-network-note').hidden = initialView !== 'global';
+$('atlas-area').onchange = () => {
+  const id=$('atlas-area').value,view=atlasViews[id];
   updateWalkLink(id);
   renderCraterSources(id);
   state.viewId = id;
   navigation.setArea(id);
   state.center = [...view.center]; state.span = view.span; schedule();
+  $('atlas-network-note').hidden = id !== 'global';
+  const url=new URL(location.href);url.searchParams.set('area',id);url.hash='';history.replaceState(null,'',url);
 };
 $('base').onchange = () => { shown.clear(); $('image-opacity').value = $('base').value === 'viking' ? 100 : 0; schedule(); };
 $('image-opacity').oninput = paint;
@@ -545,4 +553,5 @@ canvas.addEventListener('keydown', e => {
   else if (e.key === 'Enter') { e.preventDefault(); pick(state.center); }
   else if (e.key === 'Escape') navigation.cancelPick();
 });
+
 

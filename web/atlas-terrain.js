@@ -1,5 +1,6 @@
 import { cellXY, decodeTerrain, geographic, project } from './planner.js';
 import { fetchOfficial } from './official.js';
+import { BudgetCache } from './render-runtime.js';
 import { CTX_DEM, ctxBounds, ctxWindow, fetchCtxTerrain, fetchHrscTerrain, fetchMolaTerrain, layers, readCapabilities, tilesInView } from './mars-data.js';
 
 const toSigned = lon => lon > 180 ? lon - 360 : lon;
@@ -80,6 +81,10 @@ function finiteSlopes(grid, height) {
 
 let catalog;
 const terrainCache = new Map();
+const planningCache = new BudgetCache(24 * 1024 * 1024, 3);
+const contextCache = new BudgetCache(16 * 1024 * 1024, 2);
+const textureCache = new BudgetCache(20 * 1024 * 1024, 2);
+const gridBytes = result => result.grid.height.byteLength + result.grid.slope.byteLength;
 export function atlasSites() {
   catalog ??= fetchOfficial('assets/sites.json', 'json').then(data => data.sites).catch(error => { catalog = null; throw error; });
   return catalog;
@@ -125,6 +130,15 @@ export function cropAtlasGrid(site, points, surroundings = false, marginMeters =
 }
 
 export async function loadAtlasTerrain(mode, points, signal, status) {
+  signal.throwIfAborted();
+  const key=JSON.stringify([mode,points]),cached=planningCache.get(key);
+  if (cached) { status?.('使用已读取的实测高程，正在比较路线…'); return cached; }
+  const result=await readAtlasTerrain(mode,points,signal,status);
+  signal.throwIfAborted();
+  return planningCache.set(key,result,gridBytes(result));
+}
+
+async function readAtlasTerrain(mode, points, signal, status) {
   const sites = ['auto', 'local', 'jezero'].includes(mode) ? await atlasSites() : [];
   signal.throwIfAborted();
   const covers = site => points.every(point => atlasCell(site, point));
@@ -191,6 +205,15 @@ async function loadOnlineTerrain(mode, points, signal, status, surroundings = fa
 
 export async function loadAtlasContext(points, signal, radius = 8000) {
   radius = Math.max(2000, Math.min(32000, Number(radius) || 8000));
+  signal.throwIfAborted();
+  const key=JSON.stringify([radius,points]),cached=contextCache.get(key);
+  if (cached) return cached;
+  const result=await readAtlasContext(points,signal,radius);
+  signal.throwIfAborted();
+  return contextCache.set(key,result,gridBytes(result));
+}
+
+async function readAtlasContext(points, signal, radius) {
   const sites = await atlasSites().catch(() => []);
   signal.throwIfAborted();
   if (points.every(inCtx)) {
@@ -216,6 +239,15 @@ export async function loadAtlasContext(points, signal, radius = 8000) {
 }
 
 export async function atlasTexture(grid, signal) {
+  signal.throwIfAborted();
+  const key=JSON.stringify([grid.center,grid.left,grid.top,grid.rows,grid.cols,grid.step]);
+  const cached=textureCache.get(key);if(cached)return cached;
+  const canvas=await readAtlasTexture(grid,signal);
+  signal.throwIfAborted();
+  return canvas ? textureCache.set(key,canvas,canvas.width*canvas.height*4) : null;
+}
+
+async function readAtlasTexture(grid, signal) {
   const bbox = gridBounds(grid);
   const width = 1536, height = 1536;
   const [west, south, east, north] = bbox;
@@ -255,5 +287,6 @@ export async function atlasTexture(grid, signal) {
   context.putImageData(output, 0, 0);
   return raster;
 }
+
 
 

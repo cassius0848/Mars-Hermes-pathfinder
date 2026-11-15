@@ -55,3 +55,16 @@ main{max-width:1540px;margin:auto;padding:30px clamp(14px,4vw,65px) 70px}.page-i
   border-radius: 50%;
   background: #ffdb91;
 }
+
+.mission-app main { padding-top:18px; }
+.mission-app .page-intro { margin-bottom:16px; }
+.mission-app .page-intro h1 { font-size:clamp(26px,3vw,34px); }
+.mission-app .page-intro p { font-size:12px; }
+.mission-settings { border-block:1px solid var(--line); padding:9px 0; margin:10px 0; }
+.mission-settings summary { font-size:12px; }
+.mission-settings summary small { display:block; margin:4px 0 0 14px; color:var(--muted); font-size:11px; }
+.mission-app #route-report summary { padding-block:5px; }
+.mission-data-panel summary::after { content:'＋'; color:var(--muted); }
+.mission-data-panel[open] summary::after { content:'−'; }
+.mission-app .waypoint-controls input,.mission-app .params input { padding-block:7px; }
+
