@@ -1,4 +1,20 @@
-**LIVE DEMO WEBSITE IS HERE** · [Open the Mars Atlas](https://hermesxmarthpathfinder.dev/atlas?area=jezero) · [Open Walking Navigation](https://hermesxmarthpathfinder.dev/mission?area=hawksbill)
+<p align="center">
+  <a href="https://hermesxmarthpathfinder.dev/atlas?area=jezero">
+    <img src="docs/assets/live-demo-banner.svg" width="1080" alt="HermesX live demo — click to open the Mars Atlas" />
+  </a>
+</p>
+
+<h2 align="center">🚀 LIVE DEMO — START HERE</h2>
+
+<p align="center">
+  <strong><a href="https://hermesxmarthpathfinder.dev/atlas?area=jezero">▶ OPEN THE MARS ATLAS</a></strong>
+  &nbsp; · &nbsp;
+  <strong><a href="https://hermesxmarthpathfinder.dev/mission?area=hawksbill">▶ OPEN WALKING NAVIGATION</a></strong>
+</p>
+
+<p align="center"><a href="https://hermesxmarthpathfinder.dev/">hermesxmarthpathfinder.dev</a></p>
+
+---
 
 # Marth Hermes Pathfinder
 
