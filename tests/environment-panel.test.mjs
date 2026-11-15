@@ -38,7 +38,9 @@ test('regional route quality flags and units survive into the navigation tracks'
     inertia:Float32Array.from([300,310,320]),uv:Float32Array.from([200,0,210])},interpolated:Uint8Array.from([0,1,0])};
   const metrics=regionalMetrics(environment,candidate,()=>true);
   assert.deepEqual([...metrics.interpolated],[0,1,1,0]);
-  const tracks=environmentTracks({}, {...candidate,environment:metrics},null,{coverage:{active:['地表温度','热惯量'],thermalSpacing:0.05}});
+  const tracks=environmentTracks({}, {...candidate,environment:metrics},null,{coverage:{active:['surface temperature','Thermal inertia'],thermalSpacing:0.05}});
+  assert.equal(tracks.find(t=>t.key==='thermal').active,true);
+  assert.equal(tracks.find(t=>t.key==='inertia').active,true);
   assert.equal(tracks.find(t=>t.key==='inertia').step,true);
   assert.equal(tracks.find(t=>t.key==='inertia').unit,'J m⁻² K⁻¹ s⁻½');
   assert.equal(tracks.find(t=>t.key==='pressure').active,false);
@@ -51,10 +53,10 @@ test('MEDA point observations remain constant references with correct physical u
   const grid={cols:3,slope:new Float32Array(3)};
   const tracks=environmentTracks(grid,candidate,null,{observation,weights:{thermal:0}});
   const thermal=tracks.find(t=>t.key==='thermal');
-  assert.equal(thermal.label,'地表长波辐照');assert.equal(thermal.unit,'W/m²');
+  assert.equal(thermal.label,'Surface longwave radiation');assert.equal(thermal.unit,'W/m²');
   assert.equal(thermal.uncertainty,1.56);assert.equal(thermal.active,false);
   assert.ok([...thermal.values].every(v=>Math.abs(v-207.6)<1e-4));
-  assert.match(thermal.source,/同一读数/);
+  assert.match(thermal.source,/same reading/);
   assert.equal(tracks.some(t=>t.key==='inertia'),false);
 });
 

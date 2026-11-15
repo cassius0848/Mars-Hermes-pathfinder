@@ -16,7 +16,7 @@ test('replanning consumes only elapsed work and keeps the absolute reserve',()=>
   const remaining=resourcesAfter([oxygen],plan,4,1);
   assert.equal(remaining[0].capacity,12);assert.equal(remaining[0].reserveAmount,2);
   const again=resourcesAfter(remaining,plan,1,0,{oxygen:7});assert.equal(again[0].capacity,7);assert.equal(again[0].reserveAmount,2);
-  assert.throws(()=>resourcesAfter([oxygen],plan,9,20),/耗尽/);
+  assert.throws(()=>resourcesAfter([oxygen],plan,9,20),/exhausted/i);
 });
 test('scientific selection compares orders, respects required stops and explains omitted ones',()=>{
   const targets=[{cell:[0,2],name:'A',minutes:5,priority:5,required:false},{cell:[5,5],name:'B',minutes:10,priority:1,required:false}];
@@ -39,6 +39,6 @@ test('portable ZIP uses original bytes, known CRC and excludes other mission ass
   assert.equal(crc32(new TextEncoder().encode('123456789')),0xcbf43926);
   const bytes=new Uint8Array(await taskZip([['task.json','{"team":"HermesX"}']]).arrayBuffer());
   assert.equal(new DataView(bytes.buffer).getUint32(0,true),0x04034b50);assert.equal(new DataView(bytes.buffer).getUint32(bytes.length-22,true),0x06054b50);
-  assert.throws(()=>taskZip([['../secret','x']]),/路径/);
+  assert.throws(()=>taskZip([['../secret','x']]),/file path is invalid/i);
   assert.deepEqual(bundleFiles({files_sha256:{'app.js':'a','assets/sites.json':'b','assets/hawksbill/x.bin':'c','assets/neretva/x.bin':'d'}},'hawksbill'),['app.js','assets/sites.json','assets/hawksbill/x.bin']);
 });

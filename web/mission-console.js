@@ -166,7 +166,8 @@ export class MissionConsole {
     }
     $('ops-load').value=Number(config.loadKg)||0;$('ops-load-rate').value=Number(config.loadPenalty)||0;
     if(config.scienceSelection)$('ops-auto').checked=Boolean(config.scienceSelection.enabled&&!this.site.regional);
-    if([...$('ops-objective').options].some(o=>o.value===config.scienceSelection?.objective))$('ops-objective').value=config.scienceSelection.objective;
+    const objective=uiText(config.scienceSelection?.objective);
+    if([...$('ops-objective').options].some(o=>o.value===objective))$('ops-objective').value=objective;
     for(const [i,target]of this.targets.entries()){
       const targets=config.scienceSelection?.targets;
       const saved=targets?.find(t=>t.cell&&target.cell?t.cell[0]===target.cell[0]&&t.cell[1]===target.cell[1]:t.name===target.name);

@@ -18,7 +18,7 @@
 
 # Marth Hermes Pathfinder
 
-A Mars EVA mission-planning prototype by **HermesX** for NASA Space Apps Challenge 2026. The website opens in English, with a Chinese language switch in the header.
+A Mars EVA mission-planning prototype by **HermesX** for NASA Space Apps Challenge 2026. The application interface is English-only, including route planning, navigation, error messages, and offline mission packages.
 
 ## Current browser release
 

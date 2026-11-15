@@ -49,5 +49,5 @@ test('missing elevation produces a no-data profile rather than numeric NaN label
   const previous=globalThis.window;globalThis.window={devicePixelRatio:1};
   try {profileChart({getBoundingClientRect:()=>({width:500}),getContext:()=>context},site,{path:[0,1],lengths:[0,10],distance:10});}
   finally {globalThis.window=previous;}
-  assert.deepEqual(labels,['这一段缺少可用数据']);
+  assert.deepEqual(labels,['This section lacks available data']);
 });
