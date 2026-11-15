@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import * as planner from '../dist/planner.js';
+import * as operations from '../dist/mission-operations.js';
 import { TerrainView } from '../dist/terrain-view.js';
 
 test('the shared worker accepts atlas grids and both local terrain initialization protocols', () => {
@@ -13,7 +14,7 @@ test('the shared worker accepts atlas grids and both local terrain initializatio
     { type: 'terrain', site, height: new Uint16Array(9).buffer, slope: new Float32Array(9).buffer }];
   for (const data of initializations) {
     const messages = [], self = { postMessage: value => messages.push(value) };
-    vm.runInNewContext(source, { ...planner, self });
+    vm.runInNewContext(source, { ...planner, ...operations, self });
     self.onmessage({ data });
     self.onmessage({ data: { id: 1, hour: 12, season: 0, route: { start: [0, 0], base: [0, 0],
       stops: [{ cell: [2, 2], name: 'Goal', minutes: 0 }], closures: [], limit: 30, speed: 15,

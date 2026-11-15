@@ -125,3 +125,4 @@
 .nav-display-settings > label { display:block; margin:6px 0; font-size:12px; }
 @media (max-width:510px) { .atlas-toolbar > .muted { display:none; } .atlas-area { width:100%; } .atlas-area select { flex:1; min-width:0; } .atlas-app .topbar { flex-wrap:wrap; height:auto; min-height:58px; gap:7px; padding-block:10px; } }
 
+

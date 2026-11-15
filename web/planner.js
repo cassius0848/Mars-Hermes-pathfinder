@@ -166,6 +166,14 @@ const MOVES = [[-1, 0, 1], [1, 0, 1], [0, -1, 1], [0, 1, 1],
   [-1, -1, DIAGONAL], [-1, 1, DIAGONAL], [1, -1, DIAGONAL], [1, 1, DIAGONAL]];
 
 export function solveLeg(grid, route, from, to, profile, open, light) {
+  if (!route.legCache) return solveLegUncached(grid,route,from,to,profile,open,light);
+  const key=JSON.stringify([from,to,profile,route.limit,route.speed]);
+  if(route.legCache.has(key))return route.legCache.get(key);
+  const path=solveLegUncached(grid,route,from,to,profile,open,light);
+  route.legCache.set(key,path);return path;
+}
+
+function solveLegUncached(grid, route, from, to, profile, open, light) {
   const start = indexOf(grid, from), goal = indexOf(grid, to);
   if (start < 0 || goal < 0 || !open[start] || !open[goal]) return null;
   if (start === goal) return [start];

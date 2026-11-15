@@ -71,6 +71,34 @@ main{max-width:1540px;margin:auto;padding:30px clamp(14px,4vw,65px) 70px}.page-i
 .mission-data-panel summary::after { content:'＋'; color:var(--muted); }
 .mission-data-panel[open] summary::after { content:'−'; }
 .mission-app .waypoint-controls input,.mission-app .params input { padding-block:7px; }
+.ops-config { display:grid; gap:10px; margin-top:10px; }
+.ops-config label,.ops-grid label,.ops-transfer > label { display:grid; gap:4px; color:var(--muted); font-size:12px; }
+.ops-config label:has(input[type=checkbox]) { display:flex; align-items:center; color:var(--text); }
+.ops-config input[type=checkbox] { width:auto; }
+.ops-grid,.ops-target { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.ops-target { border:1px solid var(--line); padding:9px; border-radius:6px; }
+.ops-target > strong { grid-column:1 / -1; font-size:12px; }
+.ops-config fieldset { border:1px solid var(--line); border-radius:6px; padding:9px; margin:8px 0; min-width:0; }
+.ops-config input[type=text],.science-point textarea { width:100%; min-width:0; background:var(--field); color:var(--text); border:1px solid var(--line); border-radius:5px; padding:7px; font:inherit; }
+.ops-resource-report { display:grid; gap:9px; margin:9px 0; }
+.ops-resource { display:grid; gap:4px; font-size:12px; }
+.ops-resource meter { width:100%; height:10px; accent-color:var(--mint); }
+#ops-resource-summary { display:block; font-size:11px; color:var(--muted); margin-left:13px; }
+#ops-decision:not(:empty),#ops-quality:not(:empty) { margin-block:9px; line-height:1.55; }
+.ops-event { margin-top:12px; border-top:1px solid var(--line); padding-top:8px; }
+.ops-event .ops-grid { margin-block:8px; }
+.mission-environment { border-top:1px solid var(--line); }
+.mission-environment > summary { padding:10px 14px; font-size:12px; }
+.mission-environment .env-coverage { padding:0 14px 12px; }
+.science-point details { margin-top:8px; font-size:12px; }
+.science-point details > label { display:grid; gap:5px; margin-top:8px; }
+.field-image { width:100%; max-height:200px; object-fit:contain; background:#161412; margin-top:8px; }
+.science-point.at-station { outline:2px solid var(--mint); outline-offset:2px; }
+.ops-transfer { font-size:12px; }
+.ops-transfer .nav-buttons { margin-bottom:10px; }
+.ops-transfer .nav-buttons button { width:100%; }
+.ops-transfer input[type=file] { max-width:100%; }
+@media (max-width:390px) { .ops-grid,.ops-target { grid-template-columns:minmax(0,1fr); } }
 
 /* Keep the planning column short and use the space immediately below the map. */
 .mission-app .console { grid-template-areas:"map side" "context side"; grid-template-rows:auto auto; row-gap:14px; }

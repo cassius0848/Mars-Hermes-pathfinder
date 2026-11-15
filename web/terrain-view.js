@@ -96,6 +96,7 @@ export class TerrainView {
     route.material.depthTest = false; route.renderOrder = 4;
     this.scene.add(route);
     this.route = route;
+    this.baseRouteColor = color;
     this.crewMarker = document.createElement('span');
     this.crewMarker.className = 'terrain-crew-marker';
     this.crewMarker.setAttribute('aria-hidden', 'true');
@@ -157,7 +158,22 @@ export class TerrainView {
   }
 
   setTexture(canvas) { this.applyTexture(new THREE.CanvasTexture(canvas)); this.draw(); }
-  setColor(color) { this.route.material.color.set(color); this.draw(); }
+  setColor(color) {
+    this.baseRouteColor = color;
+    this.routeColors = null;
+    this.route.geometry.deleteAttribute('color');
+    this.route.material.vertexColors = false; this.route.material.needsUpdate = true;
+    this.route.material.color.set(color); this.draw();
+  }
+
+  setRouteColors(colors) {
+    this.routeColors = colors;
+    const values = new Float32Array(colors.length * 3), color = new THREE.Color();
+    colors.forEach((value, i) => color.set(value).toArray(values, i * 3));
+    this.route.geometry.setAttribute('color', new THREE.BufferAttribute(values, 3));
+    this.route.material.vertexColors = true; this.route.material.color.set('#ffffff');
+    this.route.material.needsUpdate = true; this.draw();
+  }
 
   mesh() {
     const { site } = this;
@@ -253,6 +269,12 @@ export class TerrainView {
 
   setPlan(plan) {
     if (this.plan === plan) { this.refreshRouteHeights(); return; }
+    if (this.plan !== plan) {
+      this.routeColors = null;
+      this.route.material.vertexColors = false;
+      this.route.material.color.set(this.baseRouteColor ?? '#83ffd0');
+      this.route.material.needsUpdate = true;
+    }
     this.plan = plan;
     this.routeAnchors = [];
     this.stationAnchors = [];
@@ -322,7 +344,8 @@ export class TerrainView {
     this.stationAnchors.forEach(({object,e,n,elevation,offset,scaled})=>{
       object.position.y=this.heightAt(e,n,elevation)+offset*(scaled?this.verticalScale:1);
     });
-    this.draw();
+    if (this.routeColors) this.setRouteColors(this.routeColors);
+    else this.draw();
   }
 
   update(progress, light) {

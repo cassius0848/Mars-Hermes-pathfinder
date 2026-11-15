@@ -7,6 +7,7 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="atlas.css">
+  <link rel="stylesheet" href="environment.css">
 </head>
 <body class="atlas-app">
   <header class="topbar">
@@ -26,7 +27,7 @@
         <p class="muted atlas-network-note" id="atlas-network-note" hidden>虚线表示四个经典陨石坑的位置关系。</p>
         <div class="atlas-map">
           <canvas id="surface" tabindex="0" aria-label="在线火星地图。拖动平移，滚轮缩放。键盘方向键平移，加减键缩放，回车选取中心。"></canvas>
-          <div id="atlas-3d" role="region" aria-label="路线三维地形" hidden></div>
+          <div id="atlas-3d" role="region" aria-label="路线三维地形" hidden><div id="nav-env-hud" class="env-hud" aria-label="导航环境参考" hidden></div></div>
           <div class="map-tools" id="atlas-zoom"><button id="closer" type="button" aria-label="放大在线地图">+</button><button id="farther" type="button" aria-label="缩小在线地图">−</button></div>
         </div>
         <section id="nav-playback" class="atlas-playback" aria-label="三维导航回放" hidden>
@@ -85,6 +86,7 @@
           <p id="nav-route-legend" class="muted" hidden></p>
           <div id="nav-routes" class="nav-routes"></div>
         </section>
+        <section id="nav-env-panel" class="env-panel" aria-label="沿途环境与导航" hidden></section>
       </section>
       <aside class="atlas-tools" aria-label="路线、图层与数据">
         <div class="atlas-tabs" role="tablist" aria-label="地图工具">
@@ -189,6 +191,8 @@
         <section class="panel atlas-data">
           <div class="panel-heading"><h2>规划数据与覆盖</h2></div>
           <p id="nav-coverage" class="muted" role="status">计算后列出实际参与本次路线的参数。</p>
+          <div id="nav-coverage-viz" class="env-coverage" aria-label="沿路线的数据覆盖"></div>
+          <a href="#nav-env-panel">查看沿途环境曲线与定位 ↓</a>
           <a id="nav-data-link" target="_blank" rel="noreferrer" hidden>本次高程数据 ↗</a>
           <ul id="nav-regional-links" class="product-list"></ul>
           <p id="nav-meda-links" class="nav-meda-links"></p>
