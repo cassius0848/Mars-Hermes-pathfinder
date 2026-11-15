@@ -72,3 +72,18 @@ main{max-width:1540px;margin:auto;padding:30px clamp(14px,4vw,65px) 70px}.page-i
 .mission-data-panel[open] summary::after { content:'−'; }
 .mission-app .waypoint-controls input,.mission-app .params input { padding-block:7px; }
 
+/* Keep the planning column short and use the space immediately below the map. */
+.mission-app .console { grid-template-areas:"map side" "context side"; grid-template-rows:auto auto; row-gap:14px; }
+.mission-app .console > .map-panel { grid-area:map; }
+.mission-app .console > .side { grid-area:side; }
+.mission-context { grid-area:context; display:grid; grid-template-columns:minmax(0,1.2fr) minmax(210px,.8fr); gap:12px; align-items:start; min-width:0; }
+.mission-status { display:grid; gap:12px; min-width:0; }
+.mission-context .localization-box { margin:0; padding:0 13px 13px; }
+.mission-context .localization-box .panel-heading { padding:13px 0 11px; }
+@media (max-width:1000px) {
+  .mission-context { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:640px) {
+  .mission-app .console { grid-template-areas:"side" "map" "context"; grid-template-columns:minmax(0,1fr); }
+}
+
