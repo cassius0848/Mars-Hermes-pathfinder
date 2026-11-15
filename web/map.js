@@ -1,5 +1,5 @@
 import { t as uiText } from './locale.js';
-import { cellXY, cellOf, geographic, indexOf } from './planner.js';
+import { cellXY, cellOf, elevationAt, geographic, indexOf, pathXY } from './planner.js';
 
 const colors = { start: '#a8dbb2', goal: '#ffc18d', science: '#f6d477', crew: '#ffefc0', route: '#7de3bd', rover: '#f6c197' };
 
@@ -226,15 +226,22 @@ export function profileChart(canvas, site, plan, progress) {
   const { width } = rect;
   ctx.font = '11px system-ui';
   if (!plan) { ctx.fillStyle = '#ac9b8b'; ctx.fillText(uiText("计算路线后显示沿线高程"), 12, 56); return; }
-  const heights = plan.path.map(index => site.height[index]);
-  const min = heights.reduce((a, b) => Math.min(a, b)), max = heights.reduce((a, b) => Math.max(a, b));
-  const x = distance => 58 + distance / plan.distance * (width - 73);
+  const heights = plan.path.map((_, i) => elevationAt(site, pathXY(site, plan, i)));
+  const valid = heights.filter(Number.isFinite);
+  if (!valid.length) { ctx.fillStyle = '#ac9b8b'; ctx.fillText(uiText("这一段缺少可用数据"), 12, 56); return; }
+  const min = valid.reduce((a, b) => Math.min(a, b)), max = valid.reduce((a, b) => Math.max(a, b));
+  const x = distance => 58 + distance / Math.max(1, plan.distance) * (width - 73);
   const y = z => 86 - (z - min) / Math.max(1, max - min) * 63;
   ctx.strokeStyle = '#55453a'; ctx.fillStyle = '#beab97';
   for (const z of [min, max]) {
     ctx.beginPath(); ctx.moveTo(58, y(z)); ctx.lineTo(width - 15, y(z)); ctx.stroke(); ctx.fillText(`${z.toFixed(0)} m`, 1, y(z));
   }
-  ctx.beginPath(); heights.forEach((z, i) => ctx.lineTo(x(plan.lengths[i]), y(z)));
+  ctx.beginPath(); let connected = false;
+  heights.forEach((z, i) => {
+    if (!Number.isFinite(z)) { connected = false; return; }
+    if (connected) ctx.lineTo(x(plan.lengths[i]), y(z)); else ctx.moveTo(x(plan.lengths[i]), y(z));
+    connected = true;
+  });
   ctx.strokeStyle = colors.route; ctx.lineWidth = 2; ctx.stroke();
   if (progress) { ctx.fillStyle = colors.crew; ctx.fillRect(x(progress.distance) - 1, 18, 2, 68); }
   ctx.fillStyle = '#beab97'; ctx.textAlign = 'right';
