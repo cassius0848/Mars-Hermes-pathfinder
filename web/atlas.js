@@ -488,10 +488,12 @@ function updateWalkLink(id) {
 
 updateWalkLink(initialView);
 renderCraterSources(initialView);
+navigation.setArea(initialView);
 for (const [id, view] of Object.entries(atlasViews)) $(id).onclick = () => {
   updateWalkLink(id);
   renderCraterSources(id);
   state.viewId = id;
+  navigation.setArea(id);
   state.center = [...view.center]; state.span = view.span; schedule();
 };
 $('base').onchange = () => { shown.clear(); $('image-opacity').value = $('base').value === 'viking' ? 100 : 0; schedule(); };

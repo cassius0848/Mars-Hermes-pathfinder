@@ -2,6 +2,7 @@ import { cellOf, cellXY, isLit, progressAt } from './planner.js';
 import { atlasCell, atlasLonLat, atlasSites, atlasTexture, loadAtlasContext, loadAtlasTerrain } from './atlas-terrain.js';
 import { environmentSettings, medaSun } from './atlas-environment.js';
 import { fetchOfficial } from './official.js';
+import { atlasExamples, sourceForArea } from './atlas-areas.js';
 
 const $ = id => document.getElementById(id);
 const PALETTE = ['#86f8c1', '#ffc18e', '#b8c5ff', '#f7acdc'];
@@ -26,6 +27,8 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   const climateSelect = $('nav-climate'), results = $('atlas-results'), coloring = $('nav-route-color');
   const baseOptions = [...coloring.options];
   const regional = () => medaSelect.value === 'regional';
+  let currentArea = null;
+  const autoSource = $('nav-auto-source'), demoButton = $('nav-regional-demo');
 
   async function regionalRequest(signal, weights) {
     if (!regionalMeta || !climateSelect.value) throw Error('区域环境索引未加载。请选择“地形与自选太阳时”，或刷新后重试。');
@@ -175,6 +178,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   }
 
   function resetResult() {
+    autoSource.hidden = true;
     task?.abort.abort(); task?.worker?.terminate(); task = null;
     result = null; position = null; minute = 0;
     close3d();
@@ -477,6 +481,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     } catch (error) {
       if (task !== pending) return;
       status.textContent = error.name === 'TimeoutError' ? '官方高程服务响应超时，请重试或缩短路线。' : error.message;
+      autoSource.hidden = !error.suggestedSource;
       finish(pending);
     }
   }
@@ -595,7 +600,43 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     }
   }
   $('nav-meda-demo').onclick = () => demo('hawksbill', 0, 'auto', false);
-  $('nav-regional-demo').onclick = () => demo('jezero', 1, 'jezero', true);
+  demoButton.onclick = () => {
+    const example = atlasExamples[currentArea];
+    if (!example) return;
+    if (example.site) return demo(example.site, example.target, example.source, true);
+    cancelPick(); cancelProfile();
+    waypoints.length = 0; renderWaypoints(); resetResult();
+    points.start = [...example.start]; points.goal = [...example.goal];
+    $('nav-source').value = example.source;
+    medaSelect.value = 'regional'; updateObservation();
+    fit([points.start, points.goal]); buttons(); paint();
+    $('nav-form').requestSubmit();
+  };
+  autoSource.onclick = () => {
+    $('nav-source').value = 'auto';
+    autoSource.hidden = true;
+    $('nav-form').requestSubmit();
+  };
+
+  function setArea(id) {
+    const example = atlasExamples[id];
+    const source = $('nav-source'), next = sourceForArea(id, source.value);
+    const changedArea = currentArea !== null && currentArea !== id;
+    const changedSource = next !== source.value;
+    const changedObservation = Boolean(medaSelect.value) && !regional() && id !== 'hawksbill';
+    currentArea = id;
+    if (changedArea) { cancelPick(); if (task || result) resetResult(); }
+    demoButton.textContent = example ? `试算 ${example.name} 区域路线` : '先选择陨石坑区域';
+    demoButton.disabled = !example;
+    if (changedSource || changedObservation) {
+      resetResult(); source.value = next;
+      if (changedObservation) { medaSelect.value = 'regional'; updateObservation(); }
+      status.textContent = `已切换到 ${example?.name ?? '全球视图'}，已移除不适用的区域数据限制。原选点保留，可重新选点或点击当前区域试算。`;
+    } else if (changedArea && (points.start || points.goal)) status.textContent = `已切换到 ${example?.name ?? '全球视图'}。原选点保留，试算按钮将设置当前区域的示例点。`;
+    else if (!points.start && !points.goal) status.textContent = example
+      ? `在 ${example.name} 地图选取起点和终点，或试算该区域路线。`
+      : '选择具体区域后可试算，也可在地图上手动选点并使用自动高程。';
+  }
 
   const scaleRange = $('nav-exaggeration'), scaleNumber = $('nav-exaggeration-number');
   function updateDisplay() { view?.setDisplay($('nav-relief').value, scaleRange.value); }
@@ -630,5 +671,5 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   progress.oninput = () => {
     stop(); minute = +progress.value / 1000 * result.candidates[selected].minutes; updateProgress();
   };
-  return { pick, cancelPick, draw };
+  return { pick, cancelPick, draw, setArea };
 }

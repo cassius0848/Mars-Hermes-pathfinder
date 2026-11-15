@@ -80,7 +80,7 @@
         </div>
         <div id="atlas-panel-plan" role="tabpanel" aria-labelledby="atlas-tab-plan">
         <section class="panel atlas-route" aria-labelledby="nav-heading">
-          <div class="panel-heading"><h2 id="nav-heading">地图选点</h2><button id="nav-regional-demo" type="button">试算 Jezero 区域路线</button></div>
+          <div class="panel-heading"><h2 id="nav-heading">地图选点</h2><button id="nav-regional-demo" type="button">试算当前区域路线</button></div>
           <div class="nav-actions">
             <button id="nav-start" type="button" aria-pressed="false">选出发地</button>
             <button id="nav-goal" type="button" aria-pressed="false">选目的地</button>
@@ -138,7 +138,8 @@
             </section>
             <button class="primary" id="nav-plan" type="submit" disabled>计算路线</button>
           </form>
-          <p class="message" id="nav-status" role="status">选取起点和终点，或试算 Jezero 区域路线。</p>
+          <p class="message" id="nav-status" role="status">选取起点和终点，或试算当前区域路线。</p>
+          <button id="nav-auto-source" type="button" hidden>改用自动高程并重新计算</button>
           <a id="nav-view-results" href="#atlas-results" hidden>查看路线比较 ↓</a>
         </section>
         </div>

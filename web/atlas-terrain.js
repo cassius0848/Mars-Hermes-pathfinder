@@ -99,7 +99,7 @@ async function bundledTerrain(site, signal) {
 
 export function cropAtlasGrid(site, points, surroundings = false) {
   const cells = points.map(point => atlasCell(site, point));
-  if (cells.some(cell => !cell)) throw Error('至少一个选点超出 Jezero 区域高程缓存。');
+  if (cells.some(cell => !cell)) throw Error(`至少一个选点超出 ${site.name ?? site.id} 的高程缓存。`);
   const [minRow, minCol, maxRow, maxCol] = bounds(cells);
   const span = Math.hypot(maxRow - minRow, maxCol - minCol);
   const margin = surroundings ? Math.max(45, Math.min(150, Math.ceil(span * 0.45)))
@@ -117,7 +117,7 @@ export function cropAtlasGrid(site, points, surroundings = false) {
     slope.set(site.slope.subarray(start, start + cols), row * cols);
   }
   for (const z of height) if (Number.isFinite(z)) { min = Math.min(min, z); max = Math.max(max, z); }
-  if (!Number.isFinite(min)) throw Error('Jezero 缓存这一段缺少有效高程。');
+  if (!Number.isFinite(min)) throw Error(`${site.name ?? site.id} 缓存这一段缺少有效高程。`);
   return { ...site, regional: false, rows, cols, height, slope, depth: { min, max },
     left: site.left + col0 * site.step, top: site.top - row0 * site.step,
     textureWindow: { col0, row0, cols: site.cols, rows: site.rows } };
@@ -132,10 +132,16 @@ export async function loadAtlasTerrain(mode, points, signal, status) {
     status(`正在读取 ${local.name} 的 HiRISE 验证区高程…`);
     return { grid: await bundledTerrain(local, signal), label: `${local.name} · HiRISE ${local.step} 米网格`, source: Object.values(local.sources)[0] };
   }
-  if (mode === 'local') throw Error('请把所有选点设在同一个米级验证区内，或选择区域高程。');
+  if (mode === 'local') {
+    const error = Error('当前固定使用米级验证区，但至少一个选点在覆盖之外。可改用自动高程继续估算，原选点会保留。');
+    error.suggestedSource = 'auto'; throw error;
+  }
   const cached = sites.find(site => site.regional && covers(site));
   const cachedRoute = async () => {
-    if (!cached) throw Error('所有选点需要落在 Jezero 100 米缓存范围内。');
+    if (!cached) {
+      const error = Error('当前固定使用 Jezero 100 米缓存，至少一个选点超出覆盖范围。请改用自动高程或 MOLA；其他陨石坑不受此缓存范围限制。');
+      error.suggestedSource = 'auto'; throw error;
+    }
     status('正在读取 Jezero 区域实测高程缓存…');
     return { grid: cropAtlasGrid(await bundledTerrain(cached, signal), points),
       label: 'Jezero · USGS CTX 100 米区域缓存', source: cached.sources['USGS/JPL CTX 地形'] };

@@ -1,7 +1,7 @@
 export const craterSources = {
   jezero: {
     label: 'Jezero',
-    resolution: '2 m local / 100 m regional packages',
+    resolution: '1 m local / 100 m regional packages',
     status: '米级规划包已随项目提供',
     links: [
       { label: 'NASA Mars Trek', url: 'https://trek.nasa.gov/mars/', note: '在线图层与坐标' },

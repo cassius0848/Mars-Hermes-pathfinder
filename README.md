@@ -4,7 +4,9 @@
 >
 > **A local EVA mission-planning tool for Martian astronauts**
 
-**队友入口** [火星在线地图](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/atlas.html) · [步行规划](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/) · [离线网页 ZIP](releases/mars-pathfinder-jezero-offline.zip) · [使用说明与校验](releases/README.md)
+**项目入口** [在线火星地图](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/atlas?area=jezero) · [步行规划](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/) · [当前构建版本](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/build-info.json)
+
+**统一版本来源**：GitHub `main` 是应用源码的唯一基线。网站发布经过测试的 GitHub Actions 构建产物，`build-info.json` 记录对应提交和文件校验值。详见 [构建与部署流程](docs/deployment.md)。
 
 ## 中文版
 
