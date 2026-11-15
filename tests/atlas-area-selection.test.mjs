@@ -27,13 +27,14 @@ test('changing areas releases incompatible fixed elevation sources', () => {
   assert.equal(sourceForArea('gale', 'mola'), 'mola');
 });
 
-test('out-of-cache fixed selections offer recovery and auto routes Gale to MOLA', async () => {
+test('out-of-cache fixed selections offer recovery and auto routes Gale to HRSC/MOLA', async () => {
   const sites = JSON.parse(fs.readFileSync(new URL('../dist/assets/sites.json', import.meta.url), 'utf8')).sites;
   const fetchBefore = globalThis.fetch, requested = [];
   globalThis.fetch = async url => {
     requested.push(String(url));
     if (url === 'assets/sites.json') return Response.json({ sites });
-    if (String(url).includes('/mola128_') && String(url).includes('/exportImage')) throw Error('MOLA request reached');
+    if (String(url).includes('/Mars_MOLA_blend200ppx_HRSC_DEM_') && String(url).includes('/exportImage')) throw Error('HRSC request reached');
+    if (String(url).includes('/mola128_') && String(url).includes('/exportImage')) throw Error('MOLA fallback reached');
     throw Error('Unexpected fetch ' + url);
   };
   try {
@@ -41,7 +42,8 @@ test('out-of-cache fixed selections offer recovery and auto routes Gale to MOLA'
     const signal = new AbortController().signal;
     await assert.rejects(loadAtlasTerrain('jezero', points, signal, () => {}), error => error.suggestedSource === 'auto' && error.message.includes('当前固定使用'));
     await assert.rejects(loadAtlasTerrain('local', points, signal, () => {}), error => error.suggestedSource === 'auto');
-    await assert.rejects(loadAtlasTerrain('auto', points, signal, () => {}), /MOLA request reached/);
+    await assert.rejects(loadAtlasTerrain('hrsc', points, signal, () => {}), /HRSC request reached/);
+    await assert.rejects(loadAtlasTerrain('auto', points, signal, () => {}), /MOLA fallback reached/);
     assert.ok(requested.some(url => url.includes('/mola128_')));
     assert.ok(!requested.some(url => url.includes('/jezero/elevation.bin')));
   } finally { globalThis.fetch = fetchBefore; }

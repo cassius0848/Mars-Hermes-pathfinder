@@ -2,6 +2,7 @@ import { fetchOfficial, GEOLOGY } from './official.js';
 
 const WMTS = 'https://trek.nasa.gov/tiles/Mars/EQ';
 const MOLA = 'https://trek.nasa.gov/mars/trekarcgis/rest/services/mola128_mola64_merge_90Nto90S_SimpleC_clon0/ImageServer';
+export const HRSC_DEM = 'https://trek.nasa.gov/mars/trekarcgis/rest/services/Mars_MOLA_blend200ppx_HRSC_DEM_clon0dd_200mpp_lzw/ImageServer';
 const STAC = 'https://stac.astrogeology.usgs.gov/api/search';
 export const CTX_DEM = 'https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/mars2020_trn/CTX/ScienceInvestigationMaps_JPL/M20_JezeroCrater_CTXDEM_20m.tif';
 const RADIUS = 3396190;
@@ -140,14 +141,18 @@ export function molaExport(bbox) {
   return `${MOLA}/exportImage?${new URLSearchParams(params)}`;
 }
 
-export async function fetchMolaTerrain(bbox, signal) {
-  const size = [Math.ceil((bbox[2] - bbox[0]) * 64), Math.ceil((bbox[3] - bbox[1]) * 64)].map(v => Math.max(4, v));
+export const fetchMolaTerrain = (bbox, signal) => fetchImageTerrain(MOLA, bbox, signal, 128);
+export const fetchHrscTerrain = (bbox, signal) => fetchImageTerrain(HRSC_DEM, bbox, signal, 1 / 0.00337412083064107);
+
+async function fetchImageTerrain(service, bbox, signal, pixelsPerDegree) {
+  const scale = Math.min(pixelsPerDegree, 510 / Math.max(bbox[2] - bbox[0], bbox[3] - bbox[1]));
+  const size = [Math.ceil((bbox[2] - bbox[0]) * scale), Math.ceil((bbox[3] - bbox[1]) * scale)].map(v => Math.max(4, v));
   const params = { bbox: bbox.join(','), bboxSR: 104905, imageSR: 104905, size: size.join(','),
     adjustAspectRatio: 'false', format: 'tiff', pixelType: 'F32', interpolation: 'RSP_Bilinear', f: 'image' };
-  const url = `${MOLA}/exportImage?${new URLSearchParams(params)}`;
+  const url = `${service}/exportImage?${new URLSearchParams(params)}`;
   const bytes = await fetchOfficial(url, 'arrayBuffer', signal);
   const tiff = new DataView(bytes);
-  if (tiff.byteLength < 8 || tiff.getUint32(0, true) !== 0x002a4949) throw Error('NASA 未返回有效的 MOLA TIFF');
+  if (tiff.byteLength < 8 || tiff.getUint32(0, true) !== 0x002a4949) throw Error('NASA 未返回有效的数值高程 TIFF');
   const ifd = tiff.getUint32(4, true), tags = new Map();
   try {
     for (let i = 0; i < tiff.getUint16(ifd, true); i++) {
@@ -179,7 +184,7 @@ export async function fetchMolaTerrain(bbox, signal) {
     }
     return { url, values, width, height, lon, lat, dLon: width * dx, dLat: height * dy };
   } catch {
-    throw Error('NASA MOLA 高程文件的布局无法识别，请稍后重试。');
+    throw Error('NASA 数值高程文件的布局无法识别，请稍后重试。');
   }
 }
 
@@ -242,3 +247,4 @@ export async function fetchCtxTerrain(window, signal) {
   await Promise.all(Array.from({ length: Math.min(5, Math.ceil(window.height / 28)) }, readRows));
   return { ...window, values, min, max, valid };
 }
+

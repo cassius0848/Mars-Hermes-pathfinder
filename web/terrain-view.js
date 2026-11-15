@@ -1,5 +1,18 @@
 import * as THREE from './vendor/three.module.min.js';
-import { cellOf, cellXY, geographic, project } from './planner.js';
+import { cellOf, cellXY, geographic, pathXY, project } from './planner.js';
+
+export function walkingPose(xy, heading, ground, yaw = 0, pitch = 0) {
+  const bearing = Math.atan2(heading[0], -heading[1]) + yaw;
+  const eye = [xy[0], ground + 1.7, -xy[1]];
+  return { eye, target: [eye[0] + Math.sin(bearing)*Math.cos(pitch)*20,
+    eye[1] + Math.sin(pitch)*20, eye[2] + Math.cos(bearing)*Math.cos(pitch)*20] };
+}
+
+export function stationSprite(canvas) {
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas), depthTest:false, sizeAttenuation:false}));
+  sprite.scale.set(0.018, 0.018, 1);
+  return sprite;
+}
 
 export class TerrainView {
   constructor(host, site, plan, { color = '#83ffd0', atlas = false, routeGrid = site, surroundings = false } = {}) {
@@ -8,7 +21,7 @@ export class TerrainView {
     this.routeGrid = routeGrid;
     this.surroundings = surroundings;
     this.sameProjection = site.center[0] === routeGrid.center[0] && site.center[1] === routeGrid.center[1];
-    this.meshStride = 1;
+    this.meshStride = Math.max(1, Math.ceil(Math.max(site.rows, site.cols) / 600));
     this.meshResolution = site.step * this.meshStride;
     const size = Math.max(site.cols, site.rows) * site.step;
     const relief = Math.max(1, site.depth.max - site.depth.min);
@@ -40,8 +53,12 @@ export class TerrainView {
     this.overview = new THREE.Vector3();
     this.focus = new THREE.Vector3();
     this.follow = true;
+    this.perspective = 'orbit';
+    this.walkYaw = 0; this.walkPitch = 0;
+    this.heading = [0, 1];
 
     const { geometry, rows, cols } = this.mesh();
+    if (!geometry.index.count) { geometry.dispose(); this.renderer.dispose(); this.renderer.domElement.remove(); this.badge.remove(); throw Error('这一范围没有可显示的连续高程。'); }
     this.rows = rows; this.cols = cols; this.geometry = geometry;
     const surface = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: '#b1947b', side: THREE.DoubleSide }));
     surface.name = 'Measured elevation mesh';
@@ -95,7 +112,7 @@ export class TerrainView {
   describe() {
     const width = this.site.cols * this.site.step / 1000, height = this.site.rows * this.site.step / 1000;
     const area = this.atlas ? `${width.toFixed(width < 1 ? 2 : 1)} × ${height.toFixed(height < 1 ? 2 : 1)} km · ` : '';
-    this.badge.textContent = `${area}高程网格 ${this.meshResolution} m · 垂直显示 ×${this.verticalScale} · 寻路网格 ${this.routeGrid.step} m`;
+    this.badge.textContent = `${area}显示采样 ${this.meshResolution} m · 垂直显示 ×${this.verticalScale} · 寻路网格 ${this.routeGrid.step} m${this.perspective === 'first-person' ? ' · 眼高 1.7 m' : ''}`;
   }
 
   configureMaterial() {
@@ -234,16 +251,16 @@ export class TerrainView {
   setPlan(plan) {
     this.plan = plan;
     this.route.geometry.dispose();
-    this.route.geometry = new THREE.BufferGeometry().setFromPoints(plan.path.map(index => {
-      const [e, n] = this.routeToTerrain(cellXY(this.routeGrid, cellOf(this.routeGrid, index)));
-      return new THREE.Vector3(e, this.heightAt(e, n, this.routeGrid.height[index]) + 1.5 * this.verticalScale, -n);
+    this.route.geometry = new THREE.BufferGeometry().setFromPoints(plan.path.map((index, i) => {
+      const [e, n] = this.routeToTerrain(pathXY(this.routeGrid, plan, i));
+      return new THREE.Vector3(e, this.heightAt(e, n, this.routeGrid.height[index]) + (this.perspective === 'first-person' ? 0.12 : 1.5) * this.verticalScale, -n);
     }));
     if (this.atlas) {
       this.route.geometry.computeBoundingBox();
       const bounds = this.route.geometry.boundingBox;
       const extent = bounds.getSize(new THREE.Vector3());
       bounds.getCenter(this.overview);
-      this.routeDistance = Math.max(24 * this.routeGrid.step, Math.hypot(extent.x, extent.y, extent.z) * 1.15);
+      this.routeDistance = Math.max(50, 4 * this.routeGrid.step, Math.hypot(extent.x, extent.y, extent.z) * 1.15);
       this.initialDistance = this.routeDistance;
       if (this.surroundings) {
         const { left, top, rows, cols, step } = this.site;
@@ -257,13 +274,15 @@ export class TerrainView {
     }
     const stops = plan.visits.filter(visit => !visit.returnLeg);
     stops.forEach((stop, index) => {
-      const [e, n] = this.routeToTerrain(cellXY(this.routeGrid, cellOf(this.routeGrid, stop.cell)));
+      const [e, n] = this.routeToTerrain(stop.xy ?? cellXY(this.routeGrid, cellOf(this.routeGrid, stop.cell)));
       const y = this.heightAt(e, n, this.routeGrid.height[stop.cell]);
-      const radius = this.surroundings ? Math.max(2, this.size / 420) : Math.max(2, this.site.step * 1.5);
       const waypoint = this.atlas && index < stops.length - 1;
-      const marker = new THREE.Mesh(new THREE.SphereGeometry(radius, 10, 8),
-        new THREE.MeshBasicMaterial({ color: waypoint ? '#d0c4ff' : '#ffd095', depthTest: false }));
-      marker.position.set(e, y + 2 * this.verticalScale, -n); marker.renderOrder = 5; this.stations.add(marker);
+      const dot = document.createElement('canvas'); dot.width = dot.height = 64;
+      const pen = dot.getContext('2d');
+      pen.beginPath(); pen.arc(32,32,23,0,Math.PI*2); pen.fillStyle = waypoint ? '#d0c4ff' : '#ffd095'; pen.fill();
+      pen.lineWidth = 5; pen.strokeStyle = '#211b18'; pen.stroke();
+      const marker = stationSprite(dot);
+      marker.position.set(e, y + 0.25, -n); marker.renderOrder = 5; this.stations.add(marker);
       const canvas = document.createElement('canvas');
       canvas.width = this.atlas ? 192 : 512;
       canvas.height = 64;
@@ -292,6 +311,10 @@ export class TerrainView {
     const [e, n] = this.routeToTerrain(progress.xy);
     const elevation = this.routeGrid.height[progress.cell[0] * this.routeGrid.cols + progress.cell[1]];
     this.focus.set(e, this.heightAt(e, n, elevation) + 4 * this.verticalScale, -n);
+    if (Math.hypot(...progress.heading) > 1e-6) {
+      const next = this.routeToTerrain(progress.xy.map((v, i) => v + progress.heading[i]));
+      this.heading = [next[0] - e, next[1] - n];
+    }
     if (light && this.mode === 'optical') this.sun.position.set(light.sun.east, Math.max(0.08, light.sun.up), -light.sun.north);
     this.draw();
   }
@@ -304,12 +327,18 @@ export class TerrainView {
     canvas.addEventListener('pointercancel', () => { last = null; });
     canvas.addEventListener('pointermove', e => {
       if (!last) return;
-      this.angle -= (e.clientX - last[0]) * 0.008;
-      this.pitch = Math.min(1.5, Math.max(0.18, this.pitch + (e.clientY - last[1]) * 0.008));
+      if (this.perspective === 'first-person') {
+        this.walkYaw -= (e.clientX - last[0]) * 0.004;
+        this.walkPitch = Math.max(-1.2, Math.min(1.2, this.walkPitch + (e.clientY - last[1]) * 0.004));
+      } else {
+        this.angle -= (e.clientX - last[0]) * 0.008;
+        this.pitch = Math.min(1.5, Math.max(0.18, this.pitch + (e.clientY - last[1]) * 0.008));
+      }
       last = [e.clientX, e.clientY]; this.draw();
     });
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
+      if (this.perspective === 'first-person') return;
       this.distance = Math.min(this.initialDistance * 2.3, Math.max((this.atlas ? this.routeDistance : this.initialDistance) * 0.13, this.distance * Math.exp(e.deltaY * 0.001)));
       this.draw();
     }, { passive: false });
@@ -321,6 +350,20 @@ export class TerrainView {
     this.draw();
   }
 
+  setPerspective(mode) {
+    this.perspective = mode === 'first-person' ? mode : 'orbit';
+    this.walkYaw = 0; this.walkPitch = 0;
+    this.camera.fov = this.perspective === 'first-person' ? 75 : 45;
+    this.camera.near = this.perspective === 'first-person' ? 0.1 : 1;
+    const firstPerson = this.perspective === 'first-person';
+    this.scene.background.set(firstPerson ? '#b5987b' : '#231e1b');
+    this.scene.fog.color.copy(this.scene.background);
+    this.scene.fog.near = firstPerson ? Math.min(6000, this.size * 0.18) : this.size * 1.8;
+    this.scene.fog.far = firstPerson ? Math.min(18000, this.size * 0.5) : this.size * 3.5;
+    this.setPlan(this.plan);
+    this.describe(); this.draw();
+  }
+
   draw() {
     if (!this.host.clientWidth || this.disposed) return;
     const { camera, renderer, host } = this;
@@ -328,17 +371,27 @@ export class TerrainView {
     if (!height) return;
     const pixelRatio = renderer.getPixelRatio();
     if (Math.abs(renderer.domElement.width - width * pixelRatio) > 1 || Math.abs(renderer.domElement.height - height * pixelRatio) > 1) renderer.setSize(width, height, false);
-    camera.aspect = width / height; camera.updateProjectionMatrix();
+    camera.aspect = width / height;
+    // A cropped, coarse route may be small while the camera needs a much wider overview.
+    camera.far = Math.max(this.size * 6, this.distance * 4, 50000);
+    camera.updateProjectionMatrix();
     this.target.copy(this.follow ? this.focus : this.overview);
-    camera.position.set(Math.sin(this.angle) * Math.cos(this.pitch), Math.sin(this.pitch), Math.cos(this.angle) * Math.cos(this.pitch))
-      .multiplyScalar(this.distance).add(this.target);
-    camera.lookAt(this.target);
+    if (this.perspective === 'first-person') {
+      const pose = walkingPose([this.focus.x, -this.focus.z], this.heading,
+        this.focus.y - 4 * this.verticalScale, this.walkYaw, this.walkPitch);
+      camera.position.fromArray(pose.eye); camera.lookAt(...pose.target);
+    } else {
+      camera.position.set(Math.sin(this.angle) * Math.cos(this.pitch), Math.sin(this.pitch), Math.cos(this.angle) * Math.cos(this.pitch))
+        .multiplyScalar(this.distance).add(this.target);
+      camera.lookAt(this.target);
+    }
     renderer.render(this.scene, camera);
     this.drawCrewMarker(width, height);
   }
 
   drawCrewMarker(width, height) {
     if (!this.progress) return;
+    if (this.perspective === 'first-person') { this.crewMarker.hidden = true; return; }
     // Keep the marker tied to the same terrain point at every zoom level.
     const { x, y, z } = this.projectedCrew.copy(this.focus).project(this.camera);
     const visible = Number.isFinite(x) && Number.isFinite(y) && z >= -1 && z <= 1
@@ -366,3 +419,4 @@ export class TerrainView {
     this.badge?.remove();
   }
 }
+
