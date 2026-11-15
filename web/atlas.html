@@ -80,8 +80,9 @@
         <section id="atlas-results" class="atlas-results" tabindex="-1" aria-labelledby="nav-results-heading" hidden>
           <div class="atlas-section-heading">
             <h2 id="nav-results-heading">Candidate route</h2>
-            <button id="nav-3d" type="button" hidden>3D Route Playback</button>
+            <button id="nav-3d" type="button" aria-describedby="nav-playback-guide" hidden>3D Route Playback</button>
           </div>
+          <p id="nav-playback-guide" class="atlas-playback-guide">Route ready. Select 3D Route Playback to explore the terrain and follow the simulated crew.</p>
           <p id="nav-comparison" class="atlas-comparison" role="status"></p>
           <label class="nav-route-layer" id="nav-route-layer" hidden>line coloring
             <select id="nav-route-color">
@@ -171,7 +172,7 @@
           </form>
           <p class="message" id="nav-status" role="status">Choose a start and end point, or try out a route in the current area.</p>
           <button id="nav-auto-source" type="button" hidden>Use automatic elevation instead and recalculate</button>
-          <a id="nav-view-results" href="#atlas-results" hidden>View route comparison ↓</a>
+          <a id="nav-view-results" href="#atlas-results" hidden>View routes and 3D playback ↓</a>
         </section>
         </div>
         <div id="atlas-panel-layers" role="tabpanel" aria-labelledby="atlas-tab-layers" hidden>

@@ -875,6 +875,8 @@ export const english = {
 };
 
 export const chineseMarkup = {
+  "Route ready. Select 3D Route Playback to explore the terrain and follow the simulated crew.": "路线已计算。点击「三维导航回放」，查看沿途地形并跟随模拟队员。",
+  "View routes and 3D playback ↓": "查看路线和三维回放 ↓",
   "+ Add waypoint": "＋ 途经点",
   "10x pace": "10 倍步速",
   "16 km off route": "路线外 16 公里",
