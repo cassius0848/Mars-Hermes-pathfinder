@@ -1,4 +1,4 @@
-# Mars Pathfinder AI
+# Mars Hermesx Pathfinder 
 
 > **火星宇航员局部 EVA 任务规划工具**
 >
