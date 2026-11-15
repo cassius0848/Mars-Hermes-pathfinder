@@ -254,7 +254,7 @@ function searchMission(grid, route, light) {
     if (previous) previous.profiles.push(profile);
     else candidates.push(candidate);
   }
-  if (!hasMixedLight && !grid.regional && !route.returnOnly && candidates[0]?.profiles.includes("time")) {
+  if (light && !hasMixedLight && !grid.regional && !route.returnOnly && candidates[0]?.profiles.includes("time")) {
     candidates[0].profiles.push("light");
   }
   if (!candidates.length) return { error: "当前坡度限制或封锁区切断了路线。请检查选点与地图。", candidates: [] };
@@ -279,6 +279,7 @@ export function assessCandidate(candidate, route) {
 }
 
 export function planMission(grid, route, light) {
+  if (grid.regional && route.regionalNavigation) grid = { ...grid, regional: false };
   if (!route.start || (!route.stops.length && !route.returnToBase)) return { candidates: [], error: '请在地图上选取出发地和目的地。' };
   const points = [{ cell: route.start, name: '出发地' }, ...route.stops];
   if (route.returnToBase) points.push({ cell: route.base, name: '返航点' });
@@ -309,8 +310,9 @@ export function planMission(grid, route, light) {
 }
 
 export function canAnimateRoute(plan, route, grid) {
-  return !grid?.regional && Boolean(plan?.path?.length > 1 && Number.isFinite(plan.minutes) && plan.minutes > 0
-    && (plan.feasible || route?.mode === 'estimate'));
+  const regionalPlayback = Boolean(grid?.regional && route?.regionalNavigation);
+  return (!grid?.regional || regionalPlayback) && Boolean(plan?.path?.length > 1 && Number.isFinite(plan.minutes) && plan.minutes > 0
+    && (plan.feasible || route?.mode === 'estimate' || regionalPlayback));
 }
 
 export function progressAt(grid, plan, minute) {

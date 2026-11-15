@@ -132,6 +132,7 @@ function invalidate() {
   state.diagnostics = [];
   state.reportRoute = null;
   $('compute').disabled = !state.site?.height || !state.start || !state.stops?.length;
+  $('compute').textContent = '计算路线 ↗';
   $('plan-error').textContent = '';
   renderRoutes(); redraw();
 }
@@ -146,11 +147,11 @@ async function loadSite(site) {
   $('map-title').textContent = site.name;
   $('map-caption').textContent = site.regional ? 'Jezero 陨石坑及周边 · 半径 40 km' : `Jezero 局部步行区 · ${distance(site.rows * site.step)} × ${distance(site.cols * site.step)}`;
   $('grid-detail').textContent = `${site.step} m / 格`;
-  $('scope-note').textContent = site.regional ? '区域走廊用于比较地形。请打开步行区查看导航和三维。' : '原型按地形和模拟时间计算。碎石、沙地承载力、实时天气、辐射与生命支持待核验。';
-  $('roundtrip-field').hidden = Boolean(site.regional);
+  $('scope-note').textContent = site.regional ? '区域导航使用 100 m 地形作粗略估时与三维预演，不能识别米级障碍；未计入休息和生命支持消耗。可进入步行区查看 1 m 地形。' : '原型按地形和模拟时间计算。碎石、沙地承载力、实时天气、辐射与生命支持待核验。';
+  $('roundtrip-field').hidden = false;
   $('roundtrip').checked = !site.regional;
   $('preset').disabled = true;
-  $('start-nav').hidden = Boolean(site.regional);
+  $('start-nav').hidden = false;
   $('pick-hint').textContent = '正在读取地形网格…';
   $('official-results').hidden = true;
   $('live-query').disabled = true;
@@ -174,9 +175,9 @@ async function loadSite(site) {
 function renderSettings() {
   const site = state.site;
   const root = $('settings'); root.replaceChildren();
-  const controls = site.regional ? [['坡度上限（°）', 'slope-limit', 25, 5, 30]]
-    : [['坡度上限（°）', 'slope-limit', 18, 5, 30], ['基础步速（米/分）', 'speed', 15, 5, 40],
-      ['总预算（分钟）', 'budget', site.budget, 10, 600], ['返航预留（分钟）', 'reserve', 8, 0, 180]];
+  const controls = [['坡度上限（°）', 'slope-limit', site.regional ? 25 : 18, 5, 30], ['基础步速（米/分）', 'speed', 15, 5, 40],
+    ['总预算（分钟）', 'budget', site.budget ?? 480, 10, site.regional ? 20160 : 600],
+    ['返航预留（分钟）', 'reserve', site.regional ? 60 : 8, 0, site.regional ? 1440 : 180]];
   for (const [label, id, value, min, max] of controls) {
     const field = el('label', label), input = el('input');
     input.type = 'number'; input.id = id; input.min = min; input.max = max; input.value = value; input.step = 1;
@@ -194,7 +195,7 @@ function renderSettings() {
       field.append(select); root.append(field);
     }
     root.append(el('p', '步速随沿线高差调整。光照使用规划时刻的地形阴影，途中重算会更新时刻。', 'parameter-note'));
-  }
+  } else root.append(el('p', '区域用时按所设步速与沿途高差粗略估算，不包含休息或生命支持条件；区域光照未建模。区域动画支持超限参考回放。', 'parameter-note'));
 }
 
 function renderLayers() {
@@ -372,9 +373,9 @@ function readRoute() {
   if (invalid.length) throw Error(invalid.map(input => `${input.getAttribute('aria-label') ?? input.parentElement.firstChild.textContent}须为 ${input.min}–${input.max} 范围内的有效整数。`).join(' '));
   const route = { start: state.start, stops: state.stops, base: state.start, closures: state.closures,
     mode: $('planning-method').value, diagnose: true,
-    limit: +$('slope-limit').value, speed: regional ? 1 : +$('speed').value,
-    budget: regional ? Infinity : +$('budget').value, reserve: regional ? 0 : +$('reserve').value,
-    returnToBase: !regional && $('roundtrip').checked, allowSingleStop: state.preset && $('roundtrip').checked && state.stops.length > 1 };
+    limit: +$('slope-limit').value, speed: +$('speed').value,
+    budget: +$('budget').value, reserve: +$('reserve').value, regionalNavigation: Boolean(regional),
+    returnToBase: $('roundtrip').checked, allowSingleStop: state.preset && $('roundtrip').checked && state.stops.length > 1 };
   return route;
 }
 
@@ -408,6 +409,7 @@ function createPlanner() {
     state.onPlan = null;
     callback?.({ candidates: [], error: '规划程序中断。请点击计算路线重试。' });
     $('compute').disabled = Boolean(state.nav) || !state.site?.height || !state.start || !state.stops?.length;
+    $('compute').textContent = '重试计算路线 ↗';
     $('plan-error').textContent = '规划程序中断。请点击计算路线重试。';
   };
   return planner;
@@ -430,22 +432,26 @@ function calculate() {
     const route = readRoute();
     state.inputRoute = route;
     $('compute').disabled = true;
+    $('compute').textContent = '正在计算…';
     $('plan-error').textContent = '正在计算路线…';
     requestPlan(route, result => {
       $('compute').disabled = false;
-      $('plan-error').textContent = result.error ?? '';
+      $('compute').textContent = '重新计算路线 ↗';
+      state.completedPlans = (state.completedPlans ?? 0) + 1;
+      const completed = `第 ${state.completedPlans} 次计算完成：${result.candidates.length} 条候选路线。`;
+      $('plan-error').textContent = `${completed}${result.error ?? '可选择方案并播放导航动画。'}`;
       state.candidates = result.candidates;
       state.diagnostics = result.diagnostics ?? [];
       state.current = recommended(result.candidates);
-      if (state.current?.shortened) $('plan-error').textContent = `双站任务在当前限制下不可行，推荐先访问 ${state.current.shortened}。`;
-      else if (state.current && !state.current.feasible) $('plan-error').textContent = `${result.error ? result.error + ' ' : ''}所选路线有 ${state.current.violations.length} 项指标不满足限制，详情见路线方案。`;
+      if (state.current?.shortened) $('plan-error').textContent = `${completed}双站任务在当前限制下不可行，推荐先访问 ${state.current.shortened}。`;
+      else if (state.current && !state.current.feasible) $('plan-error').textContent = `${completed}${result.error ? result.error + ' ' : ''}所选路线有 ${state.current.violations.length} 项指标不满足限制，详情见路线方案。`;
       renderRoutes(); redraw();
     });
-  } catch (error) { $('compute').disabled = false; $('plan-error').textContent = error.message; }
+  } catch (error) { $('compute').disabled = false; $('compute').textContent = '重新计算路线 ↗'; $('plan-error').textContent = error.message; }
 }
 
 function describe(candidate) {
-  return state.site.regional ? '区域走廊' : candidate.profiles.map(key => profileLabels[key]).join(' / ');
+  return `${state.site.regional ? '区域路线 · ' : ''}${candidate.profiles.map(key => profileLabels[key]).join(' / ')}`;
 }
 
 function renderRoutes() {
@@ -455,8 +461,8 @@ function renderRoutes() {
   renderRouteReport();
   $('route-count').textContent = candidates.length ? `${candidates.length} 条` : '';
   $('start-nav').disabled = !canAnimateRoute(current, state.inputRoute, site) || Boolean(nav);
-  $('start-nav').replaceChildren(state.inputRoute?.mode === 'estimate' ? '播放反算导航动画 →' : '开始导航演示 →');
-  $('export-route').hidden = !current || Boolean(nav) || Boolean(site?.regional);
+  $('start-nav').replaceChildren(site?.regional ? '播放区域 3D 导航动画 →' : state.inputRoute?.mode === 'estimate' ? '播放反算导航动画 →' : '开始导航演示 →');
+  $('export-route').hidden = !current || Boolean(nav);
   $('export-route').disabled = $('export-route').hidden;
   if (!candidates.length) { root.replaceChildren(el('p', '选取起终点后可比较候选路线。', 'muted')); return; }
   root.replaceChildren(...candidates.map(candidate => {
@@ -465,13 +471,12 @@ function renderRoutes() {
     control.setAttribute('aria-pressed', candidate === current);
     const first = el('span', null, 'route-top'), summary = el('small', null, 'metric-line');
     const variant = candidate.shortened ? ` · ${candidate.shortened}` : '';
-    first.append(el('strong', `${candidate.estimated ? '参考估算 · ' : ''}${describe(candidate)}${variant}`), el('span', site.regional ? distance(candidate.distance) : minute(candidate.minutes), 'route-time'));
-    summary.append(el('span', site.regional ? `最大坡度 ${candidate.maxSlope.toFixed(1)}°`
-      : `${distance(candidate.distance)} · 陡坡 ${distance(candidate.steep)} · 阴影 ${distance(candidate.shadow)}`));
-    if (!site.regional) {
+    first.append(el('strong', `${candidate.estimated ? '参考估算 · ' : ''}${describe(candidate)}${variant}`), el('span', site.regional ? `约 ${(candidate.minutes / 60).toFixed(1)} 小时` : minute(candidate.minutes), 'route-time'));
+    summary.append(el('span', `${distance(candidate.distance)} · 陡坡 ${distance(candidate.steep)}${site.regional ? '' : ` · 阴影 ${distance(candidate.shadow)}`}`));
+    {
       summary.append(el('span', candidate.feasible ? `余 ${candidate.margin.toFixed(1)} 分` : `${candidate.violations?.length ?? 1} 项超限`, `route-margin${candidate.feasible ? '' : ' late'}`));
       control.append(first, summary, el('small', `累计爬升 ${distance(candidate.ascent)} · 最大坡度 ${candidate.maxSlope.toFixed(1)}°${candidate.pareto ? ' · 权衡方案' : ''}`));
-    } else control.append(first, summary);
+    }
     return control;
   }));
   if (!nav && !site.regional && current) {
@@ -500,8 +505,8 @@ function renderRouteReport() {
   if (plan) {
     messages.push(...(plan.violations ?? []).map(violationText));
     if (plan.estimated) messages.push('参考估算保留有效地形与封路约束，未强制满足所设坡度。此路线指标代表一个候选方案，并非全区域所需条件的理论最小值。');
-    if (!plan.feasible) messages.push(route?.mode === 'estimate'
-      ? '可播放此路线的反算参考动画；动画会保留全部超限提示，不代表路线满足当前限制。'
+    if (!plan.feasible) messages.push(route?.mode === 'estimate' || site?.regional
+      ? '可播放此路线的参考动画；动画会保留全部超限提示，不代表路线满足当前限制。'
       : '调整限制后可开始导航，或切换按起终点反算播放参考动画。');
   }
   diagnostics.replaceChildren(...messages.map(message => el('p', message)));
@@ -512,8 +517,8 @@ function renderRouteReport() {
   const returnVisit = plan.visits.find(visit => visit.returnLeg);
   const startHeight = site.height[plan.path[0]], endHeight = site.height[plan.path.at(-1)];
   const rows = [['计算结果', plan.feasible ? '满足当前限制' : '参考路线，存在超限'],
-    ['路线总长', distance(plan.distance)], ['总用时 / 行走 / 停留', site.regional ? '区域筛选不估算 EVA 用时' : `${minute(plan.minutes)} / ${minute(plan.movingMinutes)} / ${minute(scienceTime)}`],
-    ['去程含停留 / 返程时间', !site.regional && returnVisit ? `${minute(plan.visits.at(-2)?.leave ?? 0)} / ${minute(returnVisit.arrival - (plan.visits.at(-2)?.leave ?? 0))}` : '单程'],
+    ['路线总长', distance(plan.distance)], [site.regional ? '粗略估时 / 行走 / 停留' : '总用时 / 行走 / 停留', `${minute(plan.minutes)} / ${minute(plan.movingMinutes)} / ${minute(scienceTime)}`],
+    ['去程含停留 / 返程时间', returnVisit ? `${minute(plan.visits.at(-2)?.leave ?? 0)} / ${minute(returnVisit.arrival - (plan.visits.at(-2)?.leave ?? 0))}` : '单程'],
     ['累计爬升 / 下降', `${distance(plan.ascent)} / ${distance(plan.descent)}`],
     ['起点 / 终点高程', `${startHeight.toFixed(2)} / ${endHeight.toFixed(2)} m`],
     ['任务站高程', plan.visits.filter(visit => !visit.returnLeg).map(visit => `${visit.name} ${site.height[visit.cell].toFixed(2)} m`).join('；') || '—'],
@@ -522,9 +527,9 @@ function renderRouteReport() {
     ['陡坡路段（≥12°）', distance(plan.steep)],
     ['模型阴影 / 日照路段', site.regional ? '未计算局部光照' : `${distance(plan.shadow)} / ${distance(plan.distance - plan.shadow)}`],
     ['站点', plan.visits.map(visit => visit.name).join(' → ') || '—'],
-    ['基础步速 / 地形格网', site.regional ? `${site.step} m / 格` : `${route.speed} m/分 · ${site.step} m / 格`],
+    ['基础步速 / 地形格网', `${route.speed} m/分 · ${site.step} m / 格`],
     ['沿线样本数', `${plan.path.length} 个（含停留记录）`]];
-  if (!site.regional) rows.push(['预算 / 返航预留', `${minute(route.budget)} / ${minute(route.reserve)}`],
+  rows.push(['预算 / 返航预留', `${minute(route.budget)} / ${minute(route.reserve)}`],
     ['此路线所需总预算（含预留）', minute(plan.minutes + route.reserve)],
     ['完成后可留时间 / 扣除预留后余量', `${minute(route.budget - plan.minutes)} / ${minute(plan.margin)}`]);
   $('route-metrics').replaceChildren(...rows.flatMap(([label, value]) => [el('dt', label), el('dd', value)]));
@@ -542,7 +547,7 @@ function exportSamples() {
   const rows = [['sample', 'row', 'col', 'longitude_deg_E', 'latitude_deg_N', 'elevation_m', 'cell_slope_deg', 'elapsed_min', 'distance_m', 'modeled_sunlit', 'station', 'constraint_status']];
   plan.path.forEach((index, i) => {
     const cell = cellOf(site, index), coordinate = geographic(site, cellXY(site, cell));
-    rows.push([i, ...cell, ...coordinate, site.height[index], site.slope[index], site.regional ? '' : plan.times[i], plan.lengths[i],
+    rows.push([i, ...cell, ...coordinate, site.height[index], site.slope[index], plan.times[i], plan.lengths[i],
       state.light ? Number(isLit(site, state.light, index)) : '', plan.visits.filter(visit => visit.cell === index).map(visit => visit.name).join(';'), plan.feasible ? 'within_limits' : 'reference_exceeds_limits']);
   });
   const quote = value => `"${String(value).replaceAll('"', '""')}"`;
@@ -551,7 +556,7 @@ function exportSamples() {
 
 function exportRoute() {
   const { current, site, inputRoute, nav } = state;
-  if (!current || site.regional || nav) return;
+  if (!current || nav) return;
   const card = document.implementation.createHTMLDocument('Mars Pathfinder AI · 任务卡');
   card.documentElement.lang = 'zh-CN';
   const style = el('style', 'body{font:14px/1.45 system-ui,sans-serif;margin:24px auto;width:min(96%,720px);color:#211b18}h1{font-size:24px;margin:0}h2{font-size:16px;margin:12px 0 4px}p,li{margin:3px 0}img{max-width:100%;display:block;margin:8px auto;max-height:280px}a{color:#844c2c}@media print{body{margin:0;width:100%}img{max-height:235px}}');
@@ -567,7 +572,7 @@ function exportRoute() {
   const metrics = `${distance(current.distance)} · 预计 ${minute(current.minutes)} · 陡坡 ${distance(current.steep)} · 阴影 ${distance(current.shadow)} · 扣除预留 ${current.feasible ? '剩余' : '仍差'} ${minute(Math.abs(current.margin))}`;
   card.body.append(el('h1', `${site.name} · 火星步行任务卡`), el('p', `OrionX · ${describe(current)} · 模拟出舱`), el('p', metrics),
     el('h2', '路线与约束'), el('p', `出发地 ${start}`), legs, el('p', conditions),
-    el('p', `火星当地真太阳时 ${$('hour').selectedOptions[0].textContent} · 太阳黄经 ${$('season').value}°。`));
+    el('p', site.regional ? '100 m 区域地形粗略估时；区域光照未建模。' : `火星当地真太阳时 ${$('hour').selectedOptions[0].textContent} · 太阳黄经 ${$('season').value}°。`));
   for (const [id, title] of [['map', '二维路线'], ['profile', '高程剖面']]) {
     const picture = el('img'); picture.src = $(id).toDataURL('image/png'); picture.alt = title;
     card.body.append(picture);
@@ -757,11 +762,14 @@ function beginNavigation() {
   }
   setMode('idle');
   const route = state.inputRoute;
-  const nav = { time: 0, elapsed: 0, playing: true, base: state.start, route, preview: route.mode === 'estimate', replanning: false, done: false };
+  const nav = { time: 0, elapsed: 0, playing: true, base: state.start, route, preview: route.mode === 'estimate' || Boolean(state.site.regional),
+    label: state.site.regional ? '区域地形参考模拟' : '反算参考模拟',
+    rate: state.site.regional ? Math.max(2, state.current.minutes / 60) : 2, replanning: false, done: false };
   state.nav = nav;
   $('navigation').hidden = false; $('view-tools').hidden = false;
   $('nav-notice').textContent = '模拟回放 · 已用所选出发地初始化位置 · 时间加速。';
-  $('nav-title').textContent = nav.preview ? '反算导航动画（参考模拟）' : '模拟导航';
+  $('nav-title').textContent = state.site.regional ? '区域导航动画（100 m 地形参考）' : nav.preview ? '反算导航动画（参考模拟）' : '模拟导航';
+  if (state.site.regional) $('nav-notice').textContent = '100 m 区域地形参考回放，约 60 秒播放完整行程；画面时间加速不改变估算用时。';
   $('camera').textContent = '俯瞰全区';
   setPlanningEnabled(false); renderRoutes(); updateNavigation(); show3D(nav);
   nav.frame = requestAnimationFrame(tick);
@@ -773,7 +781,7 @@ function tick(timestamp) {
   const dt = nav.last == null ? 0 : Math.min(0.1, (timestamp - nav.last) / 1000);
   nav.last = timestamp;
   if (nav.playing && !nav.replanning && !nav.done && !nav.blocked) {
-    nav.time = Math.min(state.current.minutes, nav.time + dt * 2);
+    nav.time = Math.min(state.current.minutes, nav.time + dt * nav.rate);
     if (nav.time >= state.current.minutes) { nav.done = true; nav.playing = false; }
     updateNavigation();
   }
@@ -788,9 +796,9 @@ function updateNavigation() {
   const location = compass(geographic(state.site, state.progress.xy));
   const violations = plan.violations ?? [];
   $('simulation-label').hidden = !nav.preview;
-  $('simulation-label').textContent = `反算参考模拟${violations.length ? ` · ${violations.length} 项超限` : ''}`;
+  $('simulation-label').textContent = `${nav.label}${violations.length ? ` · ${violations.length} 项超限` : ''}`;
   $('nav-warning').hidden = !nav.preview;
-  $('nav-warning').textContent = nav.preview ? `反算参考模拟。${violations.length ? violations.map(violationText).join(' ') : '当前方案满足所设限制。'}动画基于地图与模拟时间。` : '';
+  $('nav-warning').textContent = nav.preview ? `${nav.label}。${violations.length ? violations.map(violationText).join(' ') : '当前方案满足所设限制。'}${state.site.regional ? '100 m 网格不能识别米级障碍，用时为粗略估算。' : '动画基于地图与模拟时间。'}` : '';
   const status = nav.blocked ? '路线暂停，等待返航或结束回放' : nav.done ? (plan.visits.at(-1)?.returnLeg ? '已抵达基地' : '已抵达目的地')
     : state.progress.visit ? `正在观察 ${state.progress.visit.name}` : `下一站 ${due?.name ?? '终点'}`;
   $('nav-progress').textContent = `${status} · ${location} · 已用 ${minute(totalTime)} · ${plan.margin >= 0 ? '完成路线后余量' : '预计超出可用预算'} ${minute(Math.abs(plan.margin))}`;

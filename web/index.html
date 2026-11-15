@@ -62,10 +62,10 @@
       </section>
       <section class="panel routes-panel">
         <div class="panel-heading"><h2>路线方案</h2><span id="route-count" class="mono muted"></span></div>
+        <button id="start-nav" class="secondary" type="button" disabled>开始导航演示 <span aria-hidden="true">→</span></button>
         <div id="routes"><p class="muted">选取起终点后可比较候选路线。</p></div>
         <div id="route-diagnostics" role="status" aria-live="polite"></div>
         <details id="route-report" hidden open><summary>路线完整指标与所需条件</summary><dl id="route-metrics"></dl><p class="muted note">坡度含相邻格高差与对角通行格检查；光照为所选时刻的模型估计。热学、地质等数据可在图层中查看，未提供逐点定量值。</p><button id="export-samples" type="button" class="text-button">导出沿线逐点数据 CSV ↓</button></details>
-        <button id="start-nav" class="secondary" type="button" disabled>开始导航演示 <span aria-hidden="true">→</span></button>
         <button id="export-route" class="text-button" type="button" disabled hidden>导出任务卡 ↓</button>
         <p id="scope-note" class="muted note"></p>
       </section>
