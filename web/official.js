@@ -1,3 +1,4 @@
+import { t as uiText } from './locale.js';
 import { project } from './planner.js';
 
 export const GEOLOGY = 'https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/8';
@@ -49,7 +50,7 @@ export async function queryOfficial(site, lonlat) {
       return { visible, size: [canvas.width, canvas.height] };
     }),
     fetchOfficial(geologyUrl, 'json').then(data => {
-      if (!Array.isArray(data.features)) throw Error('USGS 未返回地质要素');
+      if (!Array.isArray(data.features)) throw Error(uiText("USGS 未返回地质要素"));
       return [...new Set(data.features.map(f => f.attributes.name || f.attributes.unit).filter(Boolean))];
     }),
     fetchOfficial(`${WAYPOINTS}?view=mars-pathfinder`, 'json')

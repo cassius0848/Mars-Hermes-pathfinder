@@ -1,5 +1,6 @@
+import { t as uiText } from './locale.js';
 const DEG = Math.PI / 180;
-const shortNames = { terrain: '坡度', light: '阴影', thermal: '地表温度', inertia: '热惯量', uv: '太阳辐照潜势', pressure: '地表气压' };
+const shortNames = { terrain: uiText("坡度"), light: uiText("阴影"), thermal: uiText("地表温度"), inertia: uiText("热惯量"), uv: uiText("太阳辐照潜势"), pressure: uiText("地表气压") };
 
 export const normalizedLongitude = lon => lon >= -180 && lon < 180 ? lon : ((lon + 180) % 360 + 360) % 360 - 180;
 
@@ -58,7 +59,7 @@ function surfaceFlux(grid, index, row, col, sun, peakWm2, lit) {
 export function buildRegionalEnvironment(grid, request, light, pointAt, isSunlit, peakWm2) {
   const { catalog, buffer, snapshot, pressureTarget, temperatureTarget } = request;
   const payload = new DataView(buffer), count = grid.height.length;
-  if (payload.byteLength !== catalog.bytes) throw Error('区域环境栅格长度与来源清单不符。');
+  if (payload.byteLength !== catalog.bytes) throw Error(uiText("区域环境栅格长度与来源清单不符。"));
   const weights = { ...request.weights };
   const fields = {
     thermal: new Float32Array(count).fill(NaN), inertia: new Float32Array(count).fill(NaN),

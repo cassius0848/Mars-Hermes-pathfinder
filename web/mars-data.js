@@ -1,3 +1,4 @@
+import { t as uiText } from './locale.js';
 import { fetchOfficial, GEOLOGY } from './official.js';
 
 const WMTS = 'https://trek.nasa.gov/tiles/Mars/EQ';
@@ -14,9 +15,9 @@ const ctxNorth = RADIUS * DEG;
 let verifiedHeader;
 
 export const layers = {
-  viking: { id: 'Mars_Viking_MDIM21_ClrMosaic_global_232m', title: 'Viking 全球光学' },
-  mola: { id: 'Mars_MGS_MOLA_ClrShade_merge_global_463m', title: 'MOLA 全球地形着色' },
-  thermal: { id: 'Mars_MO_THEMIS-IR-Day_mosaic_global_100m_v12_clon0_ly', title: 'THEMIS 日间红外' },
+  viking: { id: 'Mars_Viking_MDIM21_ClrMosaic_global_232m', title: uiText("Viking 全球光学") },
+  mola: { id: 'Mars_MGS_MOLA_ClrShade_merge_global_463m', title: uiText("MOLA 全球地形着色") },
+  thermal: { id: 'Mars_MO_THEMIS-IR-Day_mosaic_global_100m_v12_clon0_ly', title: uiText("THEMIS 日间红外") },
   ctx: { id: 'Jezero_CTX_BlockAdj_dd', title: 'Jezero CTX' },
   hirise: { id: 'JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first_dd', title: 'Jezero HiRISE' },
 };
@@ -32,7 +33,7 @@ export function readCapabilities(layer) {
   if (capabilities.has(layer.id)) return capabilities.get(layer.id);
   const promise = fetchOfficial(officialLayerUrl(layer), 'text').then(xml => {
     const contents = new DOMParser().parseFromString(xml, 'application/xml').getElementsByTagNameNS('*', 'Contents')[0];
-    if (!contents) throw Error('NASA 未返回有效的瓦片能力文档');
+    if (!contents) throw Error(uiText("NASA 未返回有效的瓦片能力文档"));
     const resource = child(contents, 'Layer');
     const bbox = child(resource, 'WGS84BoundingBox') ?? child(resource, 'BoundingBox');
     const bounds = [...values(child(bbox, 'LowerCorner')), ...values(child(bbox, 'UpperCorner'))];
@@ -40,15 +41,15 @@ export function readCapabilities(layer) {
     const matrix = child(contents, 'TileMatrixSet');
     const matrixName = child(matrix, 'Identifier').textContent;
     const template = children(resource, 'ResourceURL').find(url => url.getAttribute('resourceType') === 'tile')?.getAttribute('template');
-    if (!template || !template.startsWith(`${WMTS}/`)) throw Error('NASA 图层缺少可用瓦片地址');
+    if (!template || !template.startsWith(`${WMTS}/`)) throw Error(uiText("NASA 图层缺少可用瓦片地址"));
     const levels = children(matrix, 'TileMatrix').map(tile => {
       const number = name => Number(child(tile, name).textContent);
       const [west, north] = values(child(tile, 'TopLeftCorner'));
       const columns = number('MatrixWidth'), rows = number('MatrixHeight'), pixels = number('TileWidth');
-      if (west !== -180 || north !== 90 || columns !== rows * 2 || pixels !== 256) throw Error('图层使用了不同的火星瓦片矩阵');
+      if (west !== -180 || north !== 90 || columns !== rows * 2 || pixels !== 256) throw Error(uiText("图层使用了不同的火星瓦片矩阵"));
       return { id: child(tile, 'Identifier').textContent, columns, rows, pixels, degrees: 360 / columns };
     });
-    if (!levels.length) throw Error('NASA 图层缺少缩放级别');
+    if (!levels.length) throw Error(uiText("NASA 图层缺少缩放级别"));
     return { ...layer, bounds, levels, template: template.replace(/\/\/\{Style}/, '/{Style}'), style, matrixName };
   }).catch(error => { capabilities.delete(layer.id); throw error; });
   capabilities.set(layer.id, promise);
@@ -92,7 +93,7 @@ export async function viewportGeology(bbox, signal) {
   const url = `${GEOLOGY}/query?${new URLSearchParams({ where: '1=1', geometry, geometryType: 'esriGeometryEnvelope',
     spatialRel: 'esriSpatialRelIntersects', outFields: 'unit,name', returnGeometry: 'true', maxAllowableOffset: 35, f: 'json' })}`;
   const d = await fetchOfficial(url, 'json', signal);
-  if (!Array.isArray(d.features)) throw Error('USGS 未返回有效的地质面');
+  if (!Array.isArray(d.features)) throw Error(uiText("USGS 未返回有效的地质面"));
   return { url, partial: Boolean(d.exceededTransferLimit), features: d.features.filter(f => f.geometry?.rings).map(f => ({
     name: f.attributes.name || f.attributes.unit, unit: f.attributes.unit,
     rings: f.geometry.rings.map(ring => ring.map(geologyLonLat)),
@@ -102,7 +103,7 @@ export async function viewportGeology(bbox, signal) {
 export async function hiRiseProducts(bbox, signal) {
   const url = `${STAC}?${new URLSearchParams({ collections: 'mro_hirise_socet_dtms', bbox: bbox.map(v => v.toFixed(6)).join(','), limit: 12 })}`;
   const d = await fetchOfficial(url, 'json', signal);
-  if (!Array.isArray(d.features)) throw Error('USGS 未返回产品列表');
+  if (!Array.isArray(d.features)) throw Error(uiText("USGS 未返回产品列表"));
   return { url, features: d.features, more: d.links?.some(link => link.rel === 'next') };
 }
 
@@ -110,7 +111,7 @@ export function profilePoints(a, b, count = 24) {
   const vector = ([lon, lat]) => [Math.cos(lat * DEG) * Math.cos(lon * DEG), Math.cos(lat * DEG) * Math.sin(lon * DEG), Math.sin(lat * DEG)];
   const start = vector(a), end = vector(b);
   const radians = Math.acos(Math.max(-1, Math.min(1, start.reduce((sum, v, i) => sum + v * end[i], 0))));
-  if (radians < 1e-6 || radians > Math.PI - 1e-5) throw Error('请选择两个不同且非对跖的位置');
+  if (radians < 1e-6 || radians > Math.PI - 1e-5) throw Error(uiText("请选择两个不同且非对跖的位置"));
   return Array.from({ length: count }, (_, i) => {
     const t = i / (count - 1);
     const weights = [Math.sin((1 - t) * radians), Math.sin(t * radians)];
@@ -124,7 +125,7 @@ export async function molaProfile(a, b, signal) {
   const geometry = JSON.stringify({ points: track.map(point => point.lonlat.map(v => +v.toFixed(6))), spatialReference: { wkid: 104905 } });
   const url = `${MOLA}/getSamples?${new URLSearchParams({ geometry, geometryType: 'esriGeometryMultipoint', returnFirstValueOnly: 'true', f: 'json' })}`;
   const result = await fetchOfficial(url, 'json', signal);
-  if (!Array.isArray(result.samples)) throw Error('NASA 未返回 MOLA 高程样本');
+  if (!Array.isArray(result.samples)) throw Error(uiText("NASA 未返回 MOLA 高程样本"));
   for (const item of result.samples) {
     const value = item.value == null || item.value === '' ? NaN : Number(item.value);
     if (Number.isFinite(value) && value > -20000 && value < 30000 && track[item.locationId]) track[item.locationId].z = value;
@@ -152,7 +153,7 @@ async function fetchImageTerrain(service, bbox, signal, pixelsPerDegree) {
   const url = `${service}/exportImage?${new URLSearchParams(params)}`;
   const bytes = await fetchOfficial(url, 'arrayBuffer', signal);
   const tiff = new DataView(bytes);
-  if (tiff.byteLength < 8 || tiff.getUint32(0, true) !== 0x002a4949) throw Error('NASA 未返回有效的数值高程 TIFF');
+  if (tiff.byteLength < 8 || tiff.getUint32(0, true) !== 0x002a4949) throw Error(uiText("NASA 未返回有效的数值高程 TIFF"));
   const ifd = tiff.getUint32(4, true), tags = new Map();
   try {
     for (let i = 0; i < tiff.getUint16(ifd, true); i++) {
@@ -184,7 +185,7 @@ async function fetchImageTerrain(service, bbox, signal, pixelsPerDegree) {
     }
     return { url, values, width, height, lon, lat, dLon: width * dx, dLat: height * dy };
   } catch {
-    throw Error('NASA 数值高程文件的布局无法识别，请稍后重试。');
+    throw Error(uiText("NASA 数值高程文件的布局无法识别，请稍后重试。"));
   }
 }
 
@@ -207,18 +208,18 @@ async function ctxBytes(first, last, signal) {
   const timeout = AbortSignal.timeout(13000);
   const response = await fetch(url, { headers: { Range: `bytes=${first}-${last}` }, credentials: 'omit',
     signal: signal ? AbortSignal.any([signal, timeout]) : timeout });
-  if (response.status !== 206) { await response.body?.cancel(); throw Error('USGS 未返回指定范围的高程字节'); }
+  if (response.status !== 206) { await response.body?.cancel(); throw Error(uiText("USGS 未返回指定范围的高程字节")); }
   const contentRange = response.headers.get('Content-Range');
-  if (contentRange && contentRange !== `bytes ${first}-${last}/90345300`) throw Error('USGS 高程字节范围发生变化');
+  if (contentRange && contentRange !== `bytes ${first}-${last}/90345300`) throw Error(uiText("USGS 高程字节范围发生变化"));
   const data = await response.arrayBuffer();
-  if (data.byteLength !== last - first + 1) throw Error('USGS 高程切片不完整');
+  if (data.byteLength !== last - first + 1) throw Error(uiText("USGS 高程切片不完整"));
   return data;
 }
 
 export async function fetchCtxTerrain(window, signal) {
   verifiedHeader ??= ctxBytes(0, CTX.offset - 1).then(async bytes => {
     const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(byte => byte.toString(16).padStart(2, '0')).join('');
-    if (hash !== CTX.hash) throw Error('USGS 高程文件版本发生变化');
+    if (hash !== CTX.hash) throw Error(uiText("USGS 高程文件版本发生变化"));
   }).catch(error => { verifiedHeader = null; throw error; });
   await verifiedHeader;
   signal.throwIfAborted();

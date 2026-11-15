@@ -1,3 +1,4 @@
+import { t as uiText } from './locale.js';
 import { fetchOfficial } from './official.js';
 import { environmentSettings } from './atlas-environment.js';
 
@@ -7,11 +8,11 @@ export const medaCatalog=()=>meda??=fetchOfficial('atlas-meda.json','json').catc
 export async function missionEnvironment(kind,id,grid,weights) {
   if(kind==='terrain')return undefined;
   if(kind==='meda') {
-    if(grid.id!=='hawksbill')throw Error('MEDA 历史测站情景仅用于 Hawksbill Gap 覆盖区。');
+    if(grid.id!=='hawksbill')throw Error(uiText("MEDA 历史测站情景仅用于 Hawksbill Gap 覆盖区。"));
     return environmentSettings(await medaCatalog(),Number(id),weights,610,grid);
   }
   const meta=await regionalCatalog(),snapshot=meta.climate.snapshots.find(s=>s.id===id);
-  if(!snapshot)throw Error('请选择有效的历史气候快照。');
+  if(!snapshot)throw Error(uiText("请选择有效的历史气候快照。"));
   payload??=fetchOfficial('atlas-regional.bin.gz','arrayBuffer').then(async buffer=>{
     if(new Uint8Array(buffer)[0]!==31)return buffer;
     return new Response(new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();

@@ -78,6 +78,7 @@
 .atlas-results h2, .nav-environment h3 { font-size: 15px; }
 .atlas-results .nav-routes { grid-template-columns: repeat(auto-fit, minmax(min(100%, 215px), 1fr)); margin-block: 3px; }
 .atlas-results #nav-3d { width: auto; }
+.atlas-playback-guide { margin: 0; padding: 7px 10px; border-inline-start: 2px solid var(--mint); background: #86d6ac12; color: #d5ecdf; font-size: 13px; }
 .atlas-comparison { font-size: 13px; color: #d5ecdf; }
 .nav-route-layer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; width: fit-content; }
 .nav-route-layer select { width: auto; }

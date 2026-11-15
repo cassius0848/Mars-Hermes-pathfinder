@@ -1,3 +1,4 @@
+import { t as uiText, localizeData } from './locale.js';
 import { cellXY, decodeTerrain, geographic, project } from './planner.js';
 import { fetchOfficial } from './official.js';
 import { BudgetCache } from './render-runtime.js';
@@ -48,16 +49,16 @@ function bounds(points) {
 export function planningGrid(points, coarse, surroundings = false, spacing = coarse ? 1000 : 20, contextRadius = null) {
   const [west, south, east, north] = bounds(points);
   if (coarse && (east - west > 180 || south < -80 || north > 80)) {
-    throw Error('MOLA 走廊模式支持南北纬 80°以内且不跨越 ±180° 经线的区域。');
+    throw Error(uiText("MOLA 走廊模式支持南北纬 80°以内且不跨越 ±180° 经线的区域。"));
   }
   const center = [(west + east) / 2, (south + north) / 2];
   const [left, bottom, right, top] = bounds(points.map(point => project({ center }, point)));
   const distance = Math.hypot(right - left, top - bottom);
   const maxKm = coarse ? 120 : 15;
   if (!surroundings && distance > maxKm * 1000) {
-    throw Error(`${coarse ? 'MOLA' : 'CTX'} 的选点包围范围上限为 ${maxKm} 公里。请缩短路线或分段规划。`);
+    throw Error(uiText("{0} 的选点包围范围上限为 {1} 公里。请缩短路线或分段规划。", [coarse ? 'MOLA' : 'CTX', maxKm]));
   }
-  if (!surroundings && coarse && distance < spacing * 3) throw Error(`当前 ${spacing} 米网格要求选点范围至少 ${spacing * 3} 米。请使用更精细的高程或拉开选点距离。`);
+  if (!surroundings && coarse && distance < spacing * 3) throw Error(uiText("当前 {0} 米网格要求选点范围至少 {1} 米。请使用更精细的高程或拉开选点距离。", [spacing, spacing * 3]));
   const margin = surroundings ? contextRadius ?? Math.max(coarse ? 8000 : 2500, Math.min(coarse ? 28000 : 8000, distance * 0.65))
     : coarse ? Math.max(4000, Math.min(16000, distance * 0.18))
       : Math.max(320, Math.min(1500, distance * 0.25));
@@ -86,7 +87,7 @@ const contextCache = new BudgetCache(16 * 1024 * 1024, 2);
 const textureCache = new BudgetCache(20 * 1024 * 1024, 2);
 const gridBytes = result => result.grid.height.byteLength + result.grid.slope.byteLength;
 export function atlasSites() {
-  catalog ??= fetchOfficial('assets/sites.json', 'json').then(data => data.sites).catch(error => { catalog = null; throw error; });
+  catalog ??= fetchOfficial('assets/sites.json', 'json').then(data => localizeData(data.sites)).catch(error => { catalog = null; throw error; });
   return catalog;
 }
 
@@ -104,7 +105,7 @@ async function bundledTerrain(site, signal) {
 
 export function cropAtlasGrid(site, points, surroundings = false, marginMeters = null) {
   const cells = points.map(point => atlasCell(site, point));
-  if (cells.some(cell => !cell)) throw Error(`至少一个选点超出 ${site.name ?? site.id} 的高程缓存。`);
+  if (cells.some(cell => !cell)) throw Error(uiText("至少一个选点超出 {0} 的高程缓存。", [site.name ?? site.id]));
   const [minRow, minCol, maxRow, maxCol] = bounds(cells);
   const span = Math.hypot(maxRow - minRow, maxCol - minCol);
   const margin = marginMeters !== null ? Math.ceil(marginMeters / site.step)
@@ -123,7 +124,7 @@ export function cropAtlasGrid(site, points, surroundings = false, marginMeters =
     slope.set(site.slope.subarray(start, start + cols), row * cols);
   }
   for (const z of height) if (Number.isFinite(z)) { min = Math.min(min, z); max = Math.max(max, z); }
-  if (!Number.isFinite(min)) throw Error(`${site.name ?? site.id} 缓存这一段缺少有效高程。`);
+  if (!Number.isFinite(min)) throw Error(uiText("{0} 缓存这一段缺少有效高程。", [site.name ?? site.id]));
   return { ...site, regional: false, rows, cols, height, slope, depth: { min, max },
     left: site.left + col0 * site.step, top: site.top - row0 * site.step,
     textureWindow: { col0, row0, cols: site.cols, rows: site.rows } };
@@ -132,7 +133,7 @@ export function cropAtlasGrid(site, points, surroundings = false, marginMeters =
 export async function loadAtlasTerrain(mode, points, signal, status) {
   signal.throwIfAborted();
   const key=JSON.stringify([mode,points]),cached=planningCache.get(key);
-  if (cached) { status?.('使用已读取的实测高程，正在比较路线…'); return cached; }
+  if (cached) { status?.(uiText("使用已读取的实测高程，正在比较路线…")); return cached; }
   const result=await readAtlasTerrain(mode,points,signal,status);
   signal.throwIfAborted();
   return planningCache.set(key,result,gridBytes(result));
@@ -144,22 +145,22 @@ async function readAtlasTerrain(mode, points, signal, status) {
   const covers = site => points.every(point => atlasCell(site, point));
   const local = mode !== 'jezero' && sites.find(site => !site.regional && covers(site));
   if (local) {
-    status(`正在读取 ${local.name} 的 HiRISE 验证区高程…`);
-    return { grid: await bundledTerrain(local, signal), label: `${local.name} · HiRISE ${local.step} 米网格`, source: Object.values(local.sources)[0] };
+    status(uiText("正在读取 {0} 的 HiRISE 验证区高程…", [local.name]));
+    return { grid: await bundledTerrain(local, signal), label: uiText("{0} · HiRISE {1} 米网格", [local.name, local.step]), source: Object.values(local.sources)[0] };
   }
   if (mode === 'local') {
-    const error = Error('当前固定使用米级验证区，但至少一个选点在覆盖之外。可改用自动高程继续估算，原选点会保留。');
+    const error = Error(uiText("当前固定使用米级验证区，但至少一个选点在覆盖之外。可改用自动高程继续估算，原选点会保留。"));
     error.suggestedSource = 'auto'; throw error;
   }
   const cached = sites.find(site => site.regional && covers(site));
   const cachedRoute = async () => {
     if (!cached) {
-      const error = Error('当前固定使用 Jezero 100 米缓存，至少一个选点超出覆盖范围。请改用自动高程或 MOLA；其他陨石坑不受此缓存范围限制。');
+      const error = Error(uiText("当前固定使用 Jezero 100 米缓存，至少一个选点超出覆盖范围。请改用自动高程或 MOLA；其他陨石坑不受此缓存范围限制。"));
       error.suggestedSource = 'auto'; throw error;
     }
-    status('正在读取 Jezero 区域实测高程缓存…');
+    status(uiText("正在读取 Jezero 区域实测高程缓存…"));
     return { grid: cropAtlasGrid(await bundledTerrain(cached, signal), points),
-      label: 'Jezero · USGS CTX 100 米区域缓存', source: cached.sources['USGS/JPL CTX 地形'] };
+      label: uiText("Jezero · USGS CTX 100 米区域缓存"), source: cached.sources['USGS/JPL CTX 地形'] };
   };
   if (mode === 'jezero' || (mode === 'auto' && cached && !points.every(inCtx))) return cachedRoute();
   try {
@@ -173,14 +174,14 @@ async function readAtlasTerrain(mode, points, signal, status) {
 
 async function loadOnlineTerrain(mode, points, signal, status, surroundings = false, contextRadius = null) {
   const covered = points.every(inCtx);
-  if (mode === 'ctx' && !covered) throw Error('至少一个选点在 Jezero CTX 高程覆盖之外。可改用 MOLA 粗略地形走廊。');
+  if (mode === 'ctx' && !covered) throw Error(uiText("至少一个选点在 Jezero CTX 高程覆盖之外。可改用 MOLA 粗略地形走廊。"));
   const coarse = ['mola', 'hrsc'].includes(mode) || !covered;
   const hrsc = coarse && mode !== 'mola';
   const grid = planningGrid(points, coarse, surroundings, coarse ? (hrsc ? 200 : 500) : 20, contextRadius);
   const margin = coarse ? 0.035 : 0.001;
   const bbox = gridBounds(grid).map((value, i) => value + (i < 2 ? -margin : margin));
-  if (coarse && (bbox[0] < -180 || bbox[2] > 180 || bbox[2] - bbox[0] > 20)) throw Error('MOLA 走廊过于接近 ±180° 经线。请缩短路线或向远离经线的一侧选点。');
-  status(coarse ? `正在向 NASA 请求 ${hrsc ? 'HRSC/MOLA 200 米' : 'MOLA'} 数值高程…` : '正在向 USGS 请求路线周边的 CTX 20 米数值高程…');
+  if (coarse && (bbox[0] < -180 || bbox[2] > 180 || bbox[2] - bbox[0] > 20)) throw Error(uiText("MOLA 走廊过于接近 ±180° 经线。请缩短路线或向远离经线的一侧选点。"));
+  status(coarse ? uiText("正在向 NASA 请求 {0} 数值高程…", [hrsc ? uiText("HRSC/MOLA 200 米") : 'MOLA']) : uiText("正在向 USGS 请求路线周边的 CTX 20 米数值高程…"));
   let source;
   try {
     source = coarse ? await (hrsc ? fetchHrscTerrain : fetchMolaTerrain)(bbox, signal) : await fetchCtxTerrain(ctxWindow(bbox), signal);
@@ -196,10 +197,10 @@ async function loadOnlineTerrain(mode, points, signal, status, surroundings = fa
     height[r * grid.cols + c] = z;
     if (Number.isFinite(z)) { min = Math.min(min, z); max = Math.max(max, z); }
   }
-  if (!Number.isFinite(min)) throw Error('选点附近没有可用的数值高程，请缩短路线或重选。');
+  if (!Number.isFinite(min)) throw Error(uiText("选点附近没有可用的数值高程，请缩短路线或重选。"));
   return { grid: { ...grid, height, slope: finiteSlopes(grid, height), depth: { min, max } },
-    label: coarse ? hrsc ? `NASA/USGS HRSC-MOLA 混合高程 · ${grid.step} 米网格（部分区域源自 MOLA）` : `NASA MOLA · ${grid.step} 米粗略走廊`
-      : `USGS/JPL CTX · ${grid.step} 米网格`,
+    label: coarse ? hrsc ? uiText("NASA/USGS HRSC-MOLA 混合高程 · {0} 米网格（部分区域源自 MOLA）", [grid.step]) : uiText("NASA MOLA · {0} 米粗略走廊", [grid.step])
+      : uiText("USGS/JPL CTX · {0} 米网格", [grid.step]),
     source: coarse ? source.url : CTX_DEM, coarse };
 }
 
@@ -230,7 +231,7 @@ async function readAtlasContext(points, signal, radius) {
     const [west, south, east, north] = bounds(points.map(point => project(source, point)));
     if (cropped.left <= west-radius && cropped.left+cropped.cols*cropped.step >= east+radius
       && cropped.top >= north+radius && cropped.top-cropped.rows*cropped.step <= south-radius) {
-      return { grid: cropped, label: 'Jezero · USGS CTX 周边高程' };
+      return { grid: cropped, label: uiText("Jezero · USGS CTX 周边高程") };
     }
   }
   const context = await loadOnlineTerrain('hrsc', points, signal, () => {}, true, radius)

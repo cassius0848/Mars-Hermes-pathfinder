@@ -1,120 +1,129 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#1d1917">
-  <meta name="description" content="HermesX 火星出舱任务规划器。使用 NASA 和 USGS 实测资料，在 Jezero 选点、比较路线并进行三维回放。">
-  <title>Mars Pathfinder AI · Jezero 火星导航</title>
+  <meta name="description" content="HermesX Mars extravehicular mission planner. Use NASA and USGS measurement data to select points, compare routes, and play back in 3D in Jezero.">
+  <title>Marth Hermes Pathfinder · Jezero Walking Navigation</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="environment.css">
 </head>
 <body class="mission-app">
 <header class="topbar">
-  <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">⤢</span><span>MARS PATHFINDER<span class="brand-ai"> AI</span></span></a>
-  <nav aria-label="页面入口"><a id="atlas-link" href="atlas.html">在线火星地图</a><a href="#mission">任务地图</a><a href="#sources">数据来源</a></nav>
+  <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">⤢</span><span>Marth Hermes Pathfinder</span></a>
+  <nav aria-label="Page entry"><a id="atlas-link" href="atlas.html">Mars Atlas</a><a href="#mission">Mission Map</a><a href="#sources">Data Sources</a></nav>
   <span class="team">HermesX <span> / </span> NASA SPACE APPS</span>
+  <button type="button" class="language-switch" aria-label="Switch to Chinese" lang="zh-CN">中文</button>
 </header>
 <main id="mission">
   <div class="page-intro">
-    <div><p class="eyebrow">JEZERO CRATER <span> / </span> MARS 2020</p><h1>火星步行导航</h1><p>在真实火星地形上选点、比较路线，并回放出舱任务。</p></div>
-    <label class="area-label task-area-switch"><span>切换任务区域 <span aria-hidden="true">⌄</span></span><select id="area" aria-label="切换任务区域" disabled></select></label>
+    <div><p class="eyebrow">JEZERO CRATER <span> / </span> MARS 2020</p><h1>Mars Walking Navigation</h1><p>Pick points on measured Martian terrain, compare routes, and replay an EVA.</p></div>
+    <label class="area-label task-area-switch"><span>Switch task area <span aria-hidden="true">⌄</span></span><select id="area" aria-label="Switch task area" disabled></select></label>
   </div>
   <div class="console">
     <section class="map-panel" aria-labelledby="map-title">
       <div class="panel-heading"><div><h2 id="map-title">Jezero</h2><div id="map-caption" class="muted"></div></div><span id="grid-detail" class="tag mono"></span></div>
-      <div class="layer-bar" id="layers" aria-label="地图图层"></div>
+      <div class="layer-bar" id="layers" aria-label="Map Layers"></div>
       <div class="maps">
-        <canvas id="map" tabindex="0" role="img" aria-label="火星地图。选择选点模式后点击地图，或使用方向键移动光标，按回车确认。"></canvas>
-        <div id="terrain" hidden><div id="mission-env-hud" class="env-hud" aria-label="沿途环境参考" hidden></div></div>
-        <div class="map-tools"><button id="zoom-in" class="square" aria-label="放大地图" type="button">+</button><button id="zoom-out" class="square" aria-label="缩小地图" type="button">−</button><button id="zoom-reset" class="square" aria-label="重置地图视野" type="button">⌖</button></div>
-        <div id="view-tools" hidden><button id="view-toggle" type="button">返回二维</button><button id="camera" type="button" hidden>俯瞰全区</button></div>
+        <canvas id="map" tabindex="0" role="img" aria-label="Mars map. Select point selection mode and click on the map, or use the direction keys to move the cursor and press Enter to confirm."></canvas>
+        <div id="terrain" hidden><div id="mission-env-hud" class="env-hud" aria-label="Environmental reference along the way" hidden></div></div>
+        <div class="map-tools"><button id="zoom-in" class="square" aria-label="Enlarge map" type="button">+</button><button id="zoom-out" class="square" aria-label="Zoom out map" type="button">−</button><button id="zoom-reset" class="square" aria-label="Reset map view" type="button">⌖</button></div>
+        <div id="view-tools" hidden><button id="view-toggle" type="button">Show 2D</button><button id="camera" type="button" hidden>Overlooking the whole area</button></div>
         <p id="terrain-fallback" class="map-notice" role="status" hidden></p>
-        <span id="simulation-label" class="simulation-label" hidden>反算参考模拟</span>
+        <span id="simulation-label" class="simulation-label" hidden>Reference estimate</span>
       </div>
-      <div class="map-footer"><label><input type="checkbox" id="show-rover" checked> 毅力号历史轨迹</label><span id="map-legend" role="status"></span></div>
+      <div class="map-footer"><label><input type="checkbox" id="show-rover" checked> Perseverance’s historical trajectory</label><span id="map-legend" role="status"></span></div>
       <div id="geology-key" class="geology-key" hidden></div>
-      <div class="profile"><div class="panel-heading"><h3>高程剖面</h3><span class="muted">沿路线累计距离</span></div><canvas id="profile" role="img" aria-label="选中路线的高程剖面"></canvas></div>
+      <div class="profile"><div class="panel-heading"><h3>Elevation Profile</h3><span class="muted">Cumulative route distance</span></div><canvas id="profile" role="img" aria-label="Elevation profile of the selected route"></canvas></div>
       <section class="navigation" id="navigation" aria-labelledby="nav-title" hidden>
-        <div class="panel-heading"><div><h3 id="nav-title">模拟导航</h3><p class="muted" id="nav-progress"></p></div><button id="stop-nav" type="button">结束回放</button></div>
-        <label for="timeline">任务进度</label><input type="range" id="timeline" min="0" max="1000" value="0">
-        <div class="nav-buttons"><button id="pause" type="button">暂停</button><button id="closure" type="button">报告前方封路</button><button id="return" type="button">重新规划返航</button></div>
+        <div class="panel-heading"><div><h3 id="nav-title">Simulated Navigation</h3><p class="muted" id="nav-progress"></p></div><button id="stop-nav" type="button">End playback</button></div>
+        <div id="mission-vertical-scale" class="vertical-scale" hidden>
+          <label for="mission-exaggeration">Vertical exaggeration <output id="mission-scale-label" for="mission-exaggeration">×1.5</output></label>
+          <div class="scale-inputs">
+            <input id="mission-exaggeration" type="range" min="1" max="6" step="0.1" value="1.5">
+            <input id="mission-exaggeration-number" type="number" min="1" max="6" step="0.1" value="1.5" aria-label="Exact vertical exaggeration">
+            <button id="mission-true-scale" type="button">True scale</button>
+          </div>
+        </div>
+        <label for="timeline">Task progress</label><input type="range" id="timeline" min="0" max="1000" value="0">
+        <div class="nav-buttons"><button id="pause" type="button">Pause</button><button id="closure" type="button">Report closures ahead</button><button id="return" type="button">Replan return route</button></div>
         <p id="nav-notice" class="message" role="status"></p>
         <p id="nav-warning" class="message" role="status" hidden></p>
-        <details class="ops-event"><summary>途中状态更新与重规划</summary><p class="muted">输入现场上报或演示变化；更新从当前位置生效，已完成站点不会再次加入。</p><div id="ops-event-fields" class="ops-grid"></div><button id="ops-apply-event" type="button">应用更新并重算剩余任务</button><p id="ops-event-status" class="message" role="status"></p></details>
+        <details class="ops-event"><summary>En route status updates and re-planning</summary><p class="muted">Enter live escalations or demo changes; updates take effect from the current location and completed sites will not be rejoined.</p><div id="ops-event-fields" class="ops-grid"></div><button id="ops-apply-event" type="button">Apply updates and recalculate remaining tasks</button><p id="ops-event-status" class="message" role="status"></p></details>
       </section>
-      <details class="mission-environment"><summary>沿途环境曲线 · 点击定位与联动回放</summary><section id="mission-env-panel" class="env-panel" aria-label="沿途环境剖面" hidden></section><div id="mission-coverage" class="env-coverage"></div></details>
+      <details class="mission-environment"><summary>Environmental curve along the way · Click positioning and linked playback</summary><section id="mission-env-panel" class="env-panel" aria-label="Environmental profile along the way" hidden></section><div id="mission-coverage" class="env-coverage"></div></details>
     </section>
-    <aside class="side" aria-label="任务设置与计算结果">
+    <aside class="side" aria-label="Task settings and calculation results">
       <section class="panel plan-panel">
-        <div class="panel-heading"><h2>任务规划</h2><button id="preset" class="text-button" type="button">载入示例</button></div>
-        <label class="planning-method">计算方式<select id="planning-method"><option value="constrained">按限制规划</option><option value="estimate">按起终点反算需求</option></select></label>
-        <p id="method-note" class="muted note">在坡度限制内比较路线，并检查时间预算与返航预留。</p>
-        <div class="pickers"><button id="pick-start" type="button" aria-pressed="false"><span class="dot start"></span><span><strong>出发地</strong><small id="start-coord">点击后在地图选点</small></span></button>
-          <button id="pick-goal" type="button" aria-pressed="false"><span class="dot goal"></span><span><strong>目的地</strong><small id="goal-coord">点击后在地图选点</small></span></button></div>
-        <div class="plan-actions"><button id="swap-points" type="button" disabled>交换起终点</button><button id="clear-plan" type="button">清空本次规划</button></div>
-        <div class="waypoint-heading"><strong>经停点 <span id="waypoint-count">0</span></strong><button id="add-waypoint" type="button" aria-pressed="false" disabled>＋ 地图添加经停点</button></div>
-        <ol id="waypoint-list" class="waypoint-list" aria-label="经停点顺序"></ol>
-        <p class="muted note">按列表顺序经过经停点后抵达目的地；可设置每站停留时间。</p>
-        <p class="message" id="pick-hint" role="status">正在读取 Jezero 地图…</p>
-        <details class="mission-settings" id="mission-settings"><summary>任务限制与光照 <small id="mission-settings-summary"></small></summary>
-          <label id="roundtrip-field" class="roundtrip"><input id="roundtrip" type="checkbox" checked>规划回到出发地</label>
+        <div class="panel-heading"><h2>Mission Planning</h2><button id="preset" class="text-button" type="button">Loading examples</button></div>
+        <label class="planning-method">Calculation method<select id="planning-method"><option value="constrained">Plan within constraints</option><option value="estimate">Estimate requirements</option></select></label>
+        <p id="method-note" class="muted note">Compare routes within grade limits and check time budget and return allowance.</p>
+        <div class="pickers"><button id="pick-start" type="button" aria-pressed="false"><span class="dot start"></span><span><strong>Start</strong><small id="start-coord">Click to select a point on the map</small></span></button>
+          <button id="pick-goal" type="button" aria-pressed="false"><span class="dot goal"></span><span><strong>Destination</strong><small id="goal-coord">Click to select a point on the map</small></span></button></div>
+        <div class="plan-actions"><button id="swap-points" type="button" disabled>Swap start and destination</button><button id="clear-plan" type="button">Clear this plan</button></div>
+        <div class="waypoint-heading"><strong>Waypoints <span id="waypoint-count">0</span></strong><button id="add-waypoint" type="button" aria-pressed="false" disabled>+ Add waypoint</button></div>
+        <ol id="waypoint-list" class="waypoint-list" aria-label="Sequence of stops"></ol>
+        <p class="muted note">Arrive at the destination after passing the stopping points in the order of the list; the dwell time at each stop can be set.</p>
+        <p class="message" id="pick-hint" role="status">Loading Jezero map…</p>
+        <details class="mission-settings" id="mission-settings"><summary>Task constraints and lighting <small id="mission-settings-summary"></small></summary>
+          <label id="roundtrip-field" class="roundtrip"><input id="roundtrip" type="checkbox" checked>Plan to return to the starting point</label>
           <div class="params" id="settings"></div>
         </details>
         <details id="operations-settings" class="mission-settings"></details>
-        <button id="compute" class="primary" type="button" disabled>计算路线 <span aria-hidden="true">↗</span></button>
+        <button id="compute" class="primary" type="button" disabled>Calculate route <span aria-hidden="true">↗</span></button>
         <p id="plan-error" class="message" role="status" aria-live="polite"></p>
       </section>
       <section class="panel routes-panel">
-        <div class="panel-heading"><h2>路线方案</h2><span id="route-count" class="mono muted"></span></div>
-        <button id="start-nav" class="secondary" type="button" disabled>开始导航演示 <span aria-hidden="true">→</span></button>
-        <div id="routes"><p class="muted">选取起终点后可比较候选路线。</p></div>
+        <div class="panel-heading"><h2>Route Options</h2><span id="route-count" class="mono muted"></span></div>
+        <button id="start-nav" class="secondary" type="button" disabled>Start navigation demo <span aria-hidden="true">→</span></button>
+        <div id="routes"><p class="muted">After selecting a start and end point, you can compare candidate routes.</p></div>
         <div id="route-diagnostics" role="status" aria-live="polite"></div>
         <p id="ops-decision" class="muted" role="status"></p>
-        <details id="ops-budget-details"><summary>资源预算与数据可信度 <small id="ops-resource-summary"></small></summary><div id="ops-resource-report" class="ops-resource-report" aria-label="资源预算与导航余量"></div><p id="ops-quality" class="muted"></p></details>
-        <details id="route-report" hidden><summary>路线完整指标与所需条件</summary><dl id="route-metrics"></dl><p class="muted note">坡度含相邻格高差与对角通行格检查；光照为所选时刻的模型估计。热学、地质等数据可在图层中查看，未提供逐点定量值。</p><button id="export-samples" type="button" class="text-button">导出沿线逐点数据 CSV ↓</button></details>
-        <button id="export-route" class="text-button" type="button" disabled hidden>导出任务卡 ↓</button>
+        <details id="ops-budget-details"><summary>Resource Budgeting and Data Credibility <small id="ops-resource-summary"></small></summary><div id="ops-resource-report" class="ops-resource-report" aria-label="Resource budget and navigation margin"></div><p id="ops-quality" class="muted"></p></details>
+        <details id="route-report" hidden><summary>Route completeness indicators and required conditions</summary><dl id="route-metrics"></dl><p class="muted note">The slope includes the height difference between adjacent cells and the check of diagonal passages; the lighting is a model estimate at the selected moment. Thermal, geological and other data can be viewed in layers, but point-by-point quantitative values ​​are not provided.</p><button id="export-samples" type="button" class="text-button">Export point-by-point data along the line to CSV ↓</button></details>
+        <button id="export-route" class="text-button" type="button" disabled hidden>Export task card ↓</button>
         <p id="scope-note" class="muted note"></p>
       </section>
     </aside>
-    <div class="mission-context" role="region" aria-label="科学点、定位与任务数据">
+    <div class="mission-context" role="region" aria-label="Science points, positioning and mission data">
       <section class="panel science-points-panel">
-        <div class="panel-heading"><h2>科学研究点</h2><span id="science-point-count" class="mono muted"></span></div>
+        <div class="panel-heading"><h2>Science Targets</h2><span id="science-point-count" class="mono muted"></span></div>
         <div id="science-points" class="science-points"></div>
-        <p class="muted note">菱形标记来自任务包中的 NASA/PDS 观测坐标和科学说明；路线经过的点会显示为已纳入任务。</p>
+        <p class="muted note">Diamond markers come from NASA/PDS observation coordinates and science descriptions in the mission package; points along the route appear as included in the mission.</p>
       </section>
       <div class="mission-status">
       <section class="panel localization-box">
-        <div class="panel-heading"><h2>当前位置</h2><span id="localization-status" class="tag mono">未初始化</span></div>
-        <p id="localization-detail" class="muted">先在地图上确认出发地，再初始化定位。</p>
-        <div class="nav-buttons"><button id="localize-start" type="button">初始化出发地</button><button id="localize-now" type="button" disabled>模拟地形重定位</button></div>
+        <div class="panel-heading"><h2>Current location</h2><span id="localization-status" class="tag mono">not initialized</span></div>
+        <p id="localization-detail" class="muted">First confirm the starting point on the map, and then initialize the positioning.</p>
+        <div class="nav-buttons"><button id="localize-start" type="button">Initialize starting point</button><button id="localize-now" type="button" disabled>Simulate terrain relocation</button></div>
       </section>
       <details class="panel mission-data-panel">
-        <summary class="panel-heading"><h2>任务数据层</h2></summary>
+        <summary class="panel-heading"><h2>Task data layer</h2></summary>
         <div id="mission-data" class="mission-data"></div>
         <p id="mission-data-note" class="muted note"></p>
       </details>
-      <details class="panel ops-transfer"><summary class="panel-heading"><h2>离线任务与记录</h2></summary><div class="nav-buttons"><button id="ops-offline" type="button">保存离线地图并下载任务包</button><button id="ops-export-json" type="button">导出任务与记录 JSON</button></div><label>导入任务记录<input id="ops-import" type="file" accept=".json,application/json"></label><p class="muted">包内含当前任务区地形、影像、科学证据、记录和源码校验。在线新瓦片与外部查询仍需网络。</p><p id="ops-transfer-status" class="message" role="status"></p></details>
+      <details class="panel ops-transfer"><summary class="panel-heading"><h2>Offline tasks and records</h2></summary><div class="nav-buttons"><button id="ops-offline" type="button">Save offline maps and download mission packs</button><button id="ops-export-json" type="button">Export tasks and records to JSON</button></div><label>Import task records<input id="ops-import" type="file" accept=".json,application/json"></label><p class="muted">The package contains the terrain, images, scientific evidence, records and source code verification of the current mission area. Online new tiles and external queries still require an Internet connection.</p><p id="ops-transfer-status" class="message" role="status"></p></details>
       </div>
     </div>
   </div>
-  <section id="evidence" class="section" hidden><h2>科学观察</h2><div id="cards" class="science-grid"></div></section>
+  <section id="evidence" class="section" hidden><h2>scientific observation</h2><div id="cards" class="science-grid"></div></section>
   <section id="sources" class="section">
-    <div class="source-heading"><div><p class="eyebrow">NASA / USGS</p><h2>数据来源与覆盖</h2></div><button id="live-query" class="secondary" type="button" disabled>按选点查询官方数据 ↗</button></div>
+    <div class="source-heading"><div><p class="eyebrow">NASA / USGS</p><h2>Data sources and coverage</h2></div><button id="live-query" class="secondary" type="button" disabled>Check official data by selected point ↗</button></div>
     <p id="source-note" class="muted"></p>
     <div id="source-grid" class="source-grid"></div>
     <section id="official-results" class="official-results" aria-live="polite" hidden></section>
-    <details class="reference"><summary>竞赛提供的五个资源</summary><ul>
-      <li><a href="https://trek.nasa.gov/mars/" target="_blank" rel="noreferrer">NASA Mars Trek</a> 提供火星影像和产品查询。</li>
-      <li><a href="https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars" target="_blank" rel="noreferrer">USGS–NASA 火星互动地图</a> 提供官方地质制图背景。</li>
-      <li><a href="https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/" target="_blank" rel="noreferrer">Curiosity Mount Sharp 路线</a> 用作路线和科学站的呈现示例。</li>
-      <li><a href="https://worldview.earthdata.nasa.gov/" target="_blank" rel="noreferrer">NASA Worldview</a> 提供地球遥感浏览，图层切换方式用于界面参考。</li>
-      <li><a href="https://mars.nasa.gov/mars2020/multimedia/raw-images/" target="_blank" rel="noreferrer">毅力号影像图库</a> 提供站点科学观测的照片与档案入口。</li>
-    </ul><a href="https://www.spaceappschallenge.org/2026/challenges/interplanetary-survival-guide-martian-map/?tab=details" target="_blank" rel="noreferrer">查看官方挑战 →</a></details>
+    <details class="reference"><summary>Five resources provided by the competition</summary><ul>
+      <li><a href="https://trek.nasa.gov/mars/" target="_blank" rel="noreferrer">NASA Mars Trek</a> Provide Mars images and product inquiries.</li>
+      <li><a href="https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars" target="_blank" rel="noreferrer">USGS–NASA Interactive Map of Mars</a> Provides official geological cartographic background.</li>
+      <li><a href="https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/" target="_blank" rel="noreferrer">Curiosity Mount Sharp Route</a> Used as a presentation example for routes and science stations.</li>
+      <li><a href="https://worldview.earthdata.nasa.gov/" target="_blank" rel="noreferrer">NASA Worldview</a> Provides earth remote sensing browsing, and the layer switching method is used for interface reference.</li>
+      <li><a href="https://mars.nasa.gov/mars2020/multimedia/raw-images/" target="_blank" rel="noreferrer">Perseverance Image Gallery</a> Provides access to photos and archives of scientific observations at the site.</li>
+    </ul><a href="https://www.spaceappschallenge.org/2026/challenges/interplanetary-survival-guide-martian-map/?tab=details" target="_blank" rel="noreferrer">View the official challenge →</a></details>
   </section>
 </main>
-<footer>HermesX · Mars Pathfinder AI <span>基于真实地形的任务模拟</span></footer>
+<footer>HermesX · Marth Hermes Pathfinder <span>Mission simulation based on real terrain</span></footer>
 <script type="module" src="app.js"></script>
 </body>
 </html>

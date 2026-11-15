@@ -1,3 +1,4 @@
+import { t as uiText } from './locale.js';
 import * as THREE from './vendor/three.module.min.js';
 import { cellOf, cellXY, geographic, pathXY, project } from './planner.js';
 import { frameTask } from './render-runtime.js';
@@ -40,7 +41,7 @@ export class TerrainView {
     this.camera = new THREE.PerspectiveCamera(45, 1, 1, size * 5);
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
-    this.renderer.domElement.setAttribute('aria-label', '有路线和队员位置的三维火星地形');
+    this.renderer.domElement.setAttribute('aria-label', uiText("有路线和队员位置的三维火星地形"));
     host.append(this.renderer.domElement);
     this.badge = document.createElement('div');
     this.badge.className = 'terrain-quality';
@@ -59,7 +60,7 @@ export class TerrainView {
     this.heading = [0, 1];
 
     const { geometry, rows, cols } = this.mesh();
-    if (!geometry.index.count) { geometry.dispose(); this.renderer.dispose(); this.renderer.domElement.remove(); this.badge.remove(); throw Error('这一范围没有可显示的连续高程。'); }
+    if (!geometry.index.count) { geometry.dispose(); this.renderer.dispose(); this.renderer.domElement.remove(); this.badge.remove(); throw Error(uiText("这一范围没有可显示的连续高程。")); }
     this.rows = rows; this.cols = cols; this.geometry = geometry;
     const surface = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: '#b1947b', side: THREE.DoubleSide }));
     surface.name = 'Measured elevation mesh';
@@ -114,7 +115,7 @@ export class TerrainView {
   describe() {
     const width = this.site.cols * this.site.step / 1000, height = this.site.rows * this.site.step / 1000;
     const area = this.atlas ? `${width.toFixed(width < 1 ? 2 : 1)} × ${height.toFixed(height < 1 ? 2 : 1)} km · ` : '';
-    this.badge.textContent = `${area}显示采样 ${this.meshResolution} m · 垂直显示 ×${this.verticalScale} · 寻路网格 ${this.routeGrid.step} m${this.perspective === 'first-person' ? ' · 眼高 1.7 m' : ''}`;
+    this.badge.textContent = uiText("{0}显示采样 {1} m · 垂直显示 ×{2} · 寻路网格 {3} m{4}", [area, this.meshResolution, this.verticalScale, this.routeGrid.step, this.perspective === 'first-person' ? uiText(" · 眼高 1.7 m") : '']);
   }
 
   configureMaterial() {
@@ -320,7 +321,7 @@ export class TerrainView {
       ctx.fillStyle = '#211b18dd'; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = waypoint ? '#e5dbff' : '#ffe3bd';
       ctx.font = this.atlas ? 'bold 36px system-ui' : '24px system-ui'; ctx.textAlign = 'center';
-      const labelText = index === stops.length - 1 ? '目的地' : `${this.atlas ? '途经' : '经停'} ${index + 1}`;
+      const labelText = index === stops.length - 1 ? uiText("目的地") : `${this.atlas ? uiText("途经") : uiText("经停")} ${index + 1}`;
       const caption = this.atlas || stop.name === labelText ? labelText : `${labelText} · ${stop.name}`;
       ctx.fillText(caption, canvas.width / 2, this.atlas ? 45 : 41, canvas.width - 16);
       const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;

@@ -1,15 +1,165 @@
-# Mars Hermesx Pathfinder 
+**Live demo** · [Open the Mars Atlas](https://hermesxmarthpathfinder.dev/atlas?area=jezero) · [Open Walking Navigation](https://hermesxmarthpathfinder.dev/mission?area=hawksbill)
 
-> **火星宇航员局部 EVA 任务规划工具**
->
-> **A local EVA mission-planning tool for Martian astronauts**
+# Marth Hermes Pathfinder
 
-**项目入口** [在线火星地图](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/atlas?area=jezero) · [步行规划](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/mission?area=hawksbill) · [当前构建版本](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/build-info.json)
+A Mars EVA mission-planning prototype by **HermesX** for NASA Space Apps Challenge 2026. The website opens in English, with a Chinese language switch in the header.
 
-**统一版本来源**：GitHub `main` 是应用源码的唯一基线。网站发布经过测试的 GitHub Actions 构建产物，`build-info.json` 记录对应提交和文件校验值。详见 [构建与部署流程](docs/deployment.md)。
+## Current browser release
 
+Explore real terrain in the Mars Atlas, add ordered waypoints, compare weighted route options, and follow the elevation profile during 3D playback. In the local mission map, plan over 1 m terrain in Hawksbill Gap and Neretva Vallis and adjust the 3D vertical exaggeration from 1× to 6×.
 
-## 当前浏览器部署版 / Current browser release
+Current capabilities include constraint-based and requirements-estimation modes, science-stop selection, return planning, field notes, mid-route replanning, linked environmental profiles, user-configured resource estimates, and offline mission packages. Environmental layers identify historical observations, reanalysis, simulated sunlight, and user assumptions. Live astronaut localization, real-time Mars weather, ionizing-radiation routing, and flight-qualified life-support models are outside the prototype's scope. See the [mission workflow and limits](docs/mission-workflow.md).
+
+GitHub `main` is the source of record. The [live build manifest](https://hermesxmarthpathfinder.dev/build-info.json) records the deployed commit and checksums. See the [build and deployment workflow](docs/deployment.md).
+
+## English Version
+
+### Positioning
+
+Marth Hermes Pathfinder is a research and demonstration prototype by HermesX for NASA Space Apps Challenge 2026. It is designed for **local astronaut EVA mission planning on Mars**: combining multiple NASA data layers to select science targets, plan a safe route, and prepare a return or contingency plan.
+
+This is not a flight-qualified navigation or safety system. Every real dataset must record its source, version, spatial resolution, CRS, units, time, and limitations. Synthetic data is for algorithm and UI testing only and must be labeled `synthetic`.
+
+### Mission Scenario
+
+The default study region is Jezero Crater, but the system is designed for any selected local region. A representative mission is:
+
+> Two astronauts leave a base, investigate a science target, and return safely while respecting slope, environmental risk, EVA duration, life-support margin, and battery constraints.
+
+The primary user is a two-person astronaut EVA team. Rover or robot logistics can be added as a support mode rather than defining the entire system.
+
+### Core Capabilities
+
+- Define a science objective and a bounded local study area;
+- Fuse at least three data types, such as terrain, optical, spectral / thermal, weather, or radiation;
+- Compute terrain and closure constraints; compare historical environment scenarios; ionizing radiation is not quantitatively routed;
+- Plan around EVA time, life support, battery, payload, and return reserves;
+- Compare shortest, lowest-risk, lowest-resource, and highest-science-value routes with A* / Dijkstra;
+- Show science stops, hazards, distance, estimated time, and return status;
+- Provide image or data evidence along the route;
+- Replan when environmental or crew-resource state changes.
+
+### Data Fusion
+
+```text
+Terrain          → Can the crew traverse it?
+Optical imagery  → What may the crew see there?
+Spectral / thermal → Why is the site scientifically valuable?
+Weather / radiation → When is it safer to visit?
+Science records  → What evidence supports the target?
+```
+
+The initial real-data plan should include at least:
+
+1. **Terrain**: DEM, slope, and obstacles;
+2. **Optical**: HiRISE, CTX, or mission surface imagery;
+3. **Spectral or thermal**: CRISM, THEMIS, or an appropriate official source;
+4. Optional weather, atmospheric, radiation, or chemical layers.
+
+### Architecture
+
+```text
+Mission definition
+  → data ingestion and provenance
+  → terrain and hazard analysis
+  → multi-objective EVA cost surface
+  → A* / Dijkstra route planning
+  → EVA resource and safety evaluation
+  → local map, evidence, profiles, and mission report
+```
+
+The route cost may be modeled as:
+
+```text
+Total cost = distance + terrain risk + weather risk + radiation risk
+           + resource use - science value
+```
+
+Hard constraints include maximum slope, impassable terrain, environmental thresholds, EVA duration, life-support and battery reserves, and a defined policy for missing or low-confidence data.
+
+### Official Resource Entry Points
+
+The released resource links are cataloged in [`data/source_catalog.json`](data/source_catalog.json) and shown in the Streamlit sidebar. They have different roles:
+
+- [NASA Mars Trek](https://trek.nasa.gov/mars/) for local-area, coordinate, and planetary-layer discovery;
+- NASA Mars Trek MOLA ImageServer, integrated as a bounded 256×256 Jezero sample plus the supplied bookmarked view as an optional study area;
+- NASA Mars Trek Viking MDIM21, integrated as a real 512×512 Jezero optical mosaic;
+- A Perseverance Sol 1934 SHERLOC_WATSON image, stored as surface evidence for route waypoints;
+- [USGS Astrogeology Mars Maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) with the Jezero geologic-unit GeoJSON used for science context;
+- [Perseverance Raw Images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) for surface-view evidence at targets and waypoints;
+- [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) as a downloaded NASA route animation and cited multi-mission reference.
+
+See [`docs/data-sources.md`](docs/data-sources.md) for adapter order, provenance, and metadata requirements.
+
+### Code Structure
+
+```text
+mars-pathfinder-ai/
+├── app/streamlit_app.py       # local EVA planning UI
+├── src/mars_pathfinder/
+│   ├── models.py              # terrain, layers, targets, EVA state
+│   ├── data/                  # official-data loaders and metadata
+│   ├── terrain/               # slope, traversability, cost surfaces
+│   ├── routing/               # A*, Dijkstra, route search
+│   ├── analysis/              # EVA, resource, and science metrics
+│   ├── ai/                    # reserved provider and explanation layer
+│   └── visualization/         # reserved map, profile, and evidence views
+├── tests/
+├── data/raw/                  # raw data; do not commit large files
+├── data/processed/
+└── docs/architecture.md
+```
+
+The current scaffold provides `TerrainGrid`, `MapLayer`, `ScienceTarget`, `EVAState`, `MissionConstraints`, a synthetic mission fixture, a GeoTIFF DEM loader, an EVA cost surface, A* / Dijkstra, and EVA evaluation.
+
+### Technology and Run Commands
+
+Python 3.11+, NumPy, SciPy, Pandas, Rasterio, PyProj, NetworkX, Streamlit, Plotly, and Pytest. AI APIs are optional.
+
+```bash
+pip install -r requirements.txt
+PYTHONPATH=src pytest
+streamlit run app/streamlit_app.py
+```
+
+The app opens the 40 km Jezero map. Switch among CTX imagery and elevation, terrain slope, THEMIS infrared imagery, and USGS geology. Screen corridors on a 100 m grid, then open the Hawksbill Gap or Neretva Vallis EVA planner for 2 m route planning, georeferenced imagery, a route profile, and 3D terrain. The study-area selector also includes the earlier MOLA samples. [Navigation scope and data sources](docs/jezero-navigation-scope.md) · [Neretva Vallis walkthrough](docs/neretva-vallis.md)
+
+### MVP Live Demo Script
+
+Use a 3–5 minute Hawksbill Gap mission: select the research package, show the real HiRISE, USGS, THEMIS, and Perseverance layers, compare forward/reverse/single-stop closed-loop routes, inspect the optical evidence, adjust EVA time or reserve, and state clearly that spatial weather, radiation, and life-support capacity are not configured. The story answers **why go**, **how to walk**, **what will be seen**, and **whether the crew can return**.
+
+### MVP and Roadmap
+
+1. Integrate and document at least three real data types;
+2. Select a bounded local study area and a clear science objective;
+3. Display terrain, optical / science layers, and hazards;
+4. Compute a route that satisfies EVA resource constraints;
+5. Show science stops, evidence, route metrics, and return checks;
+6. Add time, weather, radiation, and robot-support modes;
+7. Add AI task parsing and route explanations last.
+
+### Real-data policy
+
+The primary planner must be driven by documented NASA / USGS products. Real MOLA elevation, Viking MDIM21 optical imagery, USGS SIM 3464 geology, a Perseverance image, and the Curiosity route reference are already integrated. Weather and radiation use neutral no-data costs until official products are selected; the system never invents observations.
+
+Synthetic data is limited to unit tests and UI fallback, must carry the `synthetic-demo` label, and must not enter a future AI training set. See [`docs/data-policy.md`](docs/data-policy.md).
+
+Current real-route weights are explicit: MOLA terrain `1.0`, USGS science target `0.5`, and weather/radiation `0.0` until official products are selected.
+Route planning is closed-loop: base → ordered science targets → base, with EVA time and return reserve evaluated over the full loop.
+
+### Validation and CI
+
+GitHub Actions installs the declared dependencies and runs the full `pytest` suite on pushes and pull requests. Research-package tests cover the real DTM, USGS targets, closed-loop routes, and alignment uncertainty.
+
+### Collaboration Rules
+
+- Integrate modules through stable data models and function interfaces;
+- Distinguish observed, derived, predicted, and synthetic data;
+- Record source, version, coverage, resolution, CRS, units, and limitations;
+- Do not commit large raw datasets, secrets, or personal credentials;
+- Use branches such as `data`, `terrain`, `routing`, `analysis`, `ui`, `ai`, and `tests-docs`.
+
+## 中文版
 
 HermesX 的评审入口为上方在线地图与任务规划。当前米级任务包为 Hawksbill Gap 和 Neretva Vallis 的 **1 m 网格**；以下早期 Streamlit / 2 m 研究包说明保留用于历史复现，不代表当前网页精度。
 
@@ -18,13 +168,10 @@ HermesX 的评审入口为上方在线地图与任务规划。当前米级任务
 - 用户模型：资源容量、行走/作业耗用率、预留与负载惩罚。未配置项显示未评估；演示假设不是 NASA 宇航服规格。自动科学评分来自用户优先级。
 - 尚未实现：真实宇航员传感器定位、实时火星天气、定量电离辐射路由、经验证的宇航服生理模型和在线大模型任务解析。
 
-Current web release: 1 m local mission grids, bounded science-stop selection, field notes, event replanning, linked environmental profiles, user-configured resource estimates, and verified offline task packages. Historical observations, reanalysis, modeled sunlight and user assumptions remain explicitly labeled. Real astronaut localization, real-time Mars weather, ionizing-radiation routing and certified life-support models are not implemented. See [mission workflow and limits](docs/mission-workflow.md).
-
-## 中文版
 
 ### 项目定位
 
-Mars Hermes Pathfinder 是 HermesX 面向 NASA Space Apps Challenge 2026 开发的研究与演示型原型。项目服务于火星表面宇航员探测任务：在一个有限的局部区域中，叠加多种 NASA 数据，帮助任务团队规划科学目标、选择安全路线并准备返航方案。
+Marth Hermes Pathfinder 是 HermesX 面向 NASA Space Apps Challenge 2026 开发的研究与演示型原型。项目服务于火星表面宇航员探测任务：在一个有限的局部区域中，叠加多种 NASA 数据，帮助任务团队规划科学目标、选择安全路线并准备返航方案。
 
 项目不是飞行级导航或安全系统。真实数据必须记录来源、版本、空间分辨率、坐标系、单位、时间和限制；合成数据只用于算法和界面测试，并明确标记为 `synthetic`。
 
@@ -218,151 +365,3 @@ streamlit run app/streamlit_app.py
 - 可按 `data`、`terrain`、`routing`、`analysis`、`ui`、`ai`、`tests-docs` 使用独立分支。
 
 ---
-
-## English Version
-
-### Positioning
-
-Mars Pathfinder AI is a research and demonstration prototype by HermesX for NASA Space Apps Challenge 2026. It is designed for **local astronaut EVA mission planning on Mars**: combining multiple NASA data layers to select science targets, plan a safe route, and prepare a return or contingency plan.
-
-This is not a flight-qualified navigation or safety system. Every real dataset must record its source, version, spatial resolution, CRS, units, time, and limitations. Synthetic data is for algorithm and UI testing only and must be labeled `synthetic`.
-
-### Mission Scenario
-
-The default study region is Jezero Crater, but the system is designed for any selected local region. A representative mission is:
-
-> Two astronauts leave a base, investigate a science target, and return safely while respecting slope, environmental risk, EVA duration, life-support margin, and battery constraints.
-
-The primary user is a two-person astronaut EVA team. Rover or robot logistics can be added as a support mode rather than defining the entire system.
-
-### Core Capabilities
-
-- Define a science objective and a bounded local study area;
-- Fuse at least three data types, such as terrain, optical, spectral / thermal, weather, or radiation;
-- Compute terrain and closure constraints; compare historical environment scenarios; ionizing radiation is not quantitatively routed;
-- Plan around EVA time, life support, battery, payload, and return reserves;
-- Compare shortest, lowest-risk, lowest-resource, and highest-science-value routes with A* / Dijkstra;
-- Show science stops, hazards, distance, estimated time, and return status;
-- Provide image or data evidence along the route;
-- Replan when environmental or crew-resource state changes.
-
-### Data Fusion
-
-```text
-Terrain          → Can the crew traverse it?
-Optical imagery  → What may the crew see there?
-Spectral / thermal → Why is the site scientifically valuable?
-Weather / radiation → When is it safer to visit?
-Science records  → What evidence supports the target?
-```
-
-The initial real-data plan should include at least:
-
-1. **Terrain**: DEM, slope, and obstacles;
-2. **Optical**: HiRISE, CTX, or mission surface imagery;
-3. **Spectral or thermal**: CRISM, THEMIS, or an appropriate official source;
-4. Optional weather, atmospheric, radiation, or chemical layers.
-
-### Architecture
-
-```text
-Mission definition
-  → data ingestion and provenance
-  → terrain and hazard analysis
-  → multi-objective EVA cost surface
-  → A* / Dijkstra route planning
-  → EVA resource and safety evaluation
-  → local map, evidence, profiles, and mission report
-```
-
-The route cost may be modeled as:
-
-```text
-Total cost = distance + terrain risk + weather risk + radiation risk
-           + resource use - science value
-```
-
-Hard constraints include maximum slope, impassable terrain, environmental thresholds, EVA duration, life-support and battery reserves, and a defined policy for missing or low-confidence data.
-
-
-### Official Resource Entry Points
-
-The released resource links are cataloged in [`data/source_catalog.json`](data/source_catalog.json) and shown in the Streamlit sidebar. They have different roles:
-
-- [NASA Mars Trek](https://trek.nasa.gov/mars/) for local-area, coordinate, and planetary-layer discovery;
-- NASA Mars Trek MOLA ImageServer, integrated as a bounded 256×256 Jezero sample plus the supplied bookmarked view as an optional study area;
-- NASA Mars Trek Viking MDIM21, integrated as a real 512×512 Jezero optical mosaic;
-- A Perseverance Sol 1934 SHERLOC_WATSON image, stored as surface evidence for route waypoints;
-- [USGS Astrogeology Mars Maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) with the Jezero geologic-unit GeoJSON used for science context;
-- [Perseverance Raw Images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) for surface-view evidence at targets and waypoints;
-- [Curiosity Mount Sharp Route](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) as a downloaded NASA route animation and cited multi-mission reference.
-
-See [`docs/data-sources.md`](docs/data-sources.md) for adapter order, provenance, and metadata requirements.
-
-### Code Structure
-
-```text
-mars-pathfinder-ai/
-├── app/streamlit_app.py       # local EVA planning UI
-├── src/mars_pathfinder/
-│   ├── models.py              # terrain, layers, targets, EVA state
-│   ├── data/                  # official-data loaders and metadata
-│   ├── terrain/               # slope, traversability, cost surfaces
-│   ├── routing/               # A*, Dijkstra, route search
-│   ├── analysis/              # EVA, resource, and science metrics
-│   ├── ai/                    # reserved provider and explanation layer
-│   └── visualization/         # reserved map, profile, and evidence views
-├── tests/
-├── data/raw/                  # raw data; do not commit large files
-├── data/processed/
-└── docs/architecture.md
-```
-
-The current scaffold provides `TerrainGrid`, `MapLayer`, `ScienceTarget`, `EVAState`, `MissionConstraints`, a synthetic mission fixture, a GeoTIFF DEM loader, an EVA cost surface, A* / Dijkstra, and EVA evaluation.
-
-### Technology and Run Commands
-
-Python 3.11+, NumPy, SciPy, Pandas, Rasterio, PyProj, NetworkX, Streamlit, Plotly, and Pytest. AI APIs are optional.
-
-```bash
-pip install -r requirements.txt
-PYTHONPATH=src pytest
-streamlit run app/streamlit_app.py
-```
-
-The app opens the 40 km Jezero map. Switch among CTX imagery and elevation, terrain slope, THEMIS infrared imagery, and USGS geology. Screen corridors on a 100 m grid, then open the Hawksbill Gap or Neretva Vallis EVA planner for 2 m route planning, georeferenced imagery, a route profile, and 3D terrain. The study-area selector also includes the earlier MOLA samples. [Navigation scope and data sources](docs/jezero-navigation-scope.md) · [Neretva Vallis walkthrough](docs/neretva-vallis.md)
-
-### MVP Live Demo Script
-
-Use a 3–5 minute Hawksbill Gap mission: select the research package, show the real HiRISE, USGS, THEMIS, and Perseverance layers, compare forward/reverse/single-stop closed-loop routes, inspect the optical evidence, adjust EVA time or reserve, and state clearly that spatial weather, radiation, and life-support capacity are not configured. The story answers **why go**, **how to walk**, **what will be seen**, and **whether the crew can return**.
-
-### MVP and Roadmap
-
-1. Integrate and document at least three real data types;
-2. Select a bounded local study area and a clear science objective;
-3. Display terrain, optical / science layers, and hazards;
-4. Compute a route that satisfies EVA resource constraints;
-5. Show science stops, evidence, route metrics, and return checks;
-6. Add time, weather, radiation, and robot-support modes;
-7. Add AI task parsing and route explanations last.
-
-### Real-data policy
-
-The primary planner must be driven by documented NASA / USGS products. Real MOLA elevation, Viking MDIM21 optical imagery, USGS SIM 3464 geology, a Perseverance image, and the Curiosity route reference are already integrated. Weather and radiation use neutral no-data costs until official products are selected; the system never invents observations.
-
-Synthetic data is limited to unit tests and UI fallback, must carry the `synthetic-demo` label, and must not enter a future AI training set. See [`docs/data-policy.md`](docs/data-policy.md).
-
-Current real-route weights are explicit: MOLA terrain `1.0`, USGS science target `0.5`, and weather/radiation `0.0` until official products are selected.
-Route planning is closed-loop: base → ordered science targets → base, with EVA time and return reserve evaluated over the full loop.
-
-### Validation and CI
-
-GitHub Actions installs the declared dependencies and runs the full `pytest` suite on pushes and pull requests. Research-package tests cover the real DTM, USGS targets, closed-loop routes, and alignment uncertainty.
-
-### Collaboration Rules
-
-- Integrate modules through stable data models and function interfaces;
-- Distinguish observed, derived, predicted, and synthetic data;
-- Record source, version, coverage, resolution, CRS, units, and limitations;
-- Do not commit large raw datasets, secrets, or personal credentials;
-- Use branches such as `data`, `terrain`, `routing`, `analysis`, `ui`, `ai`, and `tests-docs`.

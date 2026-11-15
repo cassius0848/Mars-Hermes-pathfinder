@@ -1,3 +1,4 @@
+import { t as uiText } from './locale.js';
 import { environmentMetrics, environmentStepCost } from './atlas-environment.js';
 import { regionalMetrics } from './atlas-regional.js';
 
@@ -61,7 +62,7 @@ export function decodeTerrain(grid, heights, slopes) {
   const encoded = new DataView(heights);
   const slopeFile = new DataView(slopes);
   const size = grid.rows * grid.cols;
-  if (heights.byteLength !== size * 2 || slopes.byteLength !== size * 4) throw Error("地形文件大小与清单不符");
+  if (heights.byteLength !== size * 2 || slopes.byteLength !== size * 4) throw Error(uiText("地形文件大小与清单不符"));
   const height = new Float32Array(size);
   const slope = new Float32Array(size);
   for (let cell = 0; cell < size; cell++) {
@@ -303,12 +304,12 @@ function itinerary(grid, route, stops, profile, open, light) {
 const samePath = (a, b) => a.path.length === b.path.length && a.path.every((cell, i) => cell === b.path[i]);
 
 function searchMission(grid, route, light) {
-  if (route.start == null || (!route.stops.length && !route.returnToBase)) return { error: "请在地图上选取出发地和目的地。", candidates: [] };
+  if (route.start == null || (!route.stops.length && !route.returnToBase)) return { error: uiText("请在地图上选取出发地和目的地。"), candidates: [] };
   const open = openCells(grid, route.limit, route.closures);
   const stops = [...route.stops];
-  if (route.returnToBase) stops.push({ cell: route.base, xy: route.baseXY ?? route.startXY, name: "返航", returnLeg: true });
+  if (route.returnToBase) stops.push({ cell: route.base, xy: route.baseXY ?? route.startXY, name: uiText("返航"), returnLeg: true });
   if ([route.start, ...stops.map(s => s.cell)].some(cell => !open[indexOf(grid, cell)])) {
-    return { error: "起点或任务点位于无数据、封锁或超坡度的网格。请在地图上另选位置。", candidates: [] };
+    return { error: uiText("起点或任务点位于无数据、封锁或超坡度的网格。请在地图上另选位置。"), candidates: [] };
   }
   const candidates = [];
   const hasMixedLight = light?.mask.includes(0) && light.mask.includes(1);
@@ -324,7 +325,7 @@ function searchMission(grid, route, light) {
   if (light && !hasMixedLight && !grid.regional && !route.returnOnly && candidates[0]?.profiles.includes("time")) {
     candidates[0].profiles.push("light");
   }
-  if (!candidates.length) return { error: "当前坡度限制或封锁区切断了路线。请检查选点与地图。", candidates: [] };
+  if (!candidates.length) return { error: uiText("当前坡度限制或封锁区切断了路线。请检查选点与地图。"), candidates: [] };
   for (const candidate of candidates) {
     const metrics = ["minutes", "steep", "shadow", "ascent"];
     candidate.pareto = !candidates.some(other => metrics.every(key => other[key] <= candidate[key] + 1e-8)
@@ -335,35 +336,35 @@ function searchMission(grid, route, light) {
 
 export function assessCandidate(candidate, route) {
   const violations = [];
-  if (candidate.maxSlope > route.limit + 1e-8) violations.push({ metric: '最大通行坡度', actual: candidate.maxSlope,
+  if (candidate.maxSlope > route.limit + 1e-8) violations.push({ metric: uiText("最大通行坡度"), actual: candidate.maxSlope,
     limit: route.limit, excess: candidate.maxSlope - route.limit, unit: '°', code: 'SLOPE' });
-  if (candidate.minutes > route.budget + 1e-8) violations.push({ metric: '任务总用时', actual: candidate.minutes,
-    limit: route.budget, excess: candidate.minutes - route.budget, unit: '分钟', code: 'BUDGET' });
+  if (candidate.minutes > route.budget + 1e-8) violations.push({ metric: uiText("任务总用时"), actual: candidate.minutes,
+    limit: route.budget, excess: candidate.minutes - route.budget, unit: uiText("分钟"), code: 'BUDGET' });
   const remaining = route.budget - candidate.minutes;
-  if (remaining < route.reserve - 1e-8) violations.push({ metric: '返航预留不足', actual: remaining,
-    limit: route.reserve, excess: route.reserve - remaining, unit: '分钟', code: 'RESERVE' });
+  if (remaining < route.reserve - 1e-8) violations.push({ metric: uiText("返航预留不足"), actual: remaining,
+    limit: route.reserve, excess: route.reserve - remaining, unit: uiText("分钟"), code: 'RESERVE' });
   return { ...candidate, margin: remaining - route.reserve, violations, feasible: violations.length === 0 };
 }
 
 export function planMission(grid, route, light) {
   if (grid.regional && route.regionalNavigation) grid = { ...grid, regional: false };
-  if (!route.start || (!route.stops.length && !route.returnToBase)) return { candidates: [], error: '请在地图上选取出发地和目的地。' };
-  const points = [{ cell: route.start, name: '出发地' }, ...route.stops];
-  if (route.returnToBase) points.push({ cell: route.base, name: '返航点' });
+  if (!route.start || (!route.stops.length && !route.returnToBase)) return { candidates: [], error: uiText("请在地图上选取出发地和目的地。") };
+  const points = [{ cell: route.start, name: uiText("出发地") }, ...route.stops];
+  if (route.returnToBase) points.push({ cell: route.base, name: uiText("返航点") });
   const diagnostics = [];
   for (const point of points) {
     if (!point.cell) continue;
     const i = indexOf(grid, point.cell);
     if (i < 0 || !Number.isFinite(grid.height[i]) || !Number.isFinite(grid.slope[i]) || grid.slope[i] < 0) {
-      diagnostics.push(`${point.name}缺少有效高程或坡度数据，请重新选点。`);
+      diagnostics.push(uiText("{0}缺少有效高程或坡度数据，请重新选点。", [point.name]));
     } else if ((route.closures ?? []).some(({ cell, radius }) => Math.hypot(cell[0] - point.cell[0], cell[1] - point.cell[1]) * grid.step <= radius)) {
-      diagnostics.push(`${point.name}位于封路区域内，请移动该点或清空封路。`);
+      diagnostics.push(uiText("{0}位于封路区域内，请移动该点或清空封路。", [point.name]));
     }
   }
   if (route.startXY) {
-    const anchors = [{ name: '出发地', xy: route.startXY }, ...route.stops];
+    const anchors = [{ name: uiText("出发地"), xy: route.startXY }, ...route.stops];
     for (const point of anchors) if (point.xy && !Number.isFinite(elevationAt(grid, point.xy))) {
-      diagnostics.push(`${point.name}附近的实际坐标缺少有效高程，不能把该点移到其他网格代替。`);
+      diagnostics.push(uiText("{0}附近的实际坐标缺少有效高程，不能把该点移到其他网格代替。", [point.name]));
     }
   }
   if (diagnostics.length) return { candidates: [], diagnostics, error: diagnostics.join(' ') };
@@ -375,8 +376,8 @@ export function planMission(grid, route, light) {
     relaxed = true;
   }
   if (!result.candidates.length) return { ...result,
-    error: relaxed ? '有效地形覆盖或封路使起终点不连通，无法可靠估算完整路线及用时。' : '当前坡度限制或封路使起终点不连通。',
-    diagnostics: [relaxed ? '已检查有效高程、坡度与封路。放宽坡度后仍无完整通路；请移动选点或清空封路。' : '当前坡度与封路约束下没有完整通路；可使用按起终点反算查看参考条件。'] };
+    error: relaxed ? uiText("有效地形覆盖或封路使起终点不连通，无法可靠估算完整路线及用时。") : uiText("当前坡度限制或封路使起终点不连通。"),
+    diagnostics: [relaxed ? uiText("已检查有效高程、坡度与封路。放宽坡度后仍无完整通路；请移动选点或清空封路。") : uiText("当前坡度与封路约束下没有完整通路；可使用按起终点反算查看参考条件。")] };
   result.candidates = result.candidates.map(candidate => {
     const evaluated = { ...assessCandidate(candidate, route), estimated: relaxed };
     if (route.environment) {
@@ -385,7 +386,7 @@ export function planMission(grid, route, light) {
     }
     return evaluated;
   });
-  if (relaxed) result.error = estimating ? '按起终点反算：先求参考路线，再核对当前限制。' : '当前坡度限制下无连通路线，以下为放宽坡度后的参考估算。';
+  if (relaxed) result.error = estimating ? uiText("按起终点反算：先求参考路线，再核对当前限制。") : uiText("当前坡度限制下无连通路线，以下为放宽坡度后的参考估算。");
   return result;
 }
 
