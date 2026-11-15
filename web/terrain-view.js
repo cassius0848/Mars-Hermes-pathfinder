@@ -1,10 +1,13 @@
 import * as THREE from './vendor/three.module.min.js';
-import { cellOf, cellXY } from './planner.js';
+import { cellOf, cellXY, geographic, project } from './planner.js';
 
 export class TerrainView {
-  constructor(host, site, plan, { color = '#83ffd0', atlas = false } = {}) {
+  constructor(host, site, plan, { color = '#83ffd0', atlas = false, routeGrid = site, surroundings = false } = {}) {
     this.host = host;
     this.site = site;
+    this.routeGrid = routeGrid;
+    this.surroundings = surroundings;
+    this.sameProjection = site.center[0] === routeGrid.center[0] && site.center[1] === routeGrid.center[1];
     this.meshStride = 1;
     this.meshResolution = site.step * this.meshStride;
     const size = Math.max(site.cols, site.rows) * site.step;
@@ -30,6 +33,7 @@ export class TerrainView {
     this.describe();
     host.append(this.badge);
     this.initialDistance = size * 1.33;
+    this.routeDistance = this.initialDistance;
     this.distance = this.initialDistance;
     this.angle = 0.64; this.pitch = atlas ? 0.49 : 0.74;
     this.target = new THREE.Vector3();
@@ -48,6 +52,9 @@ export class TerrainView {
     this.scene.add(this.sun);
     this.surface = surface;
     if (atlas) {
+      this.gridLines = this.terrainGridLines();
+      this.gridLines.visible = false;
+      surface.add(this.gridLines);
       this.textureMix = { value: 0.58 };
       surface.material.onBeforeCompile = shader => {
         shader.uniforms.reliefTextureMix = this.textureMix;
@@ -86,7 +93,9 @@ export class TerrainView {
   }
 
   describe() {
-    this.badge.textContent = `高程网格 ${this.meshResolution} m · 垂直显示 ×${this.verticalScale} · 寻路使用原始高程`;
+    const width = this.site.cols * this.site.step / 1000, height = this.site.rows * this.site.step / 1000;
+    const area = this.atlas ? `${width.toFixed(width < 1 ? 2 : 1)} × ${height.toFixed(height < 1 ? 2 : 1)} km · ` : '';
+    this.badge.textContent = `${area}高程网格 ${this.meshResolution} m · 垂直显示 ×${this.verticalScale} · 寻路网格 ${this.routeGrid.step} m`;
   }
 
   configureMaterial() {
@@ -174,6 +183,37 @@ export class TerrainView {
     return { geometry, rows, cols };
   }
 
+  terrainGridLines() {
+    const { site, rows, cols } = this;
+    const position = this.geometry.getAttribute('position');
+    const lines = [], interval = Math.max(1, Math.ceil(Math.max(rows.length, cols.length) / 20));
+    const valid = (r, c) => Number.isFinite(site.height[rows[r] * site.cols + cols[c]]);
+    const vertex = (r, c) => {
+      const i = r * cols.length + c;
+      lines.push(position.getX(i), position.getY(i), position.getZ(i));
+    };
+    for (let r = 0; r < rows.length; r++) {
+      for (let c = 0; c < cols.length; c++) {
+        if (!valid(r, c)) continue;
+        if (r % interval === 0 && c + 1 < cols.length && valid(r, c + 1)) { vertex(r, c); vertex(r, c + 1); }
+        if (c % interval === 0 && r + 1 < rows.length && valid(r + 1, c)) { vertex(r, c); vertex(r + 1, c); }
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(lines, 3));
+    const overlay = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
+      color: '#ffe1c8', transparent: true, opacity: 0.22, depthWrite: false,
+    }));
+    overlay.position.y = Math.max(0.05, this.size * 0.00035);
+    return overlay;
+  }
+
+  setGridVisible(show) {
+    if (!this.gridLines) return;
+    this.gridLines.visible = show;
+    this.draw();
+  }
+
   heightAt(east, north, fallback) {
     const { site, rows, cols } = this;
     const r = (site.top - north) / site.step - 0.5, c = (east - site.left) / site.step - 0.5;
@@ -187,38 +227,59 @@ export class TerrainView {
     return Number.isFinite(value) ? value : ((fallback ?? nearest) - this.mid) * this.verticalScale;
   }
 
+  routeToTerrain(xy) {
+    return this.sameProjection ? xy : project(this.site, geographic(this.routeGrid, xy));
+  }
+
   setPlan(plan) {
     this.plan = plan;
     this.route.geometry.dispose();
     this.route.geometry = new THREE.BufferGeometry().setFromPoints(plan.path.map(index => {
-      const [e, n] = cellXY(this.site, cellOf(this.site, index));
-      return new THREE.Vector3(e, this.heightAt(e, n, this.site.height[index]) + 1.5 * this.verticalScale, -n);
+      const [e, n] = this.routeToTerrain(cellXY(this.routeGrid, cellOf(this.routeGrid, index)));
+      return new THREE.Vector3(e, this.heightAt(e, n, this.routeGrid.height[index]) + 1.5 * this.verticalScale, -n);
     }));
     if (this.atlas) {
       this.route.geometry.computeBoundingBox();
       const bounds = this.route.geometry.boundingBox;
       const extent = bounds.getSize(new THREE.Vector3());
       bounds.getCenter(this.overview);
-      this.initialDistance = Math.max(24 * this.site.step, Math.hypot(extent.x, extent.y, extent.z) * 1.15);
-      this.distance = this.initialDistance * (this.follow ? 0.62 : 1.18);
+      this.routeDistance = Math.max(24 * this.routeGrid.step, Math.hypot(extent.x, extent.y, extent.z) * 1.15);
+      this.initialDistance = this.routeDistance;
+      if (this.surroundings) {
+        const { left, top, rows, cols, step } = this.site;
+        this.overview.set(left + cols * step / 2, 0, -top + rows * step / 2);
+        this.initialDistance = Math.max(this.routeDistance, this.size * 1.48);
+      }
+      this.distance = this.follow ? this.routeDistance * 0.62 : this.initialDistance * 1.18;
     }
     for (const object of [...this.stations.children]) {
       object.geometry?.dispose(); object.material?.map?.dispose(); object.material?.dispose(); this.stations.remove(object);
     }
     const stops = plan.visits.filter(visit => !visit.returnLeg);
     stops.forEach((stop, index) => {
-      const [e, n] = cellXY(this.site, cellOf(this.site, stop.cell)), y = this.heightAt(e, n);
-      const marker = new THREE.Mesh(new THREE.SphereGeometry(Math.max(2, this.site.step * 1.5), 10, 8), new THREE.MeshBasicMaterial({ color: '#ffd095', depthTest: false }));
+      const [e, n] = this.routeToTerrain(cellXY(this.routeGrid, cellOf(this.routeGrid, stop.cell)));
+      const y = this.heightAt(e, n, this.routeGrid.height[stop.cell]);
+      const radius = this.surroundings ? Math.max(2, this.size / 420) : Math.max(2, this.site.step * 1.5);
+      const waypoint = this.atlas && index < stops.length - 1;
+      const marker = new THREE.Mesh(new THREE.SphereGeometry(radius, 10, 8),
+        new THREE.MeshBasicMaterial({ color: waypoint ? '#d0c4ff' : '#ffd095', depthTest: false }));
       marker.position.set(e, y + 2 * this.verticalScale, -n); marker.renderOrder = 5; this.stations.add(marker);
-      const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 64;
-      const ctx = canvas.getContext('2d'); ctx.fillStyle = '#211b18dd'; ctx.fillRect(0, 0, 512, 64);
-      ctx.fillStyle = '#ffe3bd'; ctx.font = '24px system-ui'; ctx.textAlign = 'center';
-      const labelText = index === stops.length - 1 ? '目的地' : `经停 ${index + 1}`;
-      ctx.fillText(stop.name === labelText ? labelText : `${labelText} · ${stop.name}`, 256, 41, 490);
+      const canvas = document.createElement('canvas');
+      canvas.width = this.atlas ? 192 : 512;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#211b18dd'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = waypoint ? '#e5dbff' : '#ffe3bd';
+      ctx.font = this.atlas ? 'bold 36px system-ui' : '24px system-ui'; ctx.textAlign = 'center';
+      const labelText = index === stops.length - 1 ? '目的地' : `${this.atlas ? '途经' : '经停'} ${index + 1}`;
+      const caption = this.atlas || stop.name === labelText ? labelText : `${labelText} · ${stop.name}`;
+      ctx.fillText(caption, canvas.width / 2, this.atlas ? 45 : 41, canvas.width - 16);
       const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
-      const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, depthTest: false }));
-      const width = Math.max(34, this.site.cols * this.site.step / 12);
-      label.scale.set(width, width / 8, 1); label.position.set(e, y + 10 * this.verticalScale, -n); label.renderOrder = 6;
+      const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, depthTest: false, sizeAttenuation: !this.atlas }));
+      const width = this.atlas ? 0.067 : Math.max(34, this.site.cols * this.site.step / 12);
+      if (this.atlas) label.center.set(0.5, -0.15);
+      label.scale.set(width, width * canvas.height / canvas.width, 1);
+      label.position.set(e, y + 10 * this.verticalScale, -n); label.renderOrder = 6;
       this.stations.add(label);
     });
     this.draw();
@@ -228,8 +289,8 @@ export class TerrainView {
     if (!progress) return;
     this.progress = progress;
     this.light = light;
-    const [e, n] = progress.xy;
-    const elevation = this.site.height[progress.cell[0] * this.site.cols + progress.cell[1]];
+    const [e, n] = this.routeToTerrain(progress.xy);
+    const elevation = this.routeGrid.height[progress.cell[0] * this.routeGrid.cols + progress.cell[1]];
     this.focus.set(e, this.heightAt(e, n, elevation) + 4 * this.verticalScale, -n);
     if (light && this.mode === 'optical') this.sun.position.set(light.sun.east, Math.max(0.08, light.sun.up), -light.sun.north);
     this.draw();
@@ -249,14 +310,14 @@ export class TerrainView {
     });
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
-      this.distance = Math.min(this.initialDistance * 2.3, Math.max(this.initialDistance * 0.13, this.distance * Math.exp(e.deltaY * 0.001)));
+      this.distance = Math.min(this.initialDistance * 2.3, Math.max((this.atlas ? this.routeDistance : this.initialDistance) * 0.13, this.distance * Math.exp(e.deltaY * 0.001)));
       this.draw();
     }, { passive: false });
   }
 
   setFollow(follow) {
     this.follow = follow;
-    this.distance = this.initialDistance * (follow ? 0.69 : this.atlas ? 1.18 : 1);
+    this.distance = follow ? this.routeDistance * 0.69 : this.initialDistance * (this.atlas ? 1.18 : 1);
     this.draw();
   }
 

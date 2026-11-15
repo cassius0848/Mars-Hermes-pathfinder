@@ -177,3 +177,29 @@ test('Jezero regional route truly uses weighted profiles and pressure, temperatu
   const timeOnly = run(zeros).find(item => item.profiles.includes('environment'));
   assert.deepEqual(timeOnly.path, baseline.path);
 });
+
+test('Jezero atlas plans ordered waypoints while the expanded DEM stays aligned', () => {
+  const original = terrain('jezero');
+  const coordinates = cell => geographic(original, cellXY(original, cell));
+  const endpoints = [original.base, original.targets[1].cell].map(coordinates);
+  const grid = cropAtlasGrid(original, endpoints);
+  const [start, goal] = endpoints.map(point => atlasCell(grid, point));
+  const baseRoute = { ...routeDefaults, start, stops: [{ cell: goal, name: '目的地' }] };
+  const { candidates: [direct] } = planMission(grid, baseRoute);
+  const [late, early] = [0.66, 0.33].map(fraction => direct.path[Math.floor(direct.path.length * fraction)]);
+  const stops = [late, early].map((index, order) => ({ cell: cellOf(grid, index), name: `途经 ${order + 1}` }));
+  const { candidates: [ordered] } = planMission(grid, { ...baseRoute, stops: [...stops, ...baseRoute.stops] });
+  assert.deepEqual(ordered.visits.map(({ name, cell }) => [name, cell]),
+    [['途经 1', late], ['途经 2', early], ['目的地', indexOf(grid, goal)]]);
+  assert.ok(ordered.visits[0].arrival < ordered.visits[1].arrival);
+  assert.ok(ordered.distance > direct.distance);
+  const track = ordered.path.map(index => geographic(grid, cellXY(grid, cellOf(grid, index))));
+  const context = cropAtlasGrid(original, track, true);
+  assert.ok(context.rows > grid.rows && context.cols > grid.cols);
+  assert.equal(context.step, grid.step);
+  for (const [i, point] of track.entries()) {
+    const cell = atlasCell(context, point);
+    assert.ok(cell);
+    assert.equal(context.height[indexOf(context, cell)], grid.height[ordered.path[i]]);
+  }
+});

@@ -33,8 +33,12 @@
             <button id="nav-back" type="button">返回二维地图</button>
             <button id="nav-play" type="button">播放</button>
             <label><input id="nav-follow" type="checkbox"> 跟随队员</label>
+            <label><input id="nav-grid-lines" type="checkbox" checked> 显示地形网格</label>
           </div>
           <div class="nav-fields nav-display">
+            <label class="atlas-field">三维范围<select id="nav-extent">
+              <option value="surroundings">周边地形</option><option value="route">路线高程网格</option>
+            </select></label>
             <label class="atlas-field">地形样式<select id="nav-relief">
               <option value="relief">高程增强与官方影像</option><option value="optical">官方光学影像</option>
             </select></label>
@@ -49,6 +53,7 @@
           </div>
           <label class="atlas-field">导航进度<input id="nav-progress" type="range" min="0" max="1000" value="0"></label>
           <p id="nav-position" class="muted"></p>
+          <p id="nav-context-status" class="muted" role="status"></p>
           <p id="nav-texture" class="muted"></p>
         </section>
         <div class="atlas-status"><p id="location" class="mono"></p><p id="tile-status" role="status"></p></div>
@@ -79,12 +84,14 @@
           <div class="nav-actions">
             <button id="nav-start" type="button" aria-pressed="false">选出发地</button>
             <button id="nav-goal" type="button" aria-pressed="false">选目的地</button>
+            <button id="nav-waypoint" type="button" aria-pressed="false">添加途经点</button>
             <button id="nav-reset" type="button">清除</button>
           </div>
           <dl class="nav-points">
             <div><dt>出发地</dt><dd id="nav-start-coord">未选择</dd></div>
             <div><dt>目的地</dt><dd id="nav-goal-coord">未选择</dd></div>
           </dl>
+          <ol id="nav-waypoints" class="atlas-waypoints" aria-label="途经点顺序" hidden></ol>
           <form id="nav-form">
             <label class="atlas-field">高程来源<select id="nav-source">
               <option value="auto">自动 · 优先较细的有效高程</option>

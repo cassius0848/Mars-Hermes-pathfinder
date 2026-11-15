@@ -35,20 +35,34 @@ function sampleElevation(terrain, [lon, lat]) {
 
 const inCtx = ([lon, lat]) => lon > ctxBounds[0] && lon < ctxBounds[2] && lat > ctxBounds[1] && lat < ctxBounds[3];
 
-function planningGrid(points, coarse) {
-  if (coarse && (Math.abs(points[0][0] - points[1][0]) > 180 || points.some(([, lat]) => Math.abs(lat) > 80))) {
-    throw Error('MOLA 走廊模式目前支持南北纬 80°以内、不跨越 ±180° 经线的路线。');
+function bounds(points) {
+  const limits = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const [x, y] of points) {
+    limits[0] = Math.min(x, limits[0]); limits[1] = Math.min(y, limits[1]);
+    limits[2] = Math.max(x, limits[2]); limits[3] = Math.max(y, limits[3]);
   }
-  const center = points[0].map((value, i) => (value + points[1][i]) / 2);
-  const xy = points.map(point => project({ center }, point));
-  const distance = Math.hypot(xy[1][0] - xy[0][0], xy[1][1] - xy[0][1]);
+  return limits;
+}
+
+function planningGrid(points, coarse, surroundings = false) {
+  const [west, south, east, north] = bounds(points);
+  if (coarse && (east - west > 180 || south < -80 || north > 80)) {
+    throw Error('MOLA 走廊模式支持南北纬 80°以内且不跨越 ±180° 经线的区域。');
+  }
+  const center = [(west + east) / 2, (south + north) / 2];
+  const [left, bottom, right, top] = bounds(points.map(point => project({ center }, point)));
+  const distance = Math.hypot(right - left, top - bottom);
   const maxKm = coarse ? 120 : 15;
-  if (distance > maxKm * 1000) throw Error(`${coarse ? 'MOLA' : 'CTX'} 单段规划支持相距最多 ${maxKm} 公里的两点。请缩短路线或分段规划。`);
-  if (coarse && distance < 3000) throw Error('MOLA 约 1 公里的规划网格需要两点至少相距 3 公里。请拉开间距。');
+  if (!surroundings && distance > maxKm * 1000) {
+    throw Error(`${coarse ? 'MOLA' : 'CTX'} 的选点包围范围上限为 ${maxKm} 公里。请缩短路线或分段规划。`);
+  }
+  if (!surroundings && coarse && distance < 3000) throw Error('MOLA 约 1 公里网格要求选点范围至少 3 公里。');
   const step = coarse ? 1000 : 20;
-  const margin = coarse ? Math.max(4000, Math.min(16000, distance * 0.18)) : Math.max(320, Math.min(1500, distance * 0.25));
-  const halfX = Math.ceil((Math.max(...xy.map(p => Math.abs(p[0]))) + margin) / step);
-  const halfY = Math.ceil((Math.max(...xy.map(p => Math.abs(p[1]))) + margin) / step);
+  const margin = surroundings ? Math.max(8000, Math.min(28000, distance * 0.45))
+    : coarse ? Math.max(4000, Math.min(16000, distance * 0.18))
+      : Math.max(320, Math.min(1500, distance * 0.25));
+  const halfX = Math.ceil((Math.max(-left, right) + margin) / step);
+  const halfY = Math.ceil((Math.max(-bottom, top) + margin) / step);
   return { center, step, left: -halfX * step, top: halfY * step, cols: 2 * halfX, rows: 2 * halfY };
 }
 
@@ -83,13 +97,17 @@ async function bundledTerrain(site, signal) {
   return grid;
 }
 
-export function cropAtlasGrid(site, points) {
+export function cropAtlasGrid(site, points, surroundings = false) {
   const cells = points.map(point => atlasCell(site, point));
-  const margin = Math.max(12, Math.min(60, Math.ceil(Math.hypot(cells[0][0] - cells[1][0], cells[0][1] - cells[1][1]) * 0.3)));
-  const row0 = Math.max(0, Math.min(...cells.map(cell => cell[0])) - margin);
-  const col0 = Math.max(0, Math.min(...cells.map(cell => cell[1])) - margin);
-  const row1 = Math.min(site.rows, Math.max(...cells.map(cell => cell[0])) + margin + 1);
-  const col1 = Math.min(site.cols, Math.max(...cells.map(cell => cell[1])) + margin + 1);
+  if (cells.some(cell => !cell)) throw Error('至少一个选点超出 Jezero 区域高程缓存。');
+  const [minRow, minCol, maxRow, maxCol] = bounds(cells);
+  const span = Math.hypot(maxRow - minRow, maxCol - minCol);
+  const margin = surroundings ? Math.max(45, Math.min(150, Math.ceil(span * 0.45)))
+    : Math.max(12, Math.min(60, Math.ceil(span * 0.3)));
+  const row0 = Math.max(0, minRow - margin);
+  const col0 = Math.max(0, minCol - margin);
+  const row1 = Math.min(site.rows, maxRow + margin + 1);
+  const col1 = Math.min(site.cols, maxCol + margin + 1);
   const rows = row1 - row0, cols = col1 - col0;
   const height = new Float32Array(rows * cols), slope = new Float32Array(rows * cols);
   let min = Infinity, max = -Infinity;
@@ -114,10 +132,10 @@ export async function loadAtlasTerrain(mode, points, signal, status) {
     status(`正在读取 ${local.name} 的 HiRISE 验证区高程…`);
     return { grid: await bundledTerrain(local, signal), label: `${local.name} · HiRISE ${local.step} 米网格`, source: Object.values(local.sources)[0] };
   }
-  if (mode === 'local') throw Error('请把两点设在同一个米级验证区内，或选择区域高程。');
+  if (mode === 'local') throw Error('请把所有选点设在同一个米级验证区内，或选择区域高程。');
   const cached = sites.find(site => site.regional && covers(site));
   const cachedRoute = async () => {
-    if (!cached) throw Error('两点需要落在 Jezero 100 米缓存范围内。');
+    if (!cached) throw Error('所有选点需要落在 Jezero 100 米缓存范围内。');
     status('正在读取 Jezero 区域实测高程缓存…');
     return { grid: cropAtlasGrid(await bundledTerrain(cached, signal), points),
       label: 'Jezero · USGS CTX 100 米区域缓存', source: cached.sources['USGS/JPL CTX 地形'] };
@@ -132,11 +150,11 @@ export async function loadAtlasTerrain(mode, points, signal, status) {
   }
 }
 
-async function loadOnlineTerrain(mode, points, signal, status) {
+async function loadOnlineTerrain(mode, points, signal, status, surroundings = false) {
   const covered = points.every(inCtx);
   if (mode === 'ctx' && !covered) throw Error('至少一个选点在 Jezero CTX 高程覆盖之外。可改用 MOLA 粗略地形走廊。');
   const coarse = mode === 'mola' || !covered;
-  const grid = planningGrid(points, coarse);
+  const grid = planningGrid(points, coarse, surroundings);
   const margin = coarse ? 0.035 : 0.001;
   const bbox = gridBounds(grid).map((value, i) => value + (i < 2 ? -margin : margin));
   if (coarse && (bbox[0] < -180 || bbox[2] > 180 || bbox[2] - bbox[0] > 20)) throw Error('MOLA 走廊过于接近 ±180° 经线。请缩短路线或向远离经线的一侧选点。');
@@ -153,6 +171,18 @@ async function loadOnlineTerrain(mode, points, signal, status) {
   return { grid: { ...grid, height, slope: finiteSlopes(grid, height), depth: { min, max } },
     label: coarse ? 'NASA MOLA · 在线约 1 公里走廊' : 'USGS/JPL CTX · 在线 20 米网格',
     source: coarse ? source.url : CTX_DEM, coarse };
+}
+
+export async function loadAtlasContext(points, signal) {
+  const sites = await atlasSites().catch(() => []);
+  signal.throwIfAborted();
+  const site = sites.find(candidate => candidate.regional && points.every(point => atlasCell(candidate, point)));
+  if (site) {
+    const source = await bundledTerrain(site, signal);
+    return { grid: cropAtlasGrid(source, points, true), label: 'Jezero · USGS CTX 周边高程' };
+  }
+  const context = await loadOnlineTerrain('mola', points, signal, () => {}, true);
+  return { grid: context.grid, label: 'NASA MOLA 周边高程' };
 }
 
 export async function atlasTexture(grid, signal) {
