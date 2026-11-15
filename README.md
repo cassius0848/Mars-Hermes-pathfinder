@@ -4,15 +4,27 @@
 >
 > **A local EVA mission-planning tool for Martian astronauts**
 
-**项目入口** [在线火星地图](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/atlas?area=jezero) · [步行规划](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/) · [当前构建版本](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/build-info.json)
+**项目入口** [在线火星地图](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/atlas?area=jezero) · [步行规划](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/mission?area=hawksbill) · [当前构建版本](https://mars-pathfinder-jezero.fengboyuan030509.chatgpt.site/build-info.json)
 
 **统一版本来源**：GitHub `main` 是应用源码的唯一基线。网站发布经过测试的 GitHub Actions 构建产物，`build-info.json` 记录对应提交和文件校验值。详见 [构建与部署流程](docs/deployment.md)。
+
+
+## 当前浏览器部署版 / Current browser release
+
+HermesX 的评审入口为上方在线地图与任务规划。当前米级任务包为 Hawksbill Gap 和 Neretva Vallis 的 **1 m 网格**；以下早期 Streamlit / 2 m 研究包说明保留用于历史复现，不代表当前网页精度。
+
+- 已实现：真实地形 A*、约束/反算规划、经停点、返航、环境加权比较、科学点自动组合与排序、现场任务记录、状态更新重规划、二维/三维/第一人称回放、环境曲线联动、来源与覆盖显示、离线地图和 ZIP/JSON 任务包。
+- 历史/模型：TES 热惯量、OpenMARS 再分析、MEDA 历史测站与 DEM 光照。曲线不是实时天气；MEDA 单点不能视作沿途空间观测。太阳辐照/UV 不是电离辐射剂量。
+- 用户模型：资源容量、行走/作业耗用率、预留与负载惩罚。未配置项显示未评估；演示假设不是 NASA 宇航服规格。自动科学评分来自用户优先级。
+- 尚未实现：真实宇航员传感器定位、实时火星天气、定量电离辐射路由、经验证的宇航服生理模型和在线大模型任务解析。
+
+Current web release: 1 m local mission grids, bounded science-stop selection, field notes, event replanning, linked environmental profiles, user-configured resource estimates, and verified offline task packages. Historical observations, reanalysis, modeled sunlight and user assumptions remain explicitly labeled. Real astronaut localization, real-time Mars weather, ionizing-radiation routing and certified life-support models are not implemented. See [mission workflow and limits](docs/mission-workflow.md).
 
 ## 中文版
 
 ### 项目定位
 
-Mars Pathfinder AI 是 Hermesx 面向 NASA Space Apps Challenge 2026 开发的研究与演示型原型。项目服务于火星表面宇航员探测任务：在一个有限的局部区域中，叠加多种 NASA 数据，帮助任务团队规划科学目标、选择安全路线并准备返航方案。
+Mars Pathfinder AI 是 HermesX 面向 NASA Space Apps Challenge 2026 开发的研究与演示型原型。项目服务于火星表面宇航员探测任务：在一个有限的局部区域中，叠加多种 NASA 数据，帮助任务团队规划科学目标、选择安全路线并准备返航方案。
 
 项目不是飞行级导航或安全系统。真实数据必须记录来源、版本、空间分辨率、坐标系、单位、时间和限制；合成数据只用于算法和界面测试，并明确标记为 `synthetic`。
 
@@ -28,7 +40,7 @@ Mars Pathfinder AI 是 Hermesx 面向 NASA Space Apps Challenge 2026 开发的�
 
 - 为一个明确的科学目标选择局部探测区域；
 - 叠加至少三类数据，例如地形、光学、光谱 / 热学、天气或辐射；
-- 计算坡度、障碍、天气风险和辐射风险；
+- 计算坡度与封锁区域，比较历史环境情景；电离辐射未进入定量路线约束；
 - 根据宇航员 EVA 时间、生命支持、电池、负载和返航储备规划路线；
 - 使用 A* / Dijkstra 比较最短、最低风险、最低资源消耗和高科研价值路线；
 - 标出科学停留点、危险区域、路线距离、预计时间和返航状态；
@@ -200,7 +212,7 @@ streamlit run app/streamlit_app.py
 
 合成数据只允许用于单元测试和界面 fallback，必须带有 `synthetic-demo` 标记，不能混入未来 AI 训练集。完整规则见 [`docs/data-policy.md`](docs/data-policy.md)。
 
-当前真实路线权重为：MOLA 地形 `1.0`、USGS 科学目标 `0.5`；天气和辐射在没有官方产品时均为 `0.0`。
+早期 Python/Streamlit 权重记录（非当前网页参数）为：MOLA 地形 `1.0`、USGS 科学目标 `0.5`；天气和辐射在没有官方产品时均为 `0.0`。
 路线规划现在按闭环执行：基地 → 按任务顺序的科学目标 → 基地，EVA 时间和返航储备覆盖完整往返。
 科学停留时间现在计入 EVA 总预算；NASA EVA 资源参考见 [`docs/eva-resource-sources.md`](docs/eva-resource-sources.md)。
 未配置有来源的代谢率和资源容量时，系统会显示 `resource model unconfigured`，不会宣称生命支持安全。
@@ -223,7 +235,7 @@ streamlit run app/streamlit_app.py
 
 ### Positioning
 
-Mars Pathfinder AI is a research and demonstration prototype by OrionX for NASA Space Apps Challenge 2026. It is designed for **local astronaut EVA mission planning on Mars**: combining multiple NASA data layers to select science targets, plan a safe route, and prepare a return or contingency plan.
+Mars Pathfinder AI is a research and demonstration prototype by HermesX for NASA Space Apps Challenge 2026. It is designed for **local astronaut EVA mission planning on Mars**: combining multiple NASA data layers to select science targets, plan a safe route, and prepare a return or contingency plan.
 
 This is not a flight-qualified navigation or safety system. Every real dataset must record its source, version, spatial resolution, CRS, units, time, and limitations. Synthetic data is for algorithm and UI testing only and must be labeled `synthetic`.
 
@@ -239,7 +251,7 @@ The primary user is a two-person astronaut EVA team. Rover or robot logistics ca
 
 - Define a science objective and a bounded local study area;
 - Fuse at least three data types, such as terrain, optical, spectral / thermal, weather, or radiation;
-- Compute slope, obstacles, weather risk, and radiation risk;
+- Compute terrain and closure constraints; compare historical environment scenarios; ionizing radiation is not quantitatively routed;
 - Plan around EVA time, life support, battery, payload, and return reserves;
 - Compare shortest, lowest-risk, lowest-resource, and highest-science-value routes with A* / Dijkstra;
 - Show science stops, hazards, distance, estimated time, and return status;

@@ -3,6 +3,7 @@ import { atlasCell, atlasLonLat, atlasSites, atlasTexture, loadAtlasContext, loa
 import { environmentSettings, medaSun } from './atlas-environment.js';
 import { fetchOfficial } from './official.js';
 import { atlasExamples, sourceForArea } from './atlas-areas.js';
+import { EnvironmentPanel, routeValueColor } from './atlas-environment-panel.js';
 
 const $ = id => document.getElementById(id);
 const PALETTE = ['#86f8c1', '#ffc18e', '#b8c5ff', '#f7acdc'];
@@ -30,6 +31,10 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   const regional = () => medaSelect.value === 'regional';
   let currentArea = null;
   const autoSource = $('nav-auto-source'), demoButton = $('nav-regional-demo');
+  const environmentPanel = new EnvironmentPanel($('nav-env-panel'), $('nav-env-hud'), $('nav-coverage-viz'), {
+    seek: minute => seekMinute(minute),
+    layer: key => { coloring.value = key; changeRouteColor(); },
+  });
 
   async function regionalRequest(signal, weights) {
     if (!regionalMeta || !climateSelect.value) throw Error('区域环境索引未加载。请选择“地形与自选太阳时”，或刷新后重试。');
@@ -182,6 +187,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   }
 
   function resetResult() {
+    environmentPanel.clear();
     autoSource.hidden = true;
     task?.abort.abort(); task?.worker?.terminate(); task = null;
     result = null; position = null; minute = 0;
@@ -303,14 +309,9 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
 
   function drawSegmentValues(ctx, screen, line, values) {
     const [min, max] = extent(values);
-    const center = (min + max) / 2;
-    const span = Math.max(max - min, ROUTE_FIELDS[coloring.value]?.[2] ?? 1);
     for (let i = 1; i < line.length; i++) {
       const value = (values[i - 1] + values[i]) / 2;
-      const ratio = (value - center) / span + 0.5;
-      ctx.strokeStyle = !Number.isFinite(value) ? '#9c9b9c'
-        : coloring.value === 'light' ? (value >= 0.5 ? '#ffd575' : '#aa9bff')
-        : `hsl(${220 - 189 * ratio} 85% 67%)`;
+      ctx.strokeStyle = routeValueColor(value, min, max, coloring.value, ROUTE_FIELDS[coloring.value]?.[2] ?? 1);
       ctx.beginPath();
       ctx.moveTo(...screen(line[i - 1]));
       ctx.lineTo(...screen(line[i]));
@@ -390,6 +391,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
         if (view) { view.setColor(PALETTE[index]); view.setPlan(candidate); updateProgress(); }
         [...routeList.children].forEach((item, i) => item.setAttribute('aria-pressed', String(i === index)));
         updateRouteLayers();
+        updateEnvironmentPanel(); applyRouteColor();
         paint();
       };
       return button;
@@ -449,7 +451,9 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
           const candidates = data.candidates.map(candidate => ({ ...candidate,
             profiles: mixedLight ? candidate.profiles : candidate.profiles.filter(profile => profile !== 'light'),
             line: candidate.path.map((index, i) => atlasLonLat(grid, pathXY(grid, candidate, i))) }));
-          result = { grid, label, light: data.light, candidates, coarse, coverage: data.coverage };
+          result = { grid, label, light: data.light, candidates, coarse, coverage: data.coverage,
+            environmentContext: {observation:route.environment?.observation, snapshot:route.environment?.snapshot,
+              weights:route.environment?.weights, coverage:data.coverage} };
           selected = 0;
           const scenario = route.environment?.observation;
           const observationLabel = scenario ? ` · NASA MEDA Sol ${scenario.sol} ${scenario.localTrueSolarTime} LTST`
@@ -466,6 +470,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
           renderCandidates();
           updateComparison();
           updateRouteLayers();
+          updateEnvironmentPanel();
           fit(candidates.flatMap(candidate => candidate.line));
           viewButton.hidden = false;
         } catch (error) { status.textContent = `${label}。 ${error.message}`; }
@@ -504,6 +509,31 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     const [row, col] = pos.cell, cell = row * grid.cols + col;
     const elevation = Math.round(elevationAt(grid, pos.xy)), slope = grid.slope[cell].toFixed(1);
     $('nav-position').textContent = `模拟队员 · ${fmt(position)} · 高程 ${elevation} m · 坡度 ${slope}° · 已走 ${km(pos.distance)} / ${km(candidate.distance)}${coarse ? ' · 区域地形走廊回放' : ` · 模拟第 ${minute.toFixed(1)} 分钟`}`;
+    environmentPanel.update(minute, pos, coloring.value);
+  }
+
+  function updateEnvironmentPanel() {
+    environmentPanel.set(result.grid, result.candidates[selected], result.light, result.environmentContext,
+      [...coloring.options].map(option => option.value));
+    updateProgress();
+  }
+
+  function seekMinute(value) {
+    if (!result) return;
+    stop(); minute = Math.max(0, Math.min(result.candidates[selected].minutes, value));
+    updateProgress(); paint();
+  }
+
+  function applyRouteColor() {
+    if (!view) return;
+    const values = pickedValues();
+    if (!values) { view.setColor(PALETTE[selected]); return; }
+    const [min, max] = extent(values);
+    view.setRouteColors(Array.from(values, value => routeValueColor(value, min, max, coloring.value, ROUTE_FIELDS[coloring.value]?.[2] ?? 1)));
+  }
+
+  function changeRouteColor() {
+    updateLegend(); applyRouteColor(); if (result) updateProgress(); paint();
   }
 
   function play(now) {
@@ -546,6 +576,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
         previous?.destroy(); view = next;
         playButton.disabled = progress.disabled = false;
         updateDisplay(); updatePerspective();
+        applyRouteColor();
         view.setGridVisible($('nav-grid-lines').checked);
         updateProgress();
         contextStatus.textContent = `${display.label} · ${surroundings ? '周边地形' : '路线高程网格'}。`;
@@ -696,7 +727,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   scaleRange.oninput = () => setScale(scaleRange.valueAsNumber);
   scaleNumber.onchange = () => setScale(scaleNumber.valueAsNumber);
   $('nav-true-scale').onclick = () => setScale(1);
-  coloring.onchange = () => { updateLegend(); paint(); };
+  coloring.onchange = changeRouteColor;
   $('nav-form').onsubmit = plan;
   const settingsSummary=()=>{
     $('nav-settings-summary').textContent=`${$('nav-slope').value || '—'}° · ${$('nav-budget').value || '—'} 分钟 · 预留 ${$('nav-reserve').value || '—'} 分钟${$('nav-return').checked?' · 往返':''}`;

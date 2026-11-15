@@ -8,6 +8,7 @@
   <title>Mars Pathfinder AI · Jezero 火星导航</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="environment.css">
 </head>
 <body class="mission-app">
 <header class="topbar">
@@ -26,7 +27,7 @@
       <div class="layer-bar" id="layers" aria-label="地图图层"></div>
       <div class="maps">
         <canvas id="map" tabindex="0" role="img" aria-label="火星地图。选择选点模式后点击地图，或使用方向键移动光标，按回车确认。"></canvas>
-        <div id="terrain" hidden></div>
+        <div id="terrain" hidden><div id="mission-env-hud" class="env-hud" aria-label="沿途环境参考" hidden></div></div>
         <div class="map-tools"><button id="zoom-in" class="square" aria-label="放大地图" type="button">+</button><button id="zoom-out" class="square" aria-label="缩小地图" type="button">−</button><button id="zoom-reset" class="square" aria-label="重置地图视野" type="button">⌖</button></div>
         <div id="view-tools" hidden><button id="view-toggle" type="button">返回二维</button><button id="camera" type="button" hidden>俯瞰全区</button></div>
         <p id="terrain-fallback" class="map-notice" role="status" hidden></p>
@@ -41,7 +42,9 @@
         <div class="nav-buttons"><button id="pause" type="button">暂停</button><button id="closure" type="button">报告前方封路</button><button id="return" type="button">重新规划返航</button></div>
         <p id="nav-notice" class="message" role="status"></p>
         <p id="nav-warning" class="message" role="status" hidden></p>
+        <details class="ops-event"><summary>途中状态更新与重规划</summary><p class="muted">输入现场上报或演示变化；更新从当前位置生效，已完成站点不会再次加入。</p><div id="ops-event-fields" class="ops-grid"></div><button id="ops-apply-event" type="button">应用更新并重算剩余任务</button><p id="ops-event-status" class="message" role="status"></p></details>
       </section>
+      <details class="mission-environment"><summary>沿途环境曲线 · 点击定位与联动回放</summary><section id="mission-env-panel" class="env-panel" aria-label="沿途环境剖面" hidden></section><div id="mission-coverage" class="env-coverage"></div></details>
     </section>
     <aside class="side" aria-label="任务设置与计算结果">
       <section class="panel plan-panel">
@@ -59,6 +62,7 @@
           <label id="roundtrip-field" class="roundtrip"><input id="roundtrip" type="checkbox" checked>规划回到出发地</label>
           <div class="params" id="settings"></div>
         </details>
+        <details id="operations-settings" class="mission-settings"></details>
         <button id="compute" class="primary" type="button" disabled>计算路线 <span aria-hidden="true">↗</span></button>
         <p id="plan-error" class="message" role="status" aria-live="polite"></p>
       </section>
@@ -67,6 +71,8 @@
         <button id="start-nav" class="secondary" type="button" disabled>开始导航演示 <span aria-hidden="true">→</span></button>
         <div id="routes"><p class="muted">选取起终点后可比较候选路线。</p></div>
         <div id="route-diagnostics" role="status" aria-live="polite"></div>
+        <p id="ops-decision" class="muted" role="status"></p>
+        <details id="ops-budget-details"><summary>资源预算与数据可信度 <small id="ops-resource-summary"></small></summary><div id="ops-resource-report" class="ops-resource-report" aria-label="资源预算与导航余量"></div><p id="ops-quality" class="muted"></p></details>
         <details id="route-report" hidden><summary>路线完整指标与所需条件</summary><dl id="route-metrics"></dl><p class="muted note">坡度含相邻格高差与对角通行格检查；光照为所选时刻的模型估计。热学、地质等数据可在图层中查看，未提供逐点定量值。</p><button id="export-samples" type="button" class="text-button">导出沿线逐点数据 CSV ↓</button></details>
         <button id="export-route" class="text-button" type="button" disabled hidden>导出任务卡 ↓</button>
         <p id="scope-note" class="muted note"></p>
@@ -89,6 +95,7 @@
         <div id="mission-data" class="mission-data"></div>
         <p id="mission-data-note" class="muted note"></p>
       </details>
+      <details class="panel ops-transfer"><summary class="panel-heading"><h2>离线任务与记录</h2></summary><div class="nav-buttons"><button id="ops-offline" type="button">保存离线地图并下载任务包</button><button id="ops-export-json" type="button">导出任务与记录 JSON</button></div><label>导入任务记录<input id="ops-import" type="file" accept=".json,application/json"></label><p class="muted">包内含当前任务区地形、影像、科学证据、记录和源码校验。在线新瓦片与外部查询仍需网络。</p><p id="ops-transfer-status" class="message" role="status"></p></details>
       </div>
     </div>
   </div>

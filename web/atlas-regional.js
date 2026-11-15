@@ -121,7 +121,9 @@ export function regionalMetrics(environment, candidate, isSunlit) {
     kind: 'regional', daylightMinutes, meanTemperatureK: mean('thermal'), meanPressurePa: mean('pressure'),
     meanInertia: mean('inertia'), meanSolarWm2: mean('uv'),
     interpolatedPercent: Number.isFinite(sums.inertia) ? interpolatedMinutes / candidate.minutes * 100 : null,
+    interpolated: Uint8Array.from(candidate.path, cell => environment.interpolated[cell]),
     values,
   };
 }
+
 

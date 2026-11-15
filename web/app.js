@@ -2,14 +2,24 @@ import { MissionMap, profileChart } from './map.js';
 import { queryOfficial } from './official.js';
 import { canAnimateRoute, cellOf, cellXY, decodeTerrain, geographic, indexOf, isLit, progressAt, SOL_RATIO } from './planner.js';
 import { missionData } from './mission-data.js';
+import { MissionConsole } from './mission-console.js';
+import { EnvironmentPanel } from './atlas-environment-panel.js';
+import { resourcesAfter,resourceReadings } from './mission-operations.js';
 
 const $ = id => document.getElementById(id);
 const layerLabels = { optical: '正射影像', elevation: '高程', slope: '坡度', thermal: '热红外', light: '地形阴影', geology: '地质' };
-const profileLabels = { time: '时间优先', terrain: '坡度优先', light: '光照优先' };
+const profileLabels = { environment:'多参数组合',time: '时间优先', terrain: '坡度优先', light: '光照优先' };
 const state = { generation: 0, planningId: 0, queryId: 0, closures: [], complete: [], mode: 'idle',
   localization: { status: 'UNINITIALIZED', source: '未初始化', cell: null, confidence: null, updated: null } };
 const map = new MissionMap($('map'), pickPoint);
 let worker = createPlanner();
+const operations=new MissionConsole({state:()=>state,invalidate,onEvent:change=>replan(false,change),restore:restoreTask});
+const environmentPanel=new EnvironmentPanel($('mission-env-panel'),$('mission-env-hud'),$('mission-coverage'),{
+  seek:time=>{if(!state.current)return;if(state.nav){state.nav.playing=false;state.nav.time=time;updateNavigation();}
+    else{state.progress=progressAt(state.site,state.current,time);environmentPanel.update(time,state.progress,'route');operations.update(state.current,state.inputRoute,time,state.progress);redraw();}},
+  layer:key=>{map.setLayer(key==='terrain'?'slope':key==='light'?'light':'thermal');renderLayers();redraw();},
+});
+const hasMissionStops=()=>Boolean(state.stops?.length||operations.isAutomatic());
 const dataUrl = id => `assets/${id}`;
 const compass = ([lon, lat]) => `${lon.toFixed(5)}°E, ${Math.abs(lat).toFixed(5)}°${lat < 0 ? 'S' : 'N'}`;
 const distance = meters => meters >= 1000 ? `${(meters / 1000).toFixed(2)} km` : `${meters.toFixed(0)} m`;
@@ -53,7 +63,8 @@ function renderMissionData() {
   const root = $('mission-data');
   if (!root || !state.site) return;
   const available = layer => {
-    if (['terrain', 'optical', 'thermal', 'geology'].includes(layer.id)) return true;
+    if (layer.id==='terrain')return true;
+    if (['optical','thermal','geology'].includes(layer.id))return state.site.layers.includes(layer.id);
     if (layer.id === 'atmosphere') return Boolean(state.site.meda);
     return false;
   };
@@ -131,7 +142,8 @@ function invalidate() {
   state.candidates = [];
   state.diagnostics = [];
   state.reportRoute = null;
-  $('compute').disabled = !state.site?.height || !state.start || !state.stops?.length;
+  operations.clear();environmentPanel.clear();state.environmentPlan=null;
+  $('compute').disabled = !state.site?.height || !state.start || !hasMissionStops();
   $('compute').textContent = '计算路线 ↗';
   $('plan-error').textContent = '';
   renderRoutes(); redraw();
@@ -142,7 +154,8 @@ async function loadSite(site) {
   $('area').value = site.id;
   $('atlas-link').href = `atlas.html?area=${site.id}`;
   endNavigation();
-  Object.assign(state, { site, start: null, stops: [], light: null, closures: [], complete: [], mode: 'idle', preset: false });
+  Object.assign(state, { site, start: null, returnBase:null, stops: [], light: null, closures: [], complete: [], mode: 'idle', preset: false });
+  state.events=[];operations.setSite(site);
   resetLocalization();
   $('map-title').textContent = site.name;
   $('map-caption').textContent = site.regional ? 'Jezero 陨石坑及周边 · 半径 40 km' : `Jezero 局部步行区 · ${distance(site.rows * site.step)} × ${distance(site.cols * site.step)}`;
@@ -292,11 +305,11 @@ function pickPoint(cell, xy) {
     state.stops = [...state.stops.slice(0, -1), { cell, name: '自选目的地', minutes: 0 }];
     state.preset = false;
   }
-  setMode(picked === 'start' && !state.stops.length ? 'goal' : 'idle');
+  setMode(picked === 'start' && !hasMissionStops() ? 'goal' : 'idle');
   state.queryId++;
   $('official-results').hidden = true;
   renderSelections();
-  if (state.start && state.stops.length) calculate(); else invalidate();
+  if (state.start && hasMissionStops()) calculate(); else invalidate();
 }
 
 function renderSelections() {
@@ -378,11 +391,14 @@ function readRoute() {
     $('mission-settings').open=true;invalid[0].focus();
     throw Error(invalid.map(input => `${input.getAttribute('aria-label') ?? input.parentElement.firstChild.textContent}须为 ${input.min}–${input.max} 范围内的有效整数。`).join(' '));
   }
-  const route = { start: state.start, stops: state.stops, base: state.start, closures: state.closures,
+  const route = { start: state.start, stops: state.stops, base: state.returnBase??state.start, closures: state.closures,
     mode: $('planning-method').value, diagnose: true,
     limit: +$('slope-limit').value, speed: +$('speed').value,
     budget: +$('budget').value, reserve: +$('reserve').value, regionalNavigation: Boolean(regional),
     returnToBase: $('roundtrip').checked, allowSingleStop: state.preset && $('roundtrip').checked && state.stops.length > 1 };
+  const config=operations.read();
+  route.resources=config.resources;route.scienceSelection=config.scienceSelection;route.operationsConfig=config;
+  route.baseSpeed=route.speed;route.speed/=1+config.loadKg*config.loadPenalty/100;
   return route;
 }
 
@@ -395,7 +411,8 @@ function requestPlan(route, onResult, hourOffset = 0) {
   state.reportRoute = route;
   const localHour = Number($('hour')?.value ?? 12);
   state.onPlan = onResult;
-  worker.postMessage({ id, route, hour: (localHour + hourOffset / (60 * SOL_RATIO)) % 24, season: +($('season')?.value ?? 0) });
+  state.environmentContext={observation:route.environment?.observation,snapshot:route.environment?.snapshot,weights:route.environment?.weights};
+  worker.postMessage({ id, route, hour: ((localHour + hourOffset / (60 * SOL_RATIO)+(state.nav?.sunOffset??0)) % 24+24)%24, season: +($('season')?.value ?? 0) });
 }
 
 function createPlanner() {
@@ -403,6 +420,7 @@ function createPlanner() {
   planner.onmessage = ({ data }) => {
     if (data.id !== state.planningId) return;
     state.light = data.light ?? state.light;
+    state.environmentContext={...state.environmentContext,coverage:data.coverage};
     const callback = state.onPlan;
     state.onPlan = null;
     callback?.(data);
@@ -432,8 +450,8 @@ function recommended(candidates) {
   return valid.find(c => c.profiles.includes(preferred)) || valid[0] || candidates.find(c => c.feasible) || candidates[0];
 }
 
-function calculate() {
-  if (!state.site?.height || !state.start || !state.stops?.length || state.nav) return;
+async function calculate() {
+  if (!state.site?.height || !state.start || !hasMissionStops() || state.nav) return;
   invalidate();
   try {
     const route = readRoute();
@@ -441,6 +459,9 @@ function calculate() {
     $('compute').disabled = true;
     $('compute').textContent = '正在计算…';
     $('plan-error').textContent = '正在计算路线…';
+    const revision=state.planningId,site=state.site;
+    route.environment=await operations.environment(route.operationsConfig);
+    if(revision!==state.planningId||site!==state.site)return;
     requestPlan(route, result => {
       $('compute').disabled = false;
       $('compute').textContent = '重新计算路线 ↗';
@@ -450,11 +471,20 @@ function calculate() {
       state.candidates = result.candidates;
       state.diagnostics = result.diagnostics ?? [];
       state.current = recommended(result.candidates);
+      operations.result(result.scienceDecision);
+      applyScienceSelection(state.current);
       if (state.current?.shortened) $('plan-error').textContent = `${completed}双站任务在当前限制下不可行，推荐先访问 ${state.current.shortened}。`;
       else if (state.current && !state.current.feasible) $('plan-error').textContent = `${completed}${result.error ? result.error + ' ' : ''}所选路线有 ${state.current.violations.length} 项指标不满足限制，详情见路线方案。`;
       renderRoutes(); redraw();
     });
   } catch (error) { $('compute').disabled = false; $('compute').textContent = '重新计算路线 ↗'; $('plan-error').textContent = error.message; }
+}
+
+function applyScienceSelection(candidate){
+  if(!candidate?.scienceStops)return;
+  state.stops=candidate.scienceStops.map(t=>({cell:t.cell,name:t.name,minutes:t.minutes}));
+  state.inputRoute={...state.inputRoute,stops:state.stops,scienceSelection:{enabled:false}};
+  state.reportRoute=state.inputRoute;renderSelections();
 }
 
 function describe(candidate) {
@@ -466,6 +496,11 @@ function renderRoutes() {
   const { site, candidates = [], current, nav } = state;
   renderSciencePoints();
   renderRouteReport();
+  if(current){
+    operations.update(current,state.inputRoute,state.nav?.time??0,state.progress);
+    if(state.environmentPlan!==current){environmentPanel.set(site,current,state.light,state.environmentContext??{},['terrain','light']);state.environmentPlan=current;}
+    environmentPanel.update(state.nav?.time??0,state.progress??progressAt(site,current,0),'route');
+  }
   $('route-count').textContent = candidates.length ? `${candidates.length} 条` : '';
   $('start-nav').disabled = !canAnimateRoute(current, state.inputRoute, site) || Boolean(nav);
   $('start-nav').replaceChildren(site?.regional ? '播放区域 3D 导航动画 →' : state.inputRoute?.mode === 'estimate' ? '播放反算导航动画 →' : '开始导航演示 →');
@@ -473,7 +508,7 @@ function renderRoutes() {
   $('export-route').disabled = $('export-route').hidden;
   if (!candidates.length) { root.replaceChildren(el('p', '选取起终点后可比较候选路线。', 'muted')); return; }
   root.replaceChildren(...candidates.map(candidate => {
-    const control = button(null, () => { state.current = candidate; renderRoutes(); redraw(); }, 'route-row');
+    const control = button(null, () => { state.current = candidate; applyScienceSelection(candidate); renderRoutes(); redraw(); }, 'route-row');
     control.disabled = Boolean(nav);
     control.setAttribute('aria-pressed', candidate === current);
     const first = el('span', null, 'route-top'), summary = el('small', null, 'metric-line');
@@ -551,11 +586,14 @@ function downloadText(contents, filename, type) {
 function exportSamples() {
   const { current: plan, site } = state;
   if (!plan || state.nav) return;
-  const rows = [['sample', 'row', 'col', 'longitude_deg_E', 'latitude_deg_N', 'elevation_m', 'cell_slope_deg', 'elapsed_min', 'distance_m', 'modeled_sunlit', 'station', 'constraint_status']];
+  const environmentFields=['thermal','pressure','inertia','uv'];
+  const resources=state.inputRoute.resources??[];
+  const rows = [['sample', 'row', 'col', 'longitude_deg_E', 'latitude_deg_N', 'elevation_m', 'cell_slope_deg', 'elapsed_min', 'distance_m', 'modeled_sunlit', 'station', 'constraint_status',...environmentFields.map(k=>`${k}_source_labeled_in_task`),...resources.map(r=>`${r.id}_remaining`)]];
   plan.path.forEach((index, i) => {
     const cell = cellOf(site, index), coordinate = geographic(site, cellXY(site, cell));
     rows.push([i, ...cell, ...coordinate, site.height[index], site.slope[index], plan.times[i], plan.lengths[i],
-      state.light ? Number(isLit(site, state.light, index)) : '', plan.visits.filter(visit => visit.cell === index).map(visit => visit.name).join(';'), plan.feasible ? 'within_limits' : 'reference_exceeds_limits']);
+      state.light ? Number(isLit(site, state.light, index)) : '', plan.visits.filter(visit => visit.cell === index).map(visit => visit.name).join(';'), plan.feasible ? 'within_limits' : 'reference_exceeds_limits',
+      ...environmentFields.map(k=>plan.environment?.values?.[k]?.[i]??''),...resourceReadings(plan,resources,plan.times[i]).map(r=>r.remaining)]);
   });
   const quote = value => `"${String(value).replaceAll('"', '""')}"`;
   downloadText('\uFEFF' + rows.map(row => row.map(quote).join(',')).join('\r\n'), `${site.id}-route-samples.csv`, 'text/csv;charset=UTF-8');
@@ -590,6 +628,9 @@ function exportRoute() {
   const sources = el('p');
   for (const [name, url] of Object.entries(site.sources)) sources.append(link(name, url), ' · ');
   sources.append('HermesX'); card.body.append(sources);
+  const records=operations.snapshot(),details=el('pre',JSON.stringify({objective:records.configuration?.scienceSelection?.objective,
+    resources:current.resourceUsage,records:records.records,events:records.events,environment:records.configuration?.scene},null,2));
+  details.style.whiteSpace='pre-wrap';card.body.append(el('h2','科学记录、资源假设与事件'),details);
   const url = URL.createObjectURL(new Blob(['<!doctype html>\n', card.documentElement.outerHTML], { type: 'text/html;charset=UTF-8' }));
   const download = el('a'); download.href = url; download.download = `${site.id}-marswalk.html`;
   download.click(); setTimeout(() => URL.revokeObjectURL(url), 30000);
@@ -653,7 +694,7 @@ function renderSciencePoints() {
     }, 'text-button');
     via.disabled = Boolean(state.nav) || !state.site.height || !state.start || !state.stops.length;
     actions.append(via);
-    card.append(actions);
+    card.append(actions);operations.appendTask(card,target);
     return card;
   }));
 }
@@ -728,7 +769,8 @@ async function runOfficialQuery() {
 
 function setPlanningEnabled(enabled) {
   for (const control of [...$('settings').querySelectorAll('input, select'), $('preset'), $('roundtrip'), $('planning-method')]) control.disabled = !enabled;
-  $('compute').disabled = !enabled || !state.start || !state.stops?.length;
+  operations.setLocked(!enabled);
+  $('compute').disabled = !enabled || !state.start || !hasMissionStops();
   renderSelections();
   renderLocalization();
 }
@@ -772,6 +814,7 @@ function beginNavigation() {
   const nav = { time: 0, elapsed: 0, playing: true, base: state.start, route, preview: route.mode === 'estimate' || Boolean(state.site.regional),
     label: state.site.regional ? '区域地形参考模拟' : '反算参考模拟',
     rate: state.site.regional ? Math.max(2, state.current.minutes / 60) : 2, replanning: false, done: false };
+  nav.base=route.base;
   state.nav = nav;
   $('navigation').hidden = false; $('view-tools').hidden = false;
   $('nav-notice').textContent = '模拟回放 · 已用所选出发地初始化位置 · 时间加速。';
@@ -816,6 +859,7 @@ function updateNavigation() {
   $('closure').disabled = nav.done || nav.replanning || Boolean(nav.blocked);
   $('return').disabled = nav.replanning || isSame(state.progress.cell, nav.base);
   nav.view?.update(state.progress, state.light);
+  environmentPanel.update(nav.time,state.progress,'route');operations.update(plan,nav.route,nav.time,state.progress);
   redraw();
 }
 
@@ -832,16 +876,19 @@ function endNavigation() {
   show2D(); setPlanningEnabled(true); renderRoutes();
 }
 
-function replan(returnOnly) {
+function replan(returnOnly,change={}) {
   const nav = state.nav, old = state.current;
   if (!nav || nav.replanning) return;
   if (state.localization?.status !== 'FIXED') {
     $('nav-notice').textContent = '当前定位不可用，请先完成地形重定位。';
     return;
   }
-  const now = nav.elapsed + nav.time, oldRemaining = old.minutes - nav.time, start = state.progress.cell;
+  for(const id of Object.keys(change.remaining??{}))if(!(nav.route.resources??[]).some(r=>r.id===id))throw Error('请先在规划阶段配置该资源的容量与耗用率，再上报剩余值。');
+  const resources=resourcesAfter(nav.route.resources??[],old,nav.time,change.delay??0,change.remaining??{});
+  const delay=change.delay??0;
+  const now = nav.elapsed + nav.time+delay, oldRemaining = old.minutes - nav.time, start = state.progress.cell;
   let closures = [...state.closures];
-  if (!returnOnly) {
+  if (!returnOnly && !Object.keys(change).length) {
     const ahead = old.path.find((cell, i) => i >= state.progress.index && old.lengths[i] >= state.progress.distance + 18);
     if (ahead == null) { $('nav-notice').textContent = '离路线终点不足 18 米，无法在前方放置模拟封路。'; return; }
     const closure = cellOf(state.site, ahead);
@@ -856,7 +903,12 @@ function replan(returnOnly) {
   }));
   const route = { ...nav.route, start, base: nav.base, stops: returnOnly ? [] : stops,
     budget: nav.route.budget - now, returnToBase: returnOnly || nav.route.returnToBase,
-    returnOnly, closures, allowSingleStop: false, mode: nav.preview ? 'estimate' : 'constrained', diagnose: false };
+    returnOnly, closures, resources, speed:change.speed??nav.route.speed,scienceSelection:{enabled:false},allowSingleStop: false, mode: nav.preview ? 'estimate' : 'constrained', diagnose: false };
+  if(Number.isFinite(change.hour)){
+    nav.sunOffset=change.hour-Number($('hour')?.value??12)-now/(60*SOL_RATIO);
+    route.environment=undefined;
+  }
+  if(Object.keys(change).length)state.events.push({taskMinute:now,...change,source:'用户现场上报 / 演示输入',environmentNote:Number.isFinite(change.hour)?'切换至更新后的地形光照模型，历史快照不作为实时天气。':undefined});
   const desired = old.profiles[0];
   nav.playing = false; nav.replanning = true;
   $('nav-notice').textContent = returnOnly ? '从当前位置计算返航路线…' : '加入前方封路，从当前位置重新规划…';
@@ -865,6 +917,7 @@ function replan(returnOnly) {
     const viable = nav.preview ? result.candidates : result.candidates.filter(candidate => candidate.feasible);
     const next = viable.find(candidate => candidate.profiles.includes(desired)) || viable[0] || (returning && result.candidates[0]);
     if (!next && !returning && !isSame(start, nav.base)) {
+      nav.returnReason=result.candidates[0]?.violations?.map(violationText).join(' ')||result.error||'剩余任务在当前限制下不可行。';
       requestPlan({ ...route, stops: [], returnToBase: true, returnOnly: true }, response => apply(response, true), now);
       return;
     }
@@ -876,12 +929,16 @@ function replan(returnOnly) {
       show2D(); updateNavigation(); return;
     }
     state.current = next; state.candidates = [next];
+    nav.route={...nav.route,resources,speed:route.speed,environment:route.environment,scienceSelection:{enabled:false}};
+    state.inputRoute=route;operations.stamp=null;operations.result(null);
+    $('ops-delay').value=0;$('ops-event-status').textContent=`状态更新完成 · 剩余路线 ${minute(next.minutes)} · ${next.feasible?'满足已设限制':'存在超限，请核对返航与资源'}`;
     nav.elapsed = now; nav.time = 0; nav.done = false; nav.blocked = !nav.preview && !next.feasible; nav.playing = nav.preview || next.feasible;
     nav.view?.setPlan(next);
     $('nav-notice').textContent = nav.preview || next.feasible
       ? `${nav.preview ? '参考模拟 · ' : ''}${returning ? '返航' : '绕行'}已重算 · 从当前点还有 ${distance(next.distance)} · 原路线剩余 ${minute(oldRemaining)}，新路线预计 ${minute(next.minutes)}。`
       : `已找到返航路径。扣除预留后仍差 ${minute(-next.margin)}，模拟暂停。`;
     renderRoutes(); updateNavigation();
+    if(returning&&nav.returnReason){$('nav-notice').textContent+=` 触发返航：${nav.returnReason}`;nav.returnReason=null;}
   }
   requestPlan(route, result => apply(result, returnOnly), now);
 }
@@ -938,6 +995,22 @@ async function init() {
   $('area').disabled = false;
   const requested = new URLSearchParams(location.search).get('area');
   await loadSite(state.sites.find(site => site.id === requested) ?? state.sites[1]);
+  if(new URLSearchParams(location.search).get('restore')==='task.json')await restoreTask(await get('task.json','json'));
+}
+
+async function restoreTask(task){
+  if(task?.schema!=='mars-pathfinder-task/v1'||!state.sites?.some(s=>s.id===task.siteId))throw Error('任务格式或区域无效。');
+  const site=state.sites.find(s=>s.id===task.siteId),valid=cell=>Array.isArray(cell)&&cell.length===2&&cell.every(Number.isInteger)&&cell[0]>=0&&cell[0]<site.rows&&cell[1]>=0&&cell[1]<site.cols;
+  if(!valid(task.start)||!Array.isArray(task.stops)||!task.stops.length||task.stops.length>12||task.stops.some(t=>!valid(t.cell)||!Number.isFinite(t.minutes)||t.minutes<0||t.minutes>180))throw Error('任务起终点、停留时间或经停站数量无效。');
+  await loadSite(site);
+  state.start=task.start;state.stops=task.stops.map(t=>({cell:t.cell,name:String(t.name??'导入站点').slice(0,120),minutes:t.minutes}));
+  await operations.restoreConfig(task.configuration);operations.restoreNotes(task.records);state.events=Array.isArray(task.events)?task.events.slice(-100):[];
+  const plan=task.planning??{};
+  if(plan.base&&!valid(plan.base))throw Error('导入任务的返航点不在本区域。');state.returnBase=plan.base??null;
+  for(const [id,key]of [['slope-limit','limit'],['budget','budget'],['reserve','reserve'],['speed','speed']])if(Number.isFinite(plan[key]))$(id).value=plan[key];
+  if(Number.isFinite(plan.baseSpeed))$('speed').value=plan.baseSpeed;
+  $('roundtrip').checked=Boolean(plan.returnToBase);$('planning-method').value=plan.mode==='estimate'?'estimate':'constrained';
+  renderSelections();resetLocalization();await calculate();
 }
 
 init().catch(error => { $('pick-hint').textContent = error.message; });

@@ -1,5 +1,6 @@
 import { cellXY, decodeTerrain, geographic, isLit, planMission, terrainLight } from './planner.js';
 import { buildRegionalEnvironment, regionalSolarTime } from './atlas-regional.js';
+import { planOperations, assessResources } from './mission-operations.js';
 
 let grid;
 const lightCache = new Map();
@@ -20,7 +21,7 @@ self.onmessage = ({ data }) => {
       season = regional.snapshot.ls;
     }
     const key = route.environment?.observation ? `meda:${route.environment.observation.sclk}` : `${hour}:${season}`;
-    if (!grid.regional && !lightCache.has(key)) {
+    if ((!grid.regional || route.regionalNavigation && route.environment) && !lightCache.has(key)) {
       if (lightCache.size === 6) lightCache.delete(lightCache.keys().next().value);
       lightCache.set(key, terrainLight(grid, hour, season, route.environment?.sun,
         regional ? Math.max(1, Math.ceil(Math.max(grid.rows, grid.cols) / 280)) : undefined));
@@ -30,15 +31,15 @@ self.onmessage = ({ data }) => {
       route.environment = buildRegionalEnvironment(grid, regional, light, (r, c) => geographic(grid, cellXY(grid, [r, c])),
         index => isLit(grid, light, index), solar.peakWm2);
     }
-    const result = planMission(grid, route, light);
+    const result = planOperations(grid, route, light);
     if (regional) {
       const { active, disabled, thermalSpacing } = route.environment;
       result.coverage = { active, disabled, thermalSpacing, hour, ls: season, year: regional.snapshot.year };
     }
-    if (route.mode !== 'estimate' && route.allowSingleStop && !result.candidates.some(candidate => candidate.feasible)) {
+    if (!route.scienceSelection?.enabled && route.mode !== 'estimate' && route.allowSingleStop && !result.candidates.some(candidate => candidate.feasible)) {
       const alternatives = route.stops.flatMap(stop => {
         const single = planMission(grid, { ...route, stops: [stop], diagnose: false }, light);
-        return single.candidates.map(candidate => ({ ...candidate, shortened: stop.name }));
+        return single.candidates.map(candidate => ({ ...assessResources(candidate,route.resources), shortened: stop.name }));
       }).filter(candidate => candidate.feasible).sort((a, b) => a.minutes - b.minutes);
       if (alternatives.length) {
         result.candidates = [...alternatives, ...result.candidates];
