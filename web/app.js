@@ -196,6 +196,10 @@ function renderSettings() {
     }
     root.append(el('p', '步速随沿线高差调整。光照使用规划时刻的地形阴影，途中重算会更新时刻。', 'parameter-note'));
   } else root.append(el('p', '区域用时按所设步速与沿途高差粗略估算，不包含休息或生命支持条件；区域光照未建模。区域动画支持超限参考回放。', 'parameter-note'));
+  const summary=()=>{
+    $('mission-settings-summary').textContent=`${$('slope-limit').value || '—'}° · ${$('budget').value || '—'} 分钟 · 预留 ${$('reserve').value || '—'} 分钟${$('roundtrip').checked?' · 往返':''}`;
+  };
+  $('mission-settings').oninput=summary;$('mission-settings').onchange=summary;summary();
 }
 
 function renderLayers() {
@@ -370,7 +374,10 @@ function readRoute() {
   const regional = state.site.regional;
   const inputs = [...$('settings').querySelectorAll('input[type=number]'), ...$('waypoint-list').querySelectorAll('input[type=number]')];
   const invalid = inputs.filter(input => !input.value || !input.checkValidity());
-  if (invalid.length) throw Error(invalid.map(input => `${input.getAttribute('aria-label') ?? input.parentElement.firstChild.textContent}须为 ${input.min}–${input.max} 范围内的有效整数。`).join(' '));
+  if (invalid.length) {
+    $('mission-settings').open=true;invalid[0].focus();
+    throw Error(invalid.map(input => `${input.getAttribute('aria-label') ?? input.parentElement.firstChild.textContent}须为 ${input.min}–${input.max} 范围内的有效整数。`).join(' '));
+  }
   const route = { start: state.start, stops: state.stops, base: state.start, closures: state.closures,
     mode: $('planning-method').value, diagnose: true,
     limit: +$('slope-limit').value, speed: +$('speed').value,
@@ -934,3 +941,4 @@ async function init() {
 }
 
 init().catch(error => { $('pick-hint').textContent = error.message; });
+

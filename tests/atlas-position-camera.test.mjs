@@ -85,7 +85,7 @@ test('overview frustum contains the terrain even when a coarse route needs a dis
     renderer:{getPixelRatio:()=>1,domElement:{width:800,height:600},render:()=>{}},
     size:1000,distance:30000,angle:0.64,pitch:0.49,follow:false,
     target:new THREE.Vector3(),overview:new THREE.Vector3(-40000,0,30000),drawCrewMarker:()=>{}};
-  TerrainView.prototype.draw.call(view);
+  TerrainView.prototype.renderFrame.call(view);
   camera.updateMatrixWorld();
   const point=view.overview.clone().project(camera);
   assert.ok(Math.abs(point.x)<1e-6 && Math.abs(point.y)<1e-6 && point.z<1);

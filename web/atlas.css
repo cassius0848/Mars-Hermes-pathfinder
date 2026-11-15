@@ -90,3 +90,31 @@
 .atlas-data a { overflow-wrap: anywhere; }
 @media (max-width: 960px) { .live-atlas { grid-template-columns: 1fr; } }
 @media (max-width: 510px) { .nav-display > * { flex-basis: 100%; } .atlas-toolbar, .atlas-results { padding: 10px; } }
+
+.atlas-app main { padding-top:18px; }
+.atlas-app .page-intro { margin-bottom:14px; }
+.atlas-app .page-intro h1 { font-size:clamp(25px,3vw,34px); }
+.atlas-app .page-intro p { font-size:12px; }
+.atlas-app .topbar nav a { font-size:12px; }
+.atlas-toolbar { align-items:center; justify-content:space-between; }
+.atlas-area { display:flex; align-items:center; gap:10px; font-size:12px; }
+.atlas-area select { width:auto; min-width:150px; padding:6px 30px 6px 9px; }
+.nav-endpoints { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.nav-endpoints button { text-align:left; min-width:0; padding:9px; }
+.nav-endpoints small { overflow-wrap:anywhere; font-size:11px; margin-top:4px; }
+.nav-endpoints #nav-start { border-left:3px solid var(--mint); }
+.nav-endpoints #nav-goal { border-left:3px solid var(--sand); }
+.nav-secondary-actions { margin:8px 0; }
+.nav-secondary-actions button { padding:5px 8px; font-size:12px; }
+.nav-coordinate-entry { margin:5px 0 10px; font-size:12px; }
+.nav-settings,.nav-env-details,.nav-display-settings { border-top:1px solid var(--line); padding-top:8px; }
+.nav-settings summary,.nav-env-details summary,.nav-display-settings summary { color:var(--text); font-size:12px; padding-bottom:5px; }
+.nav-settings summary small,.nav-env-details summary small { display:block; color:var(--muted); margin-left:14px; font-size:11px; }
+.nav-environment { border:0; padding:7px 0; }
+.nav-environment h3 { display:none; }
+.atlas-playback .nav-actions button { padding:6px 10px; }
+.atlas-playback .nav-fields { padding:2px 0; }
+.atlas-playback select { padding-block:6px; }
+.nav-display-settings > label { display:block; margin:6px 0; font-size:12px; }
+@media (max-width:510px) { .atlas-toolbar > .muted { display:none; } .atlas-area { width:100%; } .atlas-area select { flex:1; min-width:0; } .atlas-app .topbar { flex-wrap:wrap; height:auto; min-height:58px; gap:7px; padding-block:10px; } }
+

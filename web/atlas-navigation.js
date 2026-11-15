@@ -56,6 +56,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     const broad = regional();
     const sample = meda?.observations.find(item => item.sclk === Number(medaSelect.value));
     const environment = broad || Boolean(sample);
+    $('nav-env-summary').textContent = broad ? '区域多参数' : sample ? `MEDA · Sol ${sample.sol}` : '地形与光照';
     medaOptions.hidden = !environment;
     for (const input of medaOptions.querySelectorAll('input')) input.disabled = !environment;
     for (const label of document.querySelectorAll('[data-manual-sun]')) {
@@ -115,11 +116,12 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   function buttons() {
     for (const key of Object.keys(points)) {
       $(`nav-${key}`).setAttribute('aria-pressed', String(key === armed));
-      $(`nav-${key}-coord`).textContent = points[key] ? fmt(points[key]) : '未选择';
+      $(`nav-${key}-coord`).textContent = points[key] ? fmt(points[key]) : '点击后在地图选点';
       for (const [axis, index] of [['lon', 0], ['lat', 1]]) $(`nav-${key}-${axis}`).value = points[key]?.[index] ?? '';
     }
     $('nav-waypoint').setAttribute('aria-pressed', String(armed === 'waypoint'));
     planButton.disabled = !points.start || !points.goal || Boolean(task);
+    $('nav-reverse').disabled = !points.start || !points.goal || Boolean(task);
     results.hidden = !result;
     $('nav-view-results').hidden = !result;
     viewButton.hidden = !result;
@@ -523,6 +525,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     const contextStatus = $('nav-context-status'), textureStatus = $('nav-texture');
     textureStatus.textContent = '';
     const wide = extentSelect.value === 'surroundings';
+    $('nav-context-radius').disabled = !wide;
     const radius = Number($('nav-context-radius').value);
     host.hidden = false; playback.hidden = false; canvas.hidden = true; $('atlas-zoom').hidden = true;
     playButton.disabled = !view;
@@ -596,6 +599,12 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     waypoints.length = 0; renderWaypoints(); resetResult();
     status.textContent = '在地图上依次选择出发地和目的地。';
   };
+  $('nav-reverse').onclick = () => {
+    if (!points.start || !points.goal) return;
+    [points.start, points.goal]=[points.goal, points.start];waypoints.reverse();
+    cancelPick();resetResult();renderWaypoints();
+    status.textContent='起终点与途经顺序已反向，请重新计算路线。';
+  };
   medaSelect.addEventListener('change', updateObservation);
   async function demo(id, targetIndex, mode, run) {
     try {
@@ -645,7 +654,8 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     const changedObservation = Boolean(medaSelect.value) && !regional() && id !== 'hawksbill';
     currentArea = id;
     if (changedArea) { cancelPick(); if (task || result) resetResult(); }
-    demoButton.textContent = example ? `试算 ${example.name} 区域路线` : '先选择陨石坑区域';
+    demoButton.textContent = example ? '示例路线' : '先选择区域';
+    demoButton.title = example ? `载入并计算 ${example.name} 示例路线` : '选择一个陨石坑后可试算';
     demoButton.disabled = !example;
     if (changedSource || changedObservation) {
       resetResult(); source.value = next;
@@ -667,8 +677,6 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     }
     if (!firstPerson && scaleRange.disabled) setScale(orbitScale);
     scaleRange.disabled = scaleNumber.disabled = $('nav-true-scale').disabled = firstPerson;
-    $('nav-follow').disabled = firstPerson;
-    $('nav-follow').checked = perspectiveSelect.value === 'follow';
     view?.setPerspective(firstPerson ? 'first-person' : 'orbit');
     view?.setFollow(perspectiveSelect.value === 'follow');
     $('nav-view-note').textContent = firstPerson
@@ -690,7 +698,18 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   $('nav-true-scale').onclick = () => setScale(1);
   coloring.onchange = () => { updateLegend(); paint(); };
   $('nav-form').onsubmit = plan;
+  const settingsSummary=()=>{
+    $('nav-settings-summary').textContent=`${$('nav-slope').value || '—'}° · ${$('nav-budget').value || '—'} 分钟 · 预留 ${$('nav-reserve').value || '—'} 分钟${$('nav-return').checked?' · 往返':''}`;
+  };
+  settingsSummary();
+  $('nav-form').addEventListener('input',settingsSummary);
+  $('nav-form').addEventListener('invalid',event=>{
+    let parent=event.target.parentElement;
+    while(parent&&parent!==$('nav-form')) {if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}
+    status.textContent='有参数超出输入范围，请修正已展开的设置。';
+  },true);
   $('nav-form').onchange = () => {
+    settingsSummary();
     if (!result && !task) return;
     resetResult(); status.textContent = '设置已更新，请重新计算路线。';
   };
@@ -699,7 +718,6 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   extentSelect.onchange = () => open3d(false);
   $('nav-context-radius').onchange = () => { if (extentSelect.value === 'surroundings') open3d(false); };
   perspectiveSelect.onchange = updatePerspective;
-  $('nav-follow').onchange = event => { perspectiveSelect.value = event.target.checked ? 'follow' : 'overview'; updatePerspective(); };
   $('nav-grid-lines').onchange = event => view?.setGridVisible(event.target.checked);
   playButton.onclick = () => {
     if (frame) { stop(); return; }
@@ -711,4 +729,5 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   };
   return { pick, cancelPick, draw, setArea };
 }
+
 
