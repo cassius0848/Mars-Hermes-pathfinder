@@ -1,13 +1,13 @@
 <p align="center">
   <a href="https://hermesxmarthpathfinder.dev/atlas?area=jezero">
-    <img src="docs/assets/live-demo-banner.svg" width="1080" alt="HermesX live demo — click to open the Mars Atlas" />
+    <img src="docs/assets/live-demo-banner.svg" width="1080" alt="HermesX live demo — open Mars Hermes Pathfinder" />
   </a>
 </p>
 
 <h2 align="center">🚀 LIVE DEMO — START HERE</h2>
 
 <p align="center">
-  <strong><a href="https://hermesxmarthpathfinder.dev/atlas?area=jezero">▶ OPEN THE MARS ATLAS</a></strong>
+  <strong><a href="https://hermesxmarthpathfinder.dev/atlas?area=jezero">▶ OPEN Mars Hermes Pathfinder</a></strong>
   &nbsp; · &nbsp;
   <strong><a href="https://hermesxmarthpathfinder.dev/mission?area=hawksbill">▶ OPEN WALKING NAVIGATION</a></strong>
 </p>
