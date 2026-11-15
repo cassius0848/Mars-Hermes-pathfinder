@@ -71,10 +71,12 @@ export class TerrainView {
     route.material.depthTest = false; route.renderOrder = 4;
     this.scene.add(route);
     this.route = route;
-    const markerRadius = atlas ? Math.max(1.8, site.step * 0.25) : Math.max(2.5, size / 170);
-    const marker = new THREE.Mesh(new THREE.SphereGeometry(markerRadius, 16, 12), new THREE.MeshBasicMaterial({ color: '#ffd6a1' }));
-    marker.material.depthTest = false; marker.renderOrder = 5;
-    this.scene.add(marker); this.marker = marker;
+    this.crewMarker = document.createElement('span');
+    this.crewMarker.className = 'terrain-crew-marker';
+    this.crewMarker.setAttribute('aria-hidden', 'true');
+    this.crewMarker.hidden = true;
+    this.projectedCrew = new THREE.Vector3();
+    host.append(this.crewMarker);
     this.stations = new THREE.Group(); this.scene.add(this.stations);
     this.setPlan(plan);
     this.bindPointer();
@@ -228,8 +230,7 @@ export class TerrainView {
     this.light = light;
     const [e, n] = progress.xy;
     const elevation = this.site.height[progress.cell[0] * this.site.cols + progress.cell[1]];
-    this.marker.position.set(e, this.heightAt(e, n, elevation) + 4 * this.verticalScale, -n);
-    this.focus.copy(this.marker.position);
+    this.focus.set(e, this.heightAt(e, n, elevation) + 4 * this.verticalScale, -n);
     if (light && this.mode === 'optical') this.sun.position.set(light.sun.east, Math.max(0.08, light.sun.up), -light.sun.north);
     this.draw();
   }
@@ -272,6 +273,20 @@ export class TerrainView {
       .multiplyScalar(this.distance).add(this.target);
     camera.lookAt(this.target);
     renderer.render(this.scene, camera);
+    this.drawCrewMarker(width, height);
+  }
+
+  drawCrewMarker(width, height) {
+    if (!this.progress) return;
+    // Keep the marker tied to the same terrain point at every zoom level.
+    const { x, y, z } = this.projectedCrew.copy(this.focus).project(this.camera);
+    const visible = Number.isFinite(x) && Number.isFinite(y) && z >= -1 && z <= 1
+      && Math.abs(x) <= 1 && Math.abs(y) <= 1;
+    this.crewMarker.hidden = !visible;
+    if (visible) {
+      this.crewMarker.style.left = `${(x + 1) * width / 2}px`;
+      this.crewMarker.style.top = `${(1 - y) * height / 2}px`;
+    }
   }
 
   destroy() {
@@ -286,6 +301,7 @@ export class TerrainView {
     this.renderer.dispose();
     this.renderer.forceContextLoss();
     this.renderer.domElement.remove();
+    this.crewMarker.remove();
     this.badge?.remove();
   }
 }

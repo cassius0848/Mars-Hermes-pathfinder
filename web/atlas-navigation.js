@@ -293,8 +293,12 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     }
     if (position) {
       const [x, y] = screen(position);
+      ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#172028'; ctx.fill();
+      ctx.lineWidth = 4; ctx.strokeStyle = '#142328'; ctx.stroke();
+      ctx.lineWidth = 2.5; ctx.strokeStyle = '#bbf5e4'; ctx.stroke();
       ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffdfad'; ctx.fill(); ctx.strokeStyle = '#221912'; ctx.stroke();
+      ctx.fillStyle = '#ffdb91'; ctx.fill();
     }
   }
 
@@ -429,7 +433,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     progress.value = Math.round(minute / candidate.minutes * 1000);
     const [row, col] = pos.cell, cell = row * grid.cols + col;
     const elevation = Math.round(grid.height[cell]), slope = grid.slope[cell].toFixed(1);
-    $('nav-position').textContent = `${fmt(position)} · 高程 ${elevation} m · 坡度 ${slope}° · 已走 ${km(pos.distance)} / ${km(candidate.distance)}${coarse ? ' · MOLA 地形走廊回放' : ` · 模拟第 ${minute.toFixed(1)} 分钟`}`;
+    $('nav-position').textContent = `模拟队员 · ${fmt(position)} · 高程 ${elevation} m · 坡度 ${slope}° · 已走 ${km(pos.distance)} / ${km(candidate.distance)}${coarse ? ' · MOLA 地形走廊回放' : ` · 模拟第 ${minute.toFixed(1)} 分钟`}`;
   }
 
   function play(now) {

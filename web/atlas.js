@@ -222,7 +222,7 @@ function pruneTiles() {
 }
 
 function geologyExtent(bbox) {
-  return state.span <= 4 && bbox[0] < 79.5 && bbox[2] > 75.5 && bbox[1] < 20 && bbox[3] > 16;
+  return bbox[0] < 79.5 && bbox[2] > 75.5 && bbox[1] < 20 && bbox[3] > 16;
 }
 
 async function refresh() {
@@ -255,7 +255,8 @@ async function refreshGeology() {
   clearGeology();
   const status = $('geo-status'), bbox = frame();
   if (!$('geology').checked) { status.textContent = ''; paint(); return; }
-  if (!geologyExtent(bbox)) { status.textContent = '放大到 Jezero 附近可查询地质面。'; paint(); return; }
+  if (state.span > 4) { status.textContent = '放大到 Jezero–Nili Planum 可查看区域地质面。'; paint(); return; }
+  if (!geologyExtent(bbox)) { status.textContent = '当前视野超出 SIM 3464 区域制图范围。'; paint(); return; }
   const controller = new AbortController(); state.geoRequest = controller;
   status.textContent = '正在向 USGS 查询地质面…';
   try {
@@ -270,7 +271,7 @@ async function refreshGeology() {
     });
     if (items.length) items.push(link('查看 USGS 原始响应 ↗', result.url));
     $('geo-legend').replaceChildren(...items);
-    status.textContent = result.features.length ? `USGS 返回 ${result.features.length} 个地质面${result.partial ? ' · 请放大查看剩余要素' : ''}` : 'USGS 在当前视野未返回已制图地质面。';
+    status.textContent = result.features.length ? `USGS 返回 ${result.features.length} 个地质面${result.partial ? ' · 请放大查看剩余要素' : ''}` : '当前视野没有 SIM 3464 已制图地质面。';
   } catch {
     if (controller === state.geoRequest) status.textContent = 'USGS 地质服务暂不可用，可平移、缩放或重开图层重试。';
   }
