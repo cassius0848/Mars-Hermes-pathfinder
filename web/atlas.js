@@ -482,11 +482,12 @@ function updateWalkLink(id) {
   const name = craterNames[area] ?? 'Jezero';
   if (['jezero', 'hawksbill', 'neretva'].includes(area)) {
     $('walk-link').href = `./mission.html?area=${area}`;
-    $('walk-link').textContent = `${name} 任务区 →`;
+    $('walk-action').textContent = '打开任务地图 →';
   } else {
     $('walk-link').href = `./atlas.html?area=${area}`;
-    $('walk-link').textContent = `${name} 资料与剖面 →`;
+    $('walk-action').textContent = '查看区域资料与剖面 →';
   }
+  $('walk-region').textContent = `当前区域：${name}`;
 }
 
 updateWalkLink(initialView);

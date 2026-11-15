@@ -96,6 +96,13 @@
 .atlas-app .page-intro h1 { font-size:clamp(25px,3vw,34px); }
 .atlas-app .page-intro p { font-size:12px; }
 .atlas-app .topbar nav a { font-size:12px; }
+.atlas-app .topbar nav { align-items:center; gap:18px; }
+.atlas-app .topbar .task-map-link { display:grid; gap:1px; min-height:46px; padding:6px 15px; border:1px solid #edb088; border-radius:8px; background:#dc9d74; color:#211812; line-height:1.35; text-decoration:none; }
+.task-map-link > span { font-size:14px; font-weight:750; }
+.task-map-link small { font-size:11px; }
+.atlas-app .topbar .task-map-link:hover { background:#efb890; box-shadow:0 0 0 3px #dc9d7426; }
+.atlas-app .topbar .task-map-link:focus-visible { outline:3px solid var(--mint); outline-offset:4px; }
+@media (max-width:510px) { .atlas-app .topbar nav { margin-left:auto; gap:10px; } .atlas-app .topbar .task-map-link { padding-inline:11px; } }
 .atlas-toolbar { align-items:center; justify-content:space-between; }
 .atlas-area { display:flex; align-items:center; gap:10px; font-size:12px; }
 .atlas-area select { width:auto; min-width:150px; padding:6px 30px 6px 9px; }
