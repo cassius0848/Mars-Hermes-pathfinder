@@ -5,16 +5,16 @@ const lightCache = new Map();
 
 self.onmessage = ({ data }) => {
   try {
-    if (data.type === 'terrain') {
-      grid = data.height ? decodeTerrain(data.site, data.height, data.slope) : data.site;
+    if (data.type === 'terrain' || data.type === 'grid') {
+      grid = data.type === 'grid' ? data.grid : data.height ? decodeTerrain(data.site, data.height, data.slope) : data.site;
       lightCache.clear();
       return;
     }
     const { id, route, hour, season } = data;
-    const key = `${hour}:${season}`;
+    const key = route.environment ? `meda:${route.environment.observation.sclk}` : `${hour}:${season}`;
     if (!grid.regional && !lightCache.has(key)) {
       if (lightCache.size === 6) lightCache.delete(lightCache.keys().next().value);
-      lightCache.set(key, terrainLight(grid, hour, season));
+      lightCache.set(key, terrainLight(grid, hour, season, route.environment?.sun));
     }
     const light = lightCache.get(key);
     const result = planMission(grid, route, light);
@@ -34,4 +34,3 @@ self.onmessage = ({ data }) => {
     self.postMessage({ id: data.id, error: error.message, candidates: [] });
   }
 };
-

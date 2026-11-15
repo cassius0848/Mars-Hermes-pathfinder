@@ -140,6 +140,49 @@ export function molaExport(bbox) {
   return `${MOLA}/exportImage?${new URLSearchParams(params)}`;
 }
 
+export async function fetchMolaTerrain(bbox, signal) {
+  const size = [Math.ceil((bbox[2] - bbox[0]) * 64), Math.ceil((bbox[3] - bbox[1]) * 64)].map(v => Math.max(4, v));
+  const params = { bbox: bbox.join(','), bboxSR: 104905, imageSR: 104905, size: size.join(','),
+    adjustAspectRatio: 'false', format: 'tiff', pixelType: 'F32', interpolation: 'RSP_Bilinear', f: 'image' };
+  const url = `${MOLA}/exportImage?${new URLSearchParams(params)}`;
+  const bytes = await fetchOfficial(url, 'arrayBuffer', signal);
+  const tiff = new DataView(bytes);
+  if (tiff.byteLength < 8 || tiff.getUint32(0, true) !== 0x002a4949) throw Error('NASA 未返回有效的 MOLA TIFF');
+  const ifd = tiff.getUint32(4, true), tags = new Map();
+  try {
+    for (let i = 0; i < tiff.getUint16(ifd, true); i++) {
+      const entry = ifd + 2 + i * 12;
+      const type = tiff.getUint16(entry + 2, true), count = tiff.getUint32(entry + 4, true);
+      const width = { 3: 2, 4: 4, 12: 8 }[type];
+      if (!width) continue;
+      const offset = count * width <= 4 ? entry + 8 : tiff.getUint32(entry + 8, true);
+      if (count * width > tiff.byteLength - offset) throw Error();
+      const read = { 3: 'getUint16', 4: 'getUint32', 12: 'getFloat64' }[type];
+      tags.set(tiff.getUint16(entry, true), Array.from({ length: count }, (_, j) => tiff[read](offset + j * width, true)));
+    }
+    const first = tag => tags.get(tag)?.[0];
+    const width = first(256), height = first(257);
+    const tileWidth = first(322), tileHeight = first(323), offsets = tags.get(324), lengths = tags.get(325);
+    if (first(258) !== 32 || first(259) !== 1 || first(277) !== 1 || first(339) !== 3
+      || !width || !height || width > 512 || height > 512 || !tileWidth || !tileHeight) throw Error();
+    const [dx, dy] = tags.get(33550), [x, y, , originX, originY] = tags.get(33922);
+    const lon = originX - x * dx, lat = originY + y * dy;
+    if (![lon, lat, dx, dy].every(Number.isFinite) || !(dx > 0 && dy > 0)) throw Error();
+    const across = Math.ceil(width / tileWidth);
+    const values = new Float32Array(width * height);
+    for (let r = 0; r < height; r++) for (let c = 0; c < width; c++) {
+      const tile = Math.floor(r / tileHeight) * across + Math.floor(c / tileWidth);
+      const pos = ((r % tileHeight) * tileWidth + c % tileWidth) * 4;
+      if (!(pos + 4 <= lengths[tile])) throw Error();
+      const z = tiff.getFloat32(offsets[tile] + pos, true);
+      values[r * width + c] = z > -20000 && z < 30000 ? z : NaN;
+    }
+    return { url, values, width, height, lon, lat, dLon: width * dx, dLat: height * dy };
+  } catch {
+    throw Error('NASA MOLA 高程文件的布局无法识别，请稍后重试。');
+  }
+}
+
 export function ctxWindow([west, south, east, north]) {
   const column = lon => (lon * ctxEast - CTX.west) / CTX.step;
   const row = lat => (CTX.north - lat * ctxNorth) / CTX.step;
@@ -150,6 +193,9 @@ export function ctxWindow([west, south, east, north]) {
     lon: (CTX.west + left * CTX.step) / ctxEast, lat: (CTX.north - top * CTX.step) / ctxNorth,
     dLon: (right - left) * CTX.step / ctxEast, dLat: (bottom - top) * CTX.step / ctxNorth };
 }
+
+export const ctxBounds = [CTX.west / ctxEast, (CTX.north - CTX.height * CTX.step) / ctxNorth,
+  (CTX.west + CTX.width * CTX.step) / ctxEast, CTX.north / ctxNorth];
 
 async function ctxBytes(first, last, signal) {
   const url = `${CTX_DEM}?atlas-range=${first}-${last}`;
@@ -174,12 +220,16 @@ export async function fetchCtxTerrain(window, signal) {
   const rowBytes = CTX.width * 4;
   const values = new Float32Array(window.width * window.height);
   let min = Infinity, max = -Infinity, valid = 0;
-  const tasks = [];
-  for (let row = 0; row < window.height; row += 28) {
-    const rows = Math.min(28, window.height - row);
-    const first = CTX.offset + (window.top + row) * rowBytes;
-    const last = first + (rows - 1) * rowBytes + (window.left + window.width) * 4 - 1;
-    tasks.push(ctxBytes(first, last, signal).then(bytes => {
+  let nextRow = 0;
+  async function readRows() {
+    while (nextRow < window.height) {
+      signal?.throwIfAborted();
+      const row = nextRow;
+      nextRow += 28;
+      const rows = Math.min(28, window.height - row);
+      const first = CTX.offset + (window.top + row) * rowBytes;
+      const last = first + (rows - 1) * rowBytes + (window.left + window.width) * 4 - 1;
+      const bytes = await ctxBytes(first, last, signal);
       const source = new DataView(bytes);
       for (let y = 0; y < rows; y++) for (let x = 0; x < window.width; x++) {
         const z = source.getFloat32(y * rowBytes + (window.left + x) * 4, true);
@@ -187,8 +237,8 @@ export async function fetchCtxTerrain(window, signal) {
         values[(row + y) * window.width + x] = good ? z : NaN;
         if (good) { min = Math.min(min, z); max = Math.max(max, z); valid++; }
       }
-    }));
+    }
   }
-  await Promise.all(tasks);
+  await Promise.all(Array.from({ length: Math.min(5, Math.ceil(window.height / 28)) }, readRows));
   return { ...window, values, min, max, valid };
 }

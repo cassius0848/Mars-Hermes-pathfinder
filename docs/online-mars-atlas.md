@@ -14,6 +14,25 @@
 
 经典陨石坑的数据源面板也会随区域按钮切换：Gale 使用 USGS/NASA MSL Gale Merged DEM 1m v3，Endeavour 使用 NASA/HiRISE Western Rim DTM，Eberswalde 使用 NASA/HiRISE Delta Structure DTM。原始产品体量分别约 3.6 GB、675 MB 和 412 MB，因此只链接官方原始产品，待裁切和质量核验后再进入本地 A* 包。详细入口和裁切规范见 [经典陨石坑数据包说明](classic-crater-data.md)。
 
-在线图层依赖上游服务。网页分别显示影像失败、未制图地质面、有效高程缺测及目录无结果。四个经典陨石坑的在线模式用于跨区域地形筛选和路线剖面核验；米级 A*、预算约束、候选路线和导航回放仍在 Jezero 任务地图进行，两个步行区使用已配准的 2 米任务数据包，40 公里区域走廊使用 100 米规划网格。这样全球地图的范围扩展不会把没有本地 DEM/坡度包的区域误称为米级可行走路线。 [步行规划核验](web-navigation-audit.md)
+在线图层依赖上游服务。图集可直接选起终点规划并三维回放。自动选用 Hawksbill Gap 或 Neretva Vallis 的 1 米 HiRISE 高程，并在覆盖外使用 Jezero 20 米 CTX 或约 1 公里 MOLA。MOLA 模式用于粗略走廊筛选。 [步行规划核验](web-navigation-audit.md)
+
+## 三维回放
+
+默认画面以路线为中心，结合数值高程着色、配准光学影像和低角度显示侧光。可切换到光学样式、开启跟随，并选择自动、×1、×2.5、×4 或 ×6 垂直显示。高程、坡度、距离及搜索约束均取原始地形网格。显示灯光服务于坡面阅读，路线光照由太阳几何与地形遮挡另行计算。
+
+## 官方环境观测与组合权重
+
+在图集展开“官方观测与多参数权重”，选择 Hawksbill Gap 的 Sol 518 场景和各项权重。两个场景来自毅力号 NASA PDS MEDA，取四个数据产品在同一 SCLK 的记录。`web/atlas-meda.json` 记录 CSV、标签、文件哈希和时钟。 [PDS MEDA 数据说明](https://pdsatmospheres.nmsu.edu/data_and_services/atmospheres_data/PERSEVERANCE/meda.html) · [MEDA 仪器与各滤波通道](https://ntrs.nasa.gov/api/citations/20210014064/downloads/Rodriguez-Manfredi_et_al-2021-Space_Science_Reviews.pdf)
+
+| 参与规划的参数 | 官方字段和使用方式 |
+| --- | --- |
+| 光照 | ANCILLARY 的西向方位角与天顶角由 NAIF SPICE 计算。应用换算为东向方位角，在实测 DEM 上估算固定时刻的地形遮挡。 |
+| 热学 | TIRS 派生的上行地表长波辐照量（W/m²）。以该原位观测值乘路线时长作为积分参考。所选记录中地表视场没有车体阴影，车轮遮挡状态为空。 |
+| 辐射 | RDS TOP 3 校准观测（250–400 nm，W/m²）乘估算的直射光时长，形成日照段相对 UV 指标。阴影中的散射紫外、电离辐射、装备和人体剂量需独立数据。 |
+| 大气 | PS 派生气压（Pa）。以用户设定的比较值减观测气压，取正值后对路线时长积分。 |
+
+A* 每一步以原有行进时间为底，加上用户权重乘坡度、阴影、热红外、日照段 UV 与低压差的归一化代价。参考尺度分别是坡度限值、100% 阴影、250 W/m²、0.02 W/m² 与 20 Pa，用于组合代价的量纲归一。地表长波与气压按同一观测点的参考值累计，相同用时的两条路线在这两项上得分一致。光照与紫外项会随路线经过的地形阴影变化，路线用时与坡度可同时参与比较。高程缺测、坡度上限与封路仍是硬约束。
+
+这些数据是历史快照，观测时刻的环境参数在本次计算中固定。应用仅在同一 Hawksbill Gap 米级验证区启用此场景。区域外可选择原有地形模式。
 
 源代码 `web/atlas.html`、`web/atlas.js` 和 `web/mars-data.js` 随 `python scripts/build_web.py` 一并导出。离线包用于运行任务场景，在线地图需要连接数据服务。 [USGS 20 米 CTX](https://astrogeology.usgs.gov/search/map/mars_2020_science_investigation_ctx_dem_mosaic) · [USGS SIM 3464](https://doi.org/10.3133/sim3464) · [USGS HiRISE 目录](https://stac.astrogeology.usgs.gov/docs/data/mars/hirise_dtms/)

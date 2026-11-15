@@ -1,5 +1,6 @@
 import { layers, officialLayerUrl, readCapabilities, tilesInView, viewportGeology, hiRiseProducts, molaProfile, molaExport,
   CTX_DEM, ctxWindow, fetchCtxTerrain } from './mars-data.js';
+import { attachAtlasNavigation } from './atlas-navigation.js';
 import { craterSources } from './crater-sources.js';
 
 const $ = id => document.getElementById(id);
@@ -29,6 +30,26 @@ const initialView = Object.hasOwn(atlasViews, requested) ? requested : 'jezero';
 const state = { ...atlasViews[initialView], center: [...atlasViews[initialView].center], viewId: initialView, epoch: 0, points: [], picking: false };
 const overlays = [...document.querySelectorAll('[data-overlay]')];
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const navigation = attachAtlasNavigation({
+  canvas, fmt, paint,
+  cancelProfile() {
+    state.profileRequest?.abort(); state.profileRequest = null;
+    if (state.picking) {
+      state.picking = false; state.points = [];
+      $('profile-status').textContent = '沿两点连线查询 NASA MOLA 高程。';
+    }
+  },
+  fit(points) {
+    let west = Infinity, east = -Infinity, south = Infinity, north = -Infinity;
+    for (const [lon, lat] of points) {
+      west = Math.min(west, lon); east = Math.max(east, lon);
+      south = Math.min(south, lat); north = Math.max(north, lat);
+    }
+    state.center = [(west + east) / 2, (south + north) / 2];
+    state.span = clamp(1.33 * Math.max(east - west, (north - south) * state.w / state.h), 0.002, 360);
+    schedule();
+  },
+});
 
 function screen([lon, lat]) {
   return [(lon - state.center[0]) * state.scale + state.w / 2, (state.center[1] - lat) * state.scale + state.h / 2];
@@ -137,6 +158,7 @@ function paint() {
     ctx.fillStyle = '#b9f5cf'; ctx.fill(); ctx.fillStyle = '#1f271e';
     ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText(i + 1, x, y + 3.5);
   });
+  navigation.draw(ctx, screen);
   const axes = $('location');
   const label = `中心 ${fmt(state.center)} · 横向约 ${(state.w / state.scale).toFixed(state.span < 0.15 ? 3 : 1)}°`;
   if (axes.textContent !== label) axes.textContent = label;
@@ -346,6 +368,7 @@ function drawChart(track) {
 }
 
 async function pick(point) {
+  if (navigation.pick(point)) return;
   if (!state.picking || Math.abs(point[0]) > 180 || Math.abs(point[1]) > 90) return;
   state.points.push(point); paint();
   const status = $('profile-status');
@@ -405,6 +428,7 @@ async function search() {
 
 new ResizeObserver(() => {
   const { width, height } = canvas.getBoundingClientRect(), ratio = Math.min(devicePixelRatio, 2);
+  if (!width || !height) return;
   state.w = width; state.h = height;
   canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -458,6 +482,8 @@ $('ctx-elevation').onchange = refreshCtx;
 $('closer').onclick = () => zoom(0.6);
 $('farther').onclick = () => zoom(1.7);
 $('pick-profile').onclick = () => {
+  navigation.cancelPick();
+  if (canvas.hidden) $('nav-back').click();
   state.profileRequest?.abort(); state.profileRequest = null;
   state.points = []; state.profileTrack = null; state.picking = true;
   canvas.classList.add('picking'); canvas.focus();
@@ -494,4 +520,5 @@ canvas.addEventListener('keydown', e => {
     e.preventDefault(); state.center = state.center.map((value, i) => value + moves[e.key][i] * state.span); schedule();
   } else if (['+', '=', '-'].includes(e.key)) { e.preventDefault(); zoom(e.key === '-' ? 1.7 : 0.6); }
   else if (e.key === 'Enter') { e.preventDefault(); pick(state.center); }
+  else if (e.key === 'Escape') navigation.cancelPick();
 });

@@ -2,14 +2,21 @@ import * as THREE from './vendor/three.module.min.js';
 import { cellOf, cellXY } from './planner.js';
 
 export class TerrainView {
-  constructor(host, site, plan, { color = '#83ffd0' } = {}) {
+  constructor(host, site, plan, { color = '#83ffd0', atlas = false } = {}) {
     this.host = host;
     this.site = site;
     this.meshStride = 1;
     this.meshResolution = site.step * this.meshStride;
-    this.verticalScale = site.step <= 2 ? 2.5 : 1;
     const size = Math.max(site.cols, site.rows) * site.step;
+    const relief = Math.max(1, site.depth.max - site.depth.min);
+    this.atlas = atlas;
+    this.mode = atlas ? 'relief' : 'optical';
+    this.autoScale = atlas ? Math.max(1.5, Math.min(6, Math.round(0.35 * size / relief * 2) / 2))
+      : site.step <= 2 ? 2.5 : 1;
+    this.verticalScale = this.autoScale;
+    this.meshScale = this.verticalScale;
     this.mid = (site.depth.min + site.depth.max) * 0.5;
+    this.size = size;
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color('#231e1b');
     this.scene.fog = new THREE.Fog('#231e1b', size * 1.8, size * 3.5);
@@ -20,30 +27,52 @@ export class TerrainView {
     host.append(this.renderer.domElement);
     this.badge = document.createElement('div');
     this.badge.className = 'terrain-quality';
-    this.badge.textContent = `3D 网格 ${this.meshResolution} m · 垂直显示 ×${this.verticalScale}；路线计算使用原始 ${site.step} m 高程`;
+    this.describe();
     host.append(this.badge);
     this.initialDistance = size * 1.33;
     this.distance = this.initialDistance;
-    this.angle = 0.64; this.pitch = 0.74;
-    this.target = new THREE.Vector3(0, 0, 0);
-    this.focus = this.target.clone();
+    this.angle = 0.64; this.pitch = atlas ? 0.49 : 0.74;
+    this.target = new THREE.Vector3();
+    this.overview = new THREE.Vector3();
+    this.focus = new THREE.Vector3();
     this.follow = true;
 
     const { geometry, rows, cols } = this.mesh();
     this.rows = rows; this.cols = cols; this.geometry = geometry;
     const surface = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: '#b1947b', side: THREE.DoubleSide }));
-    surface.name = 'HiRISE height mesh';
-    this.scene.add(surface, new THREE.AmbientLight(0xffe3c8, 1.65));
+    surface.name = 'Measured elevation mesh';
+    this.ambient = new THREE.AmbientLight(0xffede1, 1.65);
+    this.scene.add(surface, this.ambient);
     this.sun = new THREE.DirectionalLight(0xffe4ce, 2.3);
     this.sun.position.set(0.7, 0.8, 0.4);
     this.scene.add(this.sun);
     this.surface = surface;
-    if (site.id) this.applyTexture(new THREE.TextureLoader().load(`assets/${site.id}/optical.webp`, () => this.draw()));
+    if (atlas) {
+      this.textureMix = { value: 0.58 };
+      surface.material.onBeforeCompile = shader => {
+        shader.uniforms.reliefTextureMix = this.textureMix;
+        shader.fragmentShader = 'uniform float reliefTextureMix;\n' + shader.fragmentShader.replace('#include <map_fragment>', `
+          #ifdef USE_MAP
+            vec4 image = texture2D(map, vMapUv);
+            diffuseColor *= mix(vec4(1.0), image, reliefTextureMix);
+          #endif
+        `);
+      };
+    }
+    this.configureMaterial();
+    if (site.id) {
+      new THREE.TextureLoader().load(`assets/${site.id}/optical.webp`, texture => {
+        if (this.disposed) { texture.dispose(); return; }
+        this.applyTexture(texture);
+        this.draw();
+      });
+    }
     const route = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color }));
     route.material.depthTest = false; route.renderOrder = 4;
     this.scene.add(route);
     this.route = route;
-    const marker = new THREE.Mesh(new THREE.SphereGeometry(Math.max(2.5, size / 170), 16, 12), new THREE.MeshBasicMaterial({ color: '#ffd6a1' }));
+    const markerRadius = atlas ? Math.max(1.8, site.step * 0.25) : Math.max(2.5, size / 170);
+    const marker = new THREE.Mesh(new THREE.SphereGeometry(markerRadius, 16, 12), new THREE.MeshBasicMaterial({ color: '#ffd6a1' }));
     marker.material.depthTest = false; marker.renderOrder = 5;
     this.scene.add(marker); this.marker = marker;
     this.stations = new THREE.Group(); this.scene.add(this.stations);
@@ -54,12 +83,39 @@ export class TerrainView {
     this.draw();
   }
 
+  describe() {
+    this.badge.textContent = `高程网格 ${this.meshResolution} m · 垂直显示 ×${this.verticalScale} · 寻路使用原始高程`;
+  }
+
+  configureMaterial() {
+    const optical = this.mode === 'optical';
+    const { material } = this.surface;
+    material.vertexColors = !optical;
+    material.map = this.texture ?? null;
+    if (this.textureMix) this.textureMix.value = optical ? 1 : 0.58;
+    material.color.set(optical && !this.texture ? '#b1947b' : '#ffffff');
+    material.needsUpdate = true;
+    this.ambient.intensity = optical ? 1.65 : 1.05;
+    this.sun.intensity = optical ? 2.3 : 3.1;
+    if (!optical) this.sun.position.set(-0.85, 0.38, -0.65);
+  }
+
   applyTexture(texture) {
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = Math.min(8, this.renderer.capabilities.getMaxAnisotropy());
-    const { material } = this.surface;
-    material.map?.dispose(); material.map = texture;
-    material.color.set('#ffffff'); material.needsUpdate = true;
+    this.texture?.dispose();
+    this.texture = texture;
+    this.configureMaterial();
+  }
+
+  setDisplay(mode, scale) {
+    this.mode = mode;
+    this.verticalScale = scale === 'auto' ? this.autoScale : Number(scale);
+    this.surface.scale.y = this.verticalScale / this.meshScale;
+    this.configureMaterial();
+    this.describe();
+    this.setPlan(this.plan);
+    this.update(this.progress, this.light);
   }
 
   setTexture(canvas) { this.applyTexture(new THREE.CanvasTexture(canvas)); this.draw(); }
@@ -70,23 +126,40 @@ export class TerrainView {
     const step = this.meshStride;
     const axis = count => [...Array.from({ length: Math.ceil((count - 1) / step) }, (_, i) => i * step), count - 1];
     const rows = axis(site.rows), cols = axis(site.cols);
-    const positions = [], uv = [], triangles = [], valid = [];
+    const count = rows.length * cols.length;
+    const positions = new Float32Array(count * 3), uv = new Float32Array(count * 2);
+    const colors = this.atlas ? new Float32Array(count * 3) : null;
+    const triangles = new Uint32Array((rows.length - 1) * (cols.length - 1) * 6);
+    const valid = new Uint8Array(count);
+    const low = new THREE.Color('#a07365'), middle = new THREE.Color('#d8a67b'), high = new THREE.Color('#fff1ce');
+    const tint = new THREE.Color();
+    const span = Math.max(1, site.depth.max - site.depth.min);
+    let point = 0, offset = 0;
     for (const row of rows) for (const col of cols) {
-      const [east, north] = cellXY(site, [row, col]);
       const height = site.height[row * site.cols + col];
-      valid.push(Number.isFinite(height));
-      positions.push(east, valid.at(-1) ? (height - this.mid) * this.verticalScale : 0, -north);
-      uv.push((col + 0.5) / site.cols, 1 - (row + 0.5) / site.rows);
+      valid[point] = Number.isFinite(height);
+      positions[point * 3] = site.left + (col + 0.5) * site.step;
+      positions[point * 3 + 1] = valid[point] ? (height - this.mid) * this.meshScale : 0;
+      positions[point * 3 + 2] = -site.top + (row + 0.5) * site.step;
+      uv[point * 2] = (col + 0.5) / site.cols;
+      uv[point * 2 + 1] = 1 - (row + 0.5) / site.rows;
+      if (colors && valid[point]) {
+        const value = Math.min(1, Math.max(0, (height - site.depth.min) / span));
+        tint.copy(value < 0.5 ? low : middle).lerp(value < 0.5 ? middle : high, value < 0.5 ? value * 2 : value * 2 - 1);
+        tint.toArray(colors, point * 3);
+      }
+      point++;
     }
     for (let row = 0; row < rows.length - 1; row++) for (let col = 0; col < cols.length - 1; col++) {
       const a = row * cols.length + col, b = a + 1, c = a + cols.length, d = c + 1;
-      if (valid[a] && valid[c] && valid[b]) triangles.push(a, c, b);
-      if (valid[b] && valid[c] && valid[d]) triangles.push(b, c, d);
+      if (valid[a] && valid[c] && valid[b]) { triangles[offset++] = a; triangles[offset++] = c; triangles[offset++] = b; }
+      if (valid[b] && valid[c] && valid[d]) { triangles[offset++] = b; triangles[offset++] = c; triangles[offset++] = d; }
     }
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-    geometry.setIndex(triangles);
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    if (colors) geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometry.setIndex(new THREE.BufferAttribute(triangles.subarray(0, offset), 1));
     geometry.computeVertexNormals();
     return { geometry, rows, cols };
   }
@@ -105,11 +178,20 @@ export class TerrainView {
   }
 
   setPlan(plan) {
+    this.plan = plan;
     this.route.geometry.dispose();
     this.route.geometry = new THREE.BufferGeometry().setFromPoints(plan.path.map(index => {
       const [e, n] = cellXY(this.site, cellOf(this.site, index));
       return new THREE.Vector3(e, this.heightAt(e, n, this.site.height[index]) + 1.5 * this.verticalScale, -n);
     }));
+    if (this.atlas) {
+      this.route.geometry.computeBoundingBox();
+      const bounds = this.route.geometry.boundingBox;
+      const extent = bounds.getSize(new THREE.Vector3());
+      bounds.getCenter(this.overview);
+      this.initialDistance = Math.max(24 * this.site.step, Math.hypot(extent.x, extent.y, extent.z) * 1.15);
+      this.distance = this.initialDistance * (this.follow ? 0.62 : 1.18);
+    }
     for (const object of [...this.stations.children]) {
       object.geometry?.dispose(); object.material?.map?.dispose(); object.material?.dispose(); this.stations.remove(object);
     }
@@ -133,11 +215,13 @@ export class TerrainView {
 
   update(progress, light) {
     if (!progress) return;
+    this.progress = progress;
+    this.light = light;
     const [e, n] = progress.xy;
     const elevation = this.site.height[progress.cell[0] * this.site.cols + progress.cell[1]];
     this.marker.position.set(e, this.heightAt(e, n, elevation) + 4 * this.verticalScale, -n);
     this.focus.copy(this.marker.position);
-    if (light) this.sun.position.set(light.sun.east, Math.max(0.08, light.sun.up), -light.sun.north);
+    if (light && this.mode === 'optical') this.sun.position.set(light.sun.east, Math.max(0.08, light.sun.up), -light.sun.north);
     this.draw();
   }
 
@@ -162,7 +246,7 @@ export class TerrainView {
 
   setFollow(follow) {
     this.follow = follow;
-    this.distance = follow ? this.initialDistance * 0.69 : this.initialDistance;
+    this.distance = this.initialDistance * (follow ? 0.69 : this.atlas ? 1.18 : 1);
     this.draw();
   }
 
@@ -174,7 +258,7 @@ export class TerrainView {
     const pixelRatio = renderer.getPixelRatio();
     if (Math.abs(renderer.domElement.width - width * pixelRatio) > 1 || Math.abs(renderer.domElement.height - height * pixelRatio) > 1) renderer.setSize(width, height, false);
     camera.aspect = width / height; camera.updateProjectionMatrix();
-    this.target.copy(this.follow ? this.focus : new THREE.Vector3());
+    this.target.copy(this.follow ? this.focus : this.overview);
     camera.position.set(Math.sin(this.angle) * Math.cos(this.pitch), Math.sin(this.pitch), Math.cos(this.angle) * Math.cos(this.pitch))
       .multiplyScalar(this.distance).add(this.target);
     camera.lookAt(this.target);
@@ -184,9 +268,10 @@ export class TerrainView {
   destroy() {
     this.disposed = true;
     this.observer.disconnect();
+    this.texture?.dispose();
     this.scene.traverse(object => {
       object.geometry?.dispose();
-      object.material?.map?.dispose();
+      if (object !== this.surface) object.material?.map?.dispose();
       object.material?.dispose();
     });
     this.renderer.dispose();
@@ -195,4 +280,3 @@ export class TerrainView {
     this.badge?.remove();
   }
 }
-

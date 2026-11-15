@@ -1,3 +1,5 @@
+import { environmentMetrics, environmentStepCost } from './atlas-environment.js';
+
 const DEG = Math.PI / 180;
 const RADIUS = 3396190;
 const DIAGONAL = Math.SQRT2;
@@ -63,8 +65,7 @@ export function solarPosition(lat, hour, season) {
   return { east, north, up, elevation: Math.asin(up) / DEG, azimuth: (Math.atan2(east, north) / DEG + 360) % 360 };
 }
 
-export function terrainLight(grid, hour, season) {
-  const sun = solarPosition(grid.center[1], hour, season);
+export function terrainLight(grid, hour, season, sun = solarPosition(grid.center[1], hour, season)) {
   const stride = SHADOW_STEP;
   const cols = Math.ceil(grid.cols / stride), rows = Math.ceil(grid.rows / stride);
   const mask = new Uint8Array(rows * cols);
@@ -175,8 +176,11 @@ export function solveLeg(grid, route, from, to, profile, open, light) {
       if (Math.abs(rise) > distance * maxRise) continue;
       const minutes = movementMinutes(distance, rise, route.speed, regional);
       const steep = (slope[index] + slope[next]) / (2 * route.limit);
-      const costOfStep = regional || profile === "terrain" ? minutes * (1 + 5 * steep * steep)
-        : profile === "light" ? minutes * (1 + 3 * (Number(!isLit(grid, light, index)) + Number(!isLit(grid, light, next))))
+      const useShade = profile === "environment" || profile === "light";
+      const shade = useShade ? (Number(!isLit(grid, light, index)) + Number(!isLit(grid, light, next))) / 2 : 0;
+      const costOfStep = profile === "environment" ? environmentStepCost(route.environment, minutes, steep, shade)
+        : regional || profile === "terrain" ? minutes * (1 + 5 * steep * steep)
+        : profile === "light" ? minutes * (1 + 6 * shade)
         : minutes;
       const nextCost = cost + costOfStep;
       if (nextCost >= best[next]) continue;
@@ -247,7 +251,9 @@ function searchMission(grid, route, light) {
   }
   const candidates = [];
   const hasMixedLight = light?.mask.includes(0) && light.mask.includes(1);
-  for (const profile of grid.regional || route.returnOnly ? ["time"] : hasMixedLight ? PROFILES : PROFILES.slice(0, 2)) {
+  const profiles = grid.regional || route.returnOnly ? ["time"] : hasMixedLight ? PROFILES : PROFILES.slice(0, 2);
+  const runProfiles = route.environment && !grid.regional && !route.returnOnly ? ["environment", ...profiles] : profiles;
+  for (const profile of runProfiles) {
     const candidate = itinerary(grid, route, stops, profile, open, light);
     if (!candidate || candidate.path.length < 2) continue;
     const previous = candidates.find(other => samePath(other, candidate));
@@ -304,7 +310,11 @@ export function planMission(grid, route, light) {
   if (!result.candidates.length) return { ...result,
     error: relaxed ? '有效地形覆盖或封路使起终点不连通，无法可靠估算完整路线及用时。' : '当前坡度限制或封路使起终点不连通。',
     diagnostics: [relaxed ? '已检查有效高程、坡度与封路。放宽坡度后仍无完整通路；请移动选点或清空封路。' : '当前坡度与封路约束下没有完整通路；可使用按起终点反算查看参考条件。'] };
-  result.candidates = result.candidates.map(candidate => ({ ...assessCandidate(candidate, route), estimated: relaxed }));
+  result.candidates = result.candidates.map(candidate => {
+    const evaluated = { ...assessCandidate(candidate, route), estimated: relaxed };
+    if (route.environment) evaluated.environment = environmentMetrics(route.environment, evaluated, cell => isLit(grid, light, cell));
+    return evaluated;
+  });
   if (relaxed) result.error = estimating ? '按起终点反算：先求参考路线，再核对当前限制。' : '当前坡度限制下无连通路线，以下为放宽坡度后的参考估算。';
   return result;
 }
@@ -330,4 +340,3 @@ export function progressAt(grid, plan, minute) {
     visit: plan.visits.find(stop => time >= stop.arrival && time < stop.leave),
     distance: plan.lengths[lo] + (plan.lengths[hi] - plan.lengths[lo]) * ratio };
 }
-
