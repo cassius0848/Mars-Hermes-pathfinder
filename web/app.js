@@ -934,4 +934,3 @@ async function init() {
 }
 
 init().catch(error => { $('pick-hint').textContent = error.message; });
-

@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 from urllib.request import urlopen
 
+from web_release import verify_environment_bundle, write_build_info
+
 import numpy as np
 import rasterio
 from PIL import Image
@@ -234,6 +236,7 @@ def build_local(assets, site_id, package):
 
 
 def build(output, vendor_cache):
+    verify_environment_bundle(ROOT / "web")
     shutil.copytree(ROOT / "web", output, dirs_exist_ok=True)
     copy_three(output, vendor_cache)
     assets = output / "assets"
@@ -269,6 +272,7 @@ def build(output, vendor_cache):
                       "properties": {key: f["properties"][key] for key in ("RMC", "sol")}}
                      for f in load_json(ROVER_PATH)["features"] if (f.get("geometry") or {}).get("type") == "Point"]
     (assets / "rover-waypoints.json").write_text(json.dumps({"features": route_archive}, separators=(",", ":")), encoding="utf-8")
+    write_build_info(ROOT, output)
     print(f"Browser package: {sum(p.stat().st_size for p in output.rglob('*') if p.is_file()) / 1e6:.2f} MB")
 
 

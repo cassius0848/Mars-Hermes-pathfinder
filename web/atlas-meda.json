@@ -1,0 +1,52 @@
+{
+  "siteId": "hawksbill",
+  "siteName": "Hawksbill Gap",
+  "products": {
+    "ANCILLARY": {
+      "csv": "https://atmos.nmsu.edu/PDS/data/PDS4/Mars2020/mars2020_meda/data_derived_env/sol_0420_0539/sol_0518/WE__0518___________DER_ANCILLARY___________P01.CSV",
+      "label": "https://atmos.nmsu.edu/PDS/data/PDS4/Mars2020/mars2020_meda/data_derived_env/sol_0420_0539/sol_0518/WE__0518___________DER_ANCILLARY___________P01.xml",
+      "sha256": "eafb1cac16eaeeca50aaf5db18ce4106b0d770c9b077970ede486d109741b293"
+    },
+    "PS": {
+      "csv": "https://atmos.nmsu.edu/PDS/data/PDS4/Mars2020/mars2020_meda/data_derived_env/sol_0420_0539/sol_0518/WE__0518___________DER_PS__________________P02.CSV",
+      "label": "https://atmos.nmsu.edu/PDS/data/PDS4/Mars2020/mars2020_meda/data_derived_env/sol_0420_0539/sol_0518/WE__0518___________DER_PS__________________P02.xml",
+      "sha256": "eba1912940963defdf805511e0dc4a27550710131ebb2778dbf6d90cd5269562"
+    },
+    "TIRS": {
+      "csv": "https://atmos.nmsu.edu/PDS/data/PDS4/Mars2020/mars2020_meda/data_derived_env/sol_0420_0539/sol_0518/WE__0518___________DER_TIRS________________P02.CSV",
+      "label": "https://atmos.nmsu.edu/PDS/data/PDS4/Mars2020/mars2020_meda/data_derived_env/sol_0420_0539/sol_0518/WE__0518___________DER_TIRS________________P02.xml",
+      "sha256": "8a05ab670e8485dbd4a695db3ca114b7fbf9cf5efd63f9ad2adec218be8dec68"
+    },
+    "RDS": {
+      "csv": "https://atmos.nmsu.edu/PDS/data/PDS4/Mars2020/mars2020_meda/data_calibrated_env/sol_0420_0539/sol_0518/WE__0518___________CAL_RDS_________________P01.CSV",
+      "label": "https://atmos.nmsu.edu/PDS/data/PDS4/Mars2020/mars2020_meda/data_calibrated_env/sol_0420_0539/sol_0518/WE__0518___________CAL_RDS_________________P01.xml",
+      "sha256": "27e36c7a25e9a6ccf41d4e646e84cb1a85c23e47282a8f1b855a1d3d177e3f3e"
+    }
+  },
+  "observations": [
+    {
+      "sclk": 712939040,
+      "sol": 518,
+      "localTrueSolarTime": "15:45:00",
+      "sunWestAzimuthDeg": 126.55,
+      "sunZenithDeg": 69.92,
+      "pressurePa": 765.34,
+      "groundLongwaveWm2": 207.6,
+      "groundLongwaveUncertaintyWm2": 1.56,
+      "wheelOutsideThermalFov": null,
+      "uvWm2": 0.01840455
+    },
+    {
+      "sclk": 712940890,
+      "sol": 518,
+      "localTrueSolarTime": "16:15:00",
+      "sunWestAzimuthDeg": 122.89,
+      "sunZenithDeg": 75.76,
+      "pressurePa": 763.46,
+      "groundLongwaveWm2": 183.31,
+      "groundLongwaveUncertaintyWm2": 1.72,
+      "wheelOutsideThermalFov": null,
+      "uvWm2": 0.01329313
+    }
+  ]
+}

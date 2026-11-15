@@ -239,4 +239,3 @@ export function profileChart(canvas, site, plan, progress) {
   ctx.fillStyle = '#beab97'; ctx.textAlign = 'right';
   ctx.fillText(plan.distance < 1000 ? `${plan.distance.toFixed(0)} m` : `${(plan.distance / 1000).toFixed(2)} km`, width - 14, 106);
 }
-
