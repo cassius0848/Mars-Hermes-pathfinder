@@ -1,4 +1,4 @@
-import { cellOf, cellXY, isLit, progressAt } from './planner.js';
+import { cellOf, cellXY, elevationAt, isLit, pathXY, progressAt, project } from './planner.js';
 import { atlasCell, atlasLonLat, atlasSites, atlasTexture, loadAtlasContext, loadAtlasTerrain } from './atlas-terrain.js';
 import { environmentSettings, medaSun } from './atlas-environment.js';
 import { fetchOfficial } from './official.js';
@@ -22,6 +22,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   const routeList = $('nav-routes');
   const points = { start: null, goal: null }, waypoints = [];
   const waypointList = $('nav-waypoints'), extentSelect = $('nav-extent');
+  const perspectiveSelect = $('nav-perspective');
   const medaSelect = $('nav-meda'), medaOptions = $('nav-meda-options');
   let meda, regionalMeta, regionalBuffer;
   const climateSelect = $('nav-climate'), results = $('atlas-results'), coloring = $('nav-route-color');
@@ -115,6 +116,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     for (const key of Object.keys(points)) {
       $(`nav-${key}`).setAttribute('aria-pressed', String(key === armed));
       $(`nav-${key}-coord`).textContent = points[key] ? fmt(points[key]) : '未选择';
+      for (const [axis, index] of [['lon', 0], ['lat', 1]]) $(`nav-${key}-${axis}`).value = points[key]?.[index] ?? '';
     }
     $('nav-waypoint').setAttribute('aria-pressed', String(armed === 'waypoint'));
     planButton.disabled = !points.start || !points.goal || Boolean(task);
@@ -367,7 +369,7 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
       button.setAttribute('aria-pressed', String(index === selected));
       label.textContent = names(candidate);
       const metrics = `${km(candidate.distance)} · 爬升 ${Math.round(candidate.ascent)} 米 · 最大坡度 ${candidate.maxSlope.toFixed(1)}° · 阴影 ${Math.round(candidate.shadow / candidate.distance * 100)}%`;
-      detail.textContent = result.coarse ? metrics : `${metrics} · 约 ${Math.round(candidate.minutes)} 分钟${candidate.feasible ? '' : ' · 超出可用时间'}`;
+      detail.textContent = `${metrics} · 约 ${Math.round(candidate.minutes)} 分钟${result.coarse ? '（区域估算）' : ''}${candidate.feasible ? '' : ' · 超出可用时间'}`;
       button.append(label, detail);
       if (candidate.environment) {
         const env = candidate.environment, environmental = document.createElement('small');
@@ -422,9 +424,9 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
         }
       }
       const [start, ...visits] = cells;
-      const stops = visits.map((cell, index) => ({ cell, name: nameAt(index + 1) }));
+      const stops = visits.map((cell, index) => ({ cell, xy: project(grid, ordered[index+1]), name: nameAt(index + 1) }));
       const returnToBase = $('nav-return').checked;
-      const route = { start, base: start, stops, closures: [],
+      const route = { start, base: start, startXY: project(grid, ordered[0]), baseXY: project(grid, ordered[0]), stops, closures: [],
         limit: settings.slope, speed: settings.speed, budget: settings.budget, reserve: settings.reserve, returnToBase };
       if (medaSelect.value) {
         const weights = Object.fromEntries(WEIGHTS.map(key => [key, $(`weight-${key}`).valueAsNumber]));
@@ -444,13 +446,13 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
           const mixedLight = data.light?.mask.includes(0) && data.light.mask.includes(1);
           const candidates = data.candidates.map(candidate => ({ ...candidate,
             profiles: mixedLight ? candidate.profiles : candidate.profiles.filter(profile => profile !== 'light'),
-            line: candidate.path.map(index => atlasLonLat(grid, cellXY(grid, cellOf(grid, index)))) }));
+            line: candidate.path.map((index, i) => atlasLonLat(grid, pathXY(grid, candidate, i))) }));
           result = { grid, label, light: data.light, candidates, coarse, coverage: data.coverage };
           selected = 0;
           const scenario = route.environment?.observation;
           const observationLabel = scenario ? ` · NASA MEDA Sol ${scenario.sol} ${scenario.localTrueSolarTime} LTST`
             : data.coverage ? ' · 区域多参数' : '';
-          status.textContent = `${label}${observationLabel}。${candidates.length} 条候选路线${waypoints.length ? `，按顺序经过 ${waypoints.length} 个途经点` : ''}。${coarse ? 'MOLA 用于大尺度地形筛选。' : ''}`;
+          status.textContent = `${label}${observationLabel}。${candidates.length} 条候选路线${waypoints.length ? `，按顺序经过 ${waypoints.length} 个途经点` : ''}。起终点保留所选坐标。${coarse ? '区域高程用于地形筛选，不能辨认网格以下的岩块和陡坎。' : ''}`;
           const coverage = data.coverage;
           if (coverage) {
             const enabled = coverage.active.join('、') || '行进时间';
@@ -498,27 +500,30 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
     position = atlasLonLat(grid, pos.xy);
     progress.value = Math.round(minute / candidate.minutes * 1000);
     const [row, col] = pos.cell, cell = row * grid.cols + col;
-    const elevation = Math.round(grid.height[cell]), slope = grid.slope[cell].toFixed(1);
-    $('nav-position').textContent = `模拟队员 · ${fmt(position)} · 高程 ${elevation} m · 坡度 ${slope}° · 已走 ${km(pos.distance)} / ${km(candidate.distance)}${coarse ? ' · MOLA 地形走廊回放' : ` · 模拟第 ${minute.toFixed(1)} 分钟`}`;
+    const elevation = Math.round(elevationAt(grid, pos.xy)), slope = grid.slope[cell].toFixed(1);
+    $('nav-position').textContent = `模拟队员 · ${fmt(position)} · 高程 ${elevation} m · 坡度 ${slope}° · 已走 ${km(pos.distance)} / ${km(candidate.distance)}${coarse ? ' · 区域地形走廊回放' : ` · 模拟第 ${minute.toFixed(1)} 分钟`}`;
   }
 
   function play(now) {
     if (!frame || !view) return;
     const duration = result.candidates[selected].minutes;
-    minute = Math.min(duration, minute + (now - last) / 36000 * duration);
+    const speed = $('nav-playback-speed').value;
+    minute = Math.min(duration, minute + (now - last) / (speed === 'demo' ? 36000 : 60000) * (speed === 'demo' ? duration : Number(speed)));
     last = now; updateProgress();
     if (minute >= duration) stop(); else frame = requestAnimationFrame(play);
   }
 
   async function open3d(opening = true) {
     if (!result) return;
+    stop();
     viewTask?.abort();
     const controller = new AbortController();
     viewTask = controller; viewButton.disabled = true;
     const current = result, { grid, candidates } = current;
     const contextStatus = $('nav-context-status'), textureStatus = $('nav-texture');
     textureStatus.textContent = '';
-    let wide = extentSelect.value === 'surroundings';
+    const wide = extentSelect.value === 'surroundings';
+    const radius = Number($('nav-context-radius').value);
     host.hidden = false; playback.hidden = false; canvas.hidden = true; $('atlas-zoom').hidden = true;
     playButton.disabled = !view;
     progress.disabled = !view;
@@ -526,50 +531,64 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
       host.scrollIntoView({ block: 'nearest' });
       $('nav-back').focus({ preventScroll: true });
     }
-    contextStatus.textContent = wide ? '正在加载路线周边高程…' : '正在加载路线高程网格…';
+    contextStatus.textContent = '正在显示路线高程网格…';
     try {
-      let display = { grid, label: current.label }, warning = '';
-      if (wide) {
-        try {
-          display = current.context ?? await loadAtlasContext(candidates.flatMap(candidate => candidate.line), controller.signal);
-          if (viewTask !== controller) return;
-          current.context = display;
-        } catch {
-          if (viewTask !== controller) return;
-          wide = false;
-          extentSelect.value = 'route';
-          warning = '周边高程暂不可用，已切换到路线高程网格。';
-        }
-      }
       const { TerrainView } = await import('./terrain-view.js');
       if (viewTask !== controller) return;
-      const displayGrid = display.grid;
-      view?.destroy(); view = null;
-      view = new TerrainView(host, displayGrid, candidates[selected], {
-        color: PALETTE[selected], atlas: true, routeGrid: grid, surroundings: wide,
-      });
-      contextStatus.textContent = warning || (wide ? `${display.label}。` : `${display.label} · 路线高程网格。`);
-      playButton.disabled = progress.disabled = false;
-      updateDisplay();
-      view.setFollow($('nav-follow').checked);
-      view.setGridVisible($('nav-grid-lines').checked);
-      updateProgress();
-      if (displayGrid.id) {
-        textureStatus.textContent = displayGrid.id === 'jezero' ? '使用 Jezero 配准影像。' : '使用 HiRISE 配准正射影像。';
-      } else {
-        textureStatus.textContent = '正在加载 NASA Mars Trek 官方影像贴图…';
-        const texture = await atlasTexture(displayGrid, controller.signal);
-        if (viewTask !== controller) return;
-        if (texture) view.setTexture(texture);
-        textureStatus.textContent = texture ? '已加载 NASA Mars Trek 官方影像。' : '官方影像暂不可用，当前显示数值高程地形。';
+      function show(display, surroundings) {
+        const previous = view;
+        const next = new TerrainView(host, display.grid, candidates[selected], {
+          color: PALETTE[selected], atlas: true, routeGrid: grid, surroundings,
+        });
+        previous?.destroy(); view = next;
+        playButton.disabled = progress.disabled = false;
+        updateDisplay(); updatePerspective();
+        view.setGridVisible($('nav-grid-lines').checked);
+        updateProgress();
+        contextStatus.textContent = `${display.label} · ${surroundings ? '周边地形' : '路线高程网格'}。`;
+        if (display.grid.id) {
+          textureStatus.textContent = '使用配准正射影像。';
+        } else {
+          textureStatus.textContent = '正在加载 NASA 官方影像，当前高程和导航已可使用。';
+          atlasTexture(display.grid, controller.signal).then(texture => {
+            if (viewTask !== controller || view !== next) return;
+            if (texture) next.setTexture(texture);
+            textureStatus.textContent = texture ? '已加载 NASA Mars Trek 官方影像。' : '官方影像暂不可用，当前显示数值高程地形。';
+          }).catch(() => { if (viewTask === controller && view === next) textureStatus.textContent = '影像暂不可用，当前显示实测高程。'; });
+        }
       }
-    } catch {
+      // Show usable terrain immediately; remote surroundings must never leave a blank canvas.
+      show({grid, label: current.label}, false);
+      if (wide) {
+        contextStatus.textContent = '路线地形已显示，正在扩展周边实测高程…';
+        try {
+          const display = current.context?.radius === radius ? current.context
+            : await loadAtlasContext(candidates.flatMap(candidate => candidate.line), controller.signal, radius);
+          if (viewTask !== controller) return;
+          show(display, true); current.context = {...display, radius};
+        } catch (error) {
+          if (viewTask !== controller) return;
+          extentSelect.value = 'route';
+          contextStatus.textContent = `周边高程暂不可用，已保留路线地形：${error.message}`;
+        }
+      }
+    } catch (error) {
       if (viewTask !== controller) return;
       if (!view) {
-        close3d(); status.textContent = '浏览器无法启动三维 WebGL。二维路线仍可查看。';
+        close3d(); status.textContent = `三维地形无法显示：${error.message}。二维路线仍可查看。`;
       } else textureStatus.textContent = '官方影像暂不可用，当前显示数值高程地形。';
     }
   }
+
+  $('nav-coordinates').onsubmit = event => {
+    event.preventDefault();
+    const next = Object.fromEntries(['start', 'goal'].map(key => [key,
+      ['lon', 'lat'].map(axis => $(`nav-${key}-${axis}`).valueAsNumber)]));
+    if (Object.values(next).some(point => !point.every(Number.isFinite) || Math.abs(point[0]) > 180 || Math.abs(point[1]) > 80)) return;
+    cancelPick(); cancelProfile(); resetResult();
+    Object.assign(points, next); buttons(); fit([points.start, ...waypoints, points.goal]); paint();
+    status.textContent = '已应用精确坐标，请计算路线。';
+  };
 
   for (const key of Object.keys(POINT_LABELS)) $(`nav-${key}`).onclick = () => arm(key);
   $('nav-reset').onclick = () => {
@@ -639,6 +658,23 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   }
 
   const scaleRange = $('nav-exaggeration'), scaleNumber = $('nav-exaggeration-number');
+  let orbitScale = scaleRange.valueAsNumber;
+  function updatePerspective() {
+    const firstPerson = perspectiveSelect.value === 'first-person';
+    if (firstPerson && !scaleRange.disabled) {
+      orbitScale = scaleRange.valueAsNumber; setScale(1);
+      if ($('nav-playback-speed').value === 'demo') $('nav-playback-speed').value = '10';
+    }
+    if (!firstPerson && scaleRange.disabled) setScale(orbitScale);
+    scaleRange.disabled = scaleNumber.disabled = $('nav-true-scale').disabled = firstPerson;
+    $('nav-follow').disabled = firstPerson;
+    $('nav-follow').checked = perspectiveSelect.value === 'follow';
+    view?.setPerspective(firstPerson ? 'first-person' : 'orbit');
+    view?.setFollow(perspectiveSelect.value === 'follow');
+    $('nav-view-note').textContent = firstPerson
+      ? '宇航员步行视角 · 眼高 1.7 米 · 真实垂直比例。拖动可环顾，播放或拖动导航进度前进。轨道高程无法还原网格以下的岩块和脚下细节。'
+      : '可拖动旋转视角、滚轮缩放。地形来自实测高程，细节受原始数据分辨率限制。';
+  }
   function updateDisplay() { view?.setDisplay($('nav-relief').value, scaleRange.value); }
   function setScale(value) {
     if (!Number.isFinite(value)) value = scaleRange.valueAsNumber;
@@ -661,7 +697,9 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   $('nav-back').onclick = () => close3d(true);
   viewButton.onclick = () => open3d();
   extentSelect.onchange = () => open3d(false);
-  $('nav-follow').onchange = event => view?.setFollow(event.target.checked);
+  $('nav-context-radius').onchange = () => { if (extentSelect.value === 'surroundings') open3d(false); };
+  perspectiveSelect.onchange = updatePerspective;
+  $('nav-follow').onchange = event => { perspectiveSelect.value = event.target.checked ? 'follow' : 'overview'; updatePerspective(); };
   $('nav-grid-lines').onchange = event => view?.setGridVisible(event.target.checked);
   playButton.onclick = () => {
     if (frame) { stop(); return; }
@@ -673,3 +711,4 @@ export function attachAtlasNavigation({ canvas, fmt, paint, cancelProfile, fit }
   };
   return { pick, cancelPick, draw, setArea };
 }
+

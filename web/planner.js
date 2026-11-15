@@ -17,6 +17,23 @@ export function indexOf(grid, [row, col]) {
 
 export const cellOf = (grid, index) => [Math.floor(index / grid.cols), index % grid.cols];
 export const cellXY = (grid, [row, col]) => [grid.left + (col + 0.5) * grid.step, grid.top - (row + 0.5) * grid.step];
+export const pathXY = (grid, plan, index) => plan.xy?.[index] ?? cellXY(grid, cellOf(grid, plan.path[index]));
+
+// A selected coordinate is a point inside a cell, not the centre of that cell.
+// Preserve these anchors and include the short within-cell legs in every metric.
+export function elevationAt(grid, [east, north]) {
+  const c = (east - grid.left) / grid.step - 0.5, r = (grid.top - north) / grid.step - 0.5;
+  const x = Math.max(0, Math.min(grid.cols - 1, c)), y = Math.max(0, Math.min(grid.rows - 1, r));
+  const col = Math.floor(x), row = Math.floor(y), u = x - col, v = y - row;
+  let value = 0;
+  for (const [dy, dx, weight] of [[0, 0, (1-u)*(1-v)], [0, 1, u*(1-v)], [1, 0, (1-u)*v], [1, 1, u*v]]) {
+    if (weight <= 1e-12) continue;
+    const z = grid.height[Math.min(grid.rows-1, row+dy)*grid.cols + Math.min(grid.cols-1, col+dx)];
+    if (!Number.isFinite(z)) return NaN;
+    value += weight*z;
+  }
+  return value;
+}
 
 export function geographic(grid, [east, north]) {
   const [lon, lat] = grid.center.map(angle => angle * DEG);
@@ -200,13 +217,42 @@ export function solveLeg(grid, route, from, to, profile, open, light) {
 
 function itinerary(grid, route, stops, profile, open, light) {
   const path = [indexOf(grid, route.start)];
+  const anchored = Boolean(route.startXY);
+  const xy = [route.startXY ?? cellXY(grid, route.start)];
   const times = [0], lengths = [0], visits = [];
   let from = route.start, shadow = 0, steep = 0, ascent = 0, descent = 0, slopeSum = 0;
   let maxSlope = grid.slope[path[0]], minElevation = grid.height[path[0]], maxElevation = minElevation;
+  function append(cell, point) {
+    const previous = path.at(-1), previousXY = xy.at(-1);
+    const distance = Math.hypot(point[0]-previousXY[0], point[1]-previousXY[1]);
+    if (distance < 1e-8) return true;
+    const fromZ = anchored ? elevationAt(grid, previousXY) : grid.height[previous];
+    const toZ = anchored ? elevationAt(grid, point) : grid.height[cell];
+    if (!Number.isFinite(fromZ) || !Number.isFinite(toZ)) return false;
+    const rise = toZ - fromZ;
+    const [pr, pc] = cellOf(grid, previous), [cr, cc] = cellOf(grid, cell);
+    const cornerSlope = pr !== cr && pc !== cc ? Math.max(grid.slope[pr * grid.cols + cc], grid.slope[cr * grid.cols + pc]) : 0;
+    const slope = Math.max(Math.atan2(Math.abs(rise), distance) / DEG, grid.slope[previous], grid.slope[cell], cornerSlope);
+    if (slope > route.limit + 1e-8) return false;
+    maxSlope = Math.max(maxSlope, slope);
+    ascent += Math.max(0, rise); descent += Math.max(0, -rise); slopeSum += slope * distance;
+    minElevation = Math.min(minElevation, fromZ, toZ); maxElevation = Math.max(maxElevation, fromZ, toZ);
+    if (slope >= SLOPE_EXPOSURE_DEG) steep += distance;
+    shadow += distance * (Number(!isLit(grid, light, previous)) + Number(!isLit(grid, light, cell))) / 2;
+    path.push(cell); xy.push(point);
+    times.push(times.at(-1) + movementMinutes(distance, rise, route.speed, grid.regional));
+    lengths.push(lengths.at(-1) + distance);
+    return true;
+  }
   for (const stop of stops) {
     const leg = solveLeg(grid, route, from, stop.cell, profile, open, light);
     if (!leg) return null;
     for (let i = 1; i < leg.length; i++) {
+      if (anchored) {
+        const point = i === leg.length - 1 && stop.xy ? stop.xy : cellXY(grid, cellOf(grid, leg[i]));
+        if (!append(leg[i], point)) return null;
+        continue;
+      }
       const previous = leg[i - 1], cell = leg[i];
       const distance = Math.hypot(...cellOf(grid, cell).map((v, j) => v - cellOf(grid, previous)[j])) * grid.step;
       const rise = grid.height[cell] - grid.height[previous];
@@ -223,20 +269,23 @@ function itinerary(grid, route, stops, profile, open, light) {
       if (slope >= SLOPE_EXPOSURE_DEG) steep += distance;
       shadow += distance * (Number(!isLit(grid, light, previous)) + Number(!isLit(grid, light, cell))) / 2;
       path.push(cell);
+      xy.push(cellXY(grid, cellOf(grid, cell)));
       times.push(times.at(-1) + movementMinutes(distance, rise, route.speed, grid.regional));
       lengths.push(lengths.at(-1) + distance);
     }
+    if (anchored && stop.xy && !append(leg.at(-1), stop.xy)) return null;
     visits.push({ name: stop.name, arrival: times.at(-1), leave: times.at(-1) + (stop.minutes ?? 0), cell: path.at(-1),
-      returnLeg: stop.returnLeg, science: Boolean(stop.minutes) });
+      xy: anchored ? xy.at(-1) : undefined, returnLeg: stop.returnLeg, science: Boolean(stop.minutes) });
     if (stop.minutes) {
       path.push(path.at(-1));
+      xy.push(xy.at(-1));
       times.push(times.at(-1) + stop.minutes);
       lengths.push(lengths.at(-1));
     }
     from = stop.cell;
   }
   const minutes = times.at(-1), margin = route.budget - route.reserve - minutes;
-  return { path, times, lengths, visits, profiles: [profile], distance: lengths.at(-1), minutes,
+  return { path, xy: anchored ? xy : undefined, times, lengths, visits, profiles: [profile], distance: lengths.at(-1), minutes,
     margin, shadow, steep, ascent, descent, maxSlope, minElevation, maxElevation,
     averageSlope: lengths.at(-1) ? slopeSum / lengths.at(-1) : maxSlope,
     movingMinutes: minutes - visits.reduce((sum, visit) => sum + visit.leave - visit.arrival, 0),
@@ -249,7 +298,7 @@ function searchMission(grid, route, light) {
   if (route.start == null || (!route.stops.length && !route.returnToBase)) return { error: "请在地图上选取出发地和目的地。", candidates: [] };
   const open = openCells(grid, route.limit, route.closures);
   const stops = [...route.stops];
-  if (route.returnToBase) stops.push({ cell: route.base, name: "返航", returnLeg: true });
+  if (route.returnToBase) stops.push({ cell: route.base, xy: route.baseXY ?? route.startXY, name: "返航", returnLeg: true });
   if ([route.start, ...stops.map(s => s.cell)].some(cell => !open[indexOf(grid, cell)])) {
     return { error: "起点或任务点位于无数据、封锁或超坡度的网格。请在地图上另选位置。", candidates: [] };
   }
@@ -303,6 +352,12 @@ export function planMission(grid, route, light) {
       diagnostics.push(`${point.name}位于封路区域内，请移动该点或清空封路。`);
     }
   }
+  if (route.startXY) {
+    const anchors = [{ name: '出发地', xy: route.startXY }, ...route.stops];
+    for (const point of anchors) if (point.xy && !Number.isFinite(elevationAt(grid, point.xy))) {
+      diagnostics.push(`${point.name}附近的实际坐标缺少有效高程，不能把该点移到其他网格代替。`);
+    }
+  }
   if (diagnostics.length) return { candidates: [], diagnostics, error: diagnostics.join(' ') };
   const estimating = route.mode === 'estimate';
   let result = searchMission(grid, estimating ? { ...route, limit: 90 } : route, light);
@@ -341,9 +396,10 @@ export function progressAt(grid, plan, minute) {
   }
   const a = plan.path[lo], b = plan.path[hi];
   const ratio = plan.times[hi] > plan.times[lo] ? (time - plan.times[lo]) / (plan.times[hi] - plan.times[lo]) : 0;
-  const start = cellXY(grid, cellOf(grid, a)), end = cellXY(grid, cellOf(grid, b));
+  const start = pathXY(grid, plan, lo), end = pathXY(grid, plan, hi);
   return { xy: start.map((v, j) => v + (end[j] - v) * ratio), heading: end.map((v, j) => v - start[j]),
     cell: cellOf(grid, ratio < 0.5 ? a : b), index: hi,
     visit: plan.visits.find(stop => time >= stop.arrival && time < stop.leave),
     distance: plan.lengths[lo] + (plan.lengths[hi] - plan.lengths[lo]) * ratio };
 }
+

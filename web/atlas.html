@@ -36,8 +36,17 @@
             <label><input id="nav-grid-lines" type="checkbox" checked> 显示地形网格</label>
           </div>
           <div class="nav-fields nav-display">
+            <label class="atlas-field">观察视角<select id="nav-perspective">
+              <option value="overview">全景观察</option><option value="follow">跟随队员</option><option value="first-person">宇航员第一人称</option>
+            </select></label>
+            <label class="atlas-field">回放速度<select id="nav-playback-speed">
+              <option value="demo">演示 · 全程约 36 秒</option><option value="1">实时步速</option><option value="10">10 倍步速</option><option value="60">60 倍步速</option>
+            </select></label>
             <label class="atlas-field">三维范围<select id="nav-extent">
               <option value="surroundings">周边地形</option><option value="route">路线高程网格</option>
+            </select></label>
+            <label class="atlas-field">周边扩展距离<select id="nav-context-radius">
+              <option value="8000">路线外 8 公里</option><option value="16000">路线外 16 公里</option><option value="32000">路线外 32 公里</option>
             </select></label>
             <label class="atlas-field">地形样式<select id="nav-relief">
               <option value="relief">高程增强与官方影像</option><option value="optical">官方光学影像</option>
@@ -55,6 +64,7 @@
           <p id="nav-position" class="muted"></p>
           <p id="nav-context-status" class="muted" role="status"></p>
           <p id="nav-texture" class="muted"></p>
+          <p id="nav-view-note" class="muted">可拖动旋转视角。地形来自实测高程，细节受原始数据分辨率限制。</p>
         </section>
         <div class="atlas-status"><p id="location" class="mono"></p><p id="tile-status" role="status"></p></div>
         <section id="atlas-results" class="atlas-results" tabindex="-1" aria-labelledby="nav-results-heading" hidden>
@@ -91,12 +101,25 @@
             <div><dt>出发地</dt><dd id="nav-start-coord">未选择</dd></div>
             <div><dt>目的地</dt><dd id="nav-goal-coord">未选择</dd></div>
           </dl>
+          <details class="nav-coordinate-entry">
+            <summary>输入起终点坐标</summary>
+            <form id="nav-coordinates">
+              <div class="nav-fields">
+                <label class="atlas-field">出发地东经（°）<input id="nav-start-lon" type="number" min="-180" max="180" step="any" required></label>
+                <label class="atlas-field">出发地纬度（°）<input id="nav-start-lat" type="number" min="-80" max="80" step="any" required></label>
+                <label class="atlas-field">目的地东经（°）<input id="nav-goal-lon" type="number" min="-180" max="180" step="any" required></label>
+                <label class="atlas-field">目的地纬度（°）<input id="nav-goal-lat" type="number" min="-80" max="80" step="any" required></label>
+              </div>
+              <button type="submit">应用坐标</button>
+            </form>
+          </details>
           <ol id="nav-waypoints" class="atlas-waypoints" aria-label="途经点顺序" hidden></ol>
           <form id="nav-form">
             <label class="atlas-field">高程来源<select id="nav-source">
               <option value="auto">自动 · 优先较细的有效高程</option>
               <option value="jezero">Jezero 区域缓存 · 100 米</option>
               <option value="ctx">在线 USGS CTX · 20 米</option>
+              <option value="hrsc">在线 HRSC/MOLA 混合高程 · 200 米</option>
               <option value="local">HiRISE · 1 米验证区</option>
               <option value="mola">在线 NASA MOLA · 粗略走廊</option>
             </select></label>
@@ -198,3 +221,4 @@
   <script type="module" src="atlas.js"></script>
 </body>
 </html>
+
