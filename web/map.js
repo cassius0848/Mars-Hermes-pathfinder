@@ -1,3 +1,4 @@
+import { t as uiText } from './locale.js';
 import { cellXY, cellOf, geographic, indexOf } from './planner.js';
 
 const colors = { start: '#a8dbb2', goal: '#ffc18d', science: '#f6d477', crew: '#ffefc0', route: '#7de3bd', rover: '#f6c197' };
@@ -145,9 +146,9 @@ export class MissionMap {
         else this.marker(cellXY(site, target.cell), target.name.split(' · ')[0], colors.goal, 3);
       }
     }
-    if (start) this.marker(cellXY(site, start), '出发地', colors.start);
-    stops.forEach((stop, i) => this.marker(cellXY(site, stop.cell), i === stops.length - 1 ? '目的地' : `经停 ${i + 1} · ${stop.name}`, colors.goal));
-    if (progress) this.marker(progress.xy, '模拟队员', colors.crew, 7);
+    if (start) this.marker(cellXY(site, start), uiText("出发地"), colors.start);
+    stops.forEach((stop, i) => this.marker(cellXY(site, stop.cell), i === stops.length - 1 ? uiText("目的地") : uiText("经停 {0} · {1}", [i + 1, stop.name]), colors.goal));
+    if (progress) this.marker(progress.xy, uiText("模拟队员"), colors.crew, 7);
     if (this.cursor && canvas === document.activeElement) {
       const [x, y] = this.screen(this.cursor);
       ctx.strokeStyle = '#fff0ce'; ctx.lineWidth = 1;
@@ -183,7 +184,7 @@ export class MissionMap {
     ctx.font = '600 12px system-ui'; ctx.textAlign = x > this.w * 0.72 ? 'right' : 'left';
     const labelX = x + (ctx.textAlign === 'left' ? 10 : -10);
     ctx.lineWidth = 3; ctx.strokeStyle = '#272321'; ctx.fillStyle = '#fff1d9';
-    ctx.strokeText(`科学点 · ${title}`, labelX, y - 8); ctx.fillText(`科学点 · ${title}`, labelX, y - 8);
+    ctx.strokeText(uiText("科学点 · {0}", [title]), labelX, y - 8); ctx.fillText(uiText("科学点 · {0}", [title]), labelX, y - 8);
   }
 
   marker(xy, title, color, radius = 5) {
@@ -224,7 +225,7 @@ export function profileChart(canvas, site, plan, progress) {
   ctx.scale(dpr, dpr);
   const { width } = rect;
   ctx.font = '11px system-ui';
-  if (!plan) { ctx.fillStyle = '#ac9b8b'; ctx.fillText('计算路线后显示沿线高程', 12, 56); return; }
+  if (!plan) { ctx.fillStyle = '#ac9b8b'; ctx.fillText(uiText("计算路线后显示沿线高程"), 12, 56); return; }
   const heights = plan.path.map(index => site.height[index]);
   const min = heights.reduce((a, b) => Math.min(a, b)), max = heights.reduce((a, b) => Math.max(a, b));
   const x = distance => 58 + distance / plan.distance * (width - 73);

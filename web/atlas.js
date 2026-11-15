@@ -1,8 +1,11 @@
+import { t as uiText, initLanguage } from './locale.js';
 import { layers, officialLayerUrl, readCapabilities, tilesInView, viewportGeology, hiRiseProducts, molaProfile, molaExport,
   CTX_DEM, ctxWindow, fetchCtxTerrain } from './mars-data.js';
 import { attachAtlasNavigation } from './atlas-navigation.js';
 import { craterSources } from './crater-sources.js';
 import { frameTask } from './render-runtime.js';
+
+initLanguage();
 
 const $ = id => document.getElementById(id);
 const canvas = $('surface');
@@ -58,7 +61,7 @@ const navigation = attachAtlasNavigation({
     state.profileRequest?.abort(); state.profileRequest = null;
     if (state.picking) {
       state.picking = false; state.points = [];
-      $('profile-status').textContent = '沿两点连线查询 NASA MOLA 高程。';
+      $('profile-status').textContent = uiText("沿两点连线查询 NASA MOLA 高程。");
     }
   },
   fit(points) {
@@ -182,7 +185,7 @@ function renderMap() {
   });
   navigation.draw(ctx, screen);
   const axes = $('location');
-  const label = `中心 ${fmt(state.center)} · 横向约 ${(state.w / state.scale).toFixed(state.span < 0.15 ? 3 : 1)}°`;
+  const label = uiText("中心 {0} · 横向约 {1}°", [fmt(state.center), (state.w / state.scale).toFixed(state.span < 0.15 ? 3 : 1)]);
   if (axes.textContent !== label) axes.textContent = label;
 }
 
@@ -191,9 +194,9 @@ function tileStatus() {
   const ready = active.filter(tile => tileCache.get(tile.url)?.status === 'loaded').length;
   const failed = active.filter(tile => tileCache.get(tile.url)?.status === 'failed').length;
   const layers = [...shown].filter(([, tiles]) => tiles.length).map(([key]) => key);
-  const extra = state.layerErrors?.length ? ` · ${state.layerErrors.join('、')}暂不可用` : '';
-  const status = active.length ? `NASA 在线瓦片 ${ready}/${active.length} · ${layers.length} 层${failed ? ` · ${failed} 张未返回` : ''}${extra}`
-    : state.loading ? '正在读取 NASA 图层和当前视野…' : `当前视野暂无可显示瓦片${extra}`;
+  const extra = state.layerErrors?.length ? uiText(" · {0}暂不可用", [state.layerErrors.join('、')]) : '';
+  const status = active.length ? uiText("NASA 在线瓦片 {0}/{1} · {2} 层{3}{4}", [ready, active.length, layers.length, failed ? uiText(" · {0} 张未返回", [failed]) : '', extra])
+    : state.loading ? uiText("正在读取 NASA 图层和当前视野…") : uiText("当前视野暂无可显示瓦片{0}", [extra]);
   if ($('tile-status').textContent !== status) $('tile-status').textContent = status;
 }
 
@@ -258,10 +261,10 @@ async function refreshGeology() {
   clearGeology();
   const status = $('geo-status'), bbox = frame();
   if (!$('geology').checked) { status.textContent = ''; paint(); return; }
-  if (state.span > 4) { status.textContent = '放大到 Jezero–Nili Planum 可查看区域地质面。'; paint(); return; }
-  if (!geologyExtent(bbox)) { status.textContent = '当前视野超出 SIM 3464 区域制图范围。'; paint(); return; }
+  if (state.span > 4) { status.textContent = uiText("放大到 Jezero–Nili Planum 可查看区域地质面。"); paint(); return; }
+  if (!geologyExtent(bbox)) { status.textContent = uiText("当前视野超出 SIM 3464 区域制图范围。"); paint(); return; }
   const controller = new AbortController(); state.geoRequest = controller;
-  status.textContent = '正在向 USGS 查询地质面…';
+  status.textContent = uiText("正在向 USGS 查询地质面…");
   try {
     const result = await viewportGeology(bbox, controller.signal);
     if (controller !== state.geoRequest) return;
@@ -272,11 +275,11 @@ async function refreshGeology() {
       color.className = 'swatch'; color.style.backgroundColor = geologicColor(unit);
       span.append(color, unit ? `${unit} · ${name}` : name); return span;
     });
-    if (items.length) items.push(link('查看 USGS 原始响应 ↗', result.url));
+    if (items.length) items.push(link(uiText("查看 USGS 原始响应 ↗"), result.url));
     $('geo-legend').replaceChildren(...items);
-    status.textContent = result.features.length ? `USGS 返回 ${result.features.length} 个地质面${result.partial ? ' · 请放大查看剩余要素' : ''}` : '当前视野没有 SIM 3464 已制图地质面。';
+    status.textContent = result.features.length ? uiText("USGS 返回 {0} 个地质面{1}", [result.features.length, result.partial ? uiText(" · 请放大查看剩余要素") : '']) : uiText("当前视野没有 SIM 3464 已制图地质面。");
   } catch {
-    if (controller === state.geoRequest) status.textContent = 'USGS 地质服务暂不可用，可平移、缩放或重开图层重试。';
+    if (controller === state.geoRequest) status.textContent = uiText("USGS 地质服务暂不可用，可平移、缩放或重开图层重试。");
   }
   paint();
 }
@@ -291,7 +294,7 @@ function schedule() {
   paint();
   state.productRequest?.abort(); state.productRequest = null;
   $('search-products').disabled = state.span > 4;
-  $('product-status').textContent = state.span > 4 ? '请先放大到较小区域。' : '可查原始 HiRISE 高程和正射数据。';
+  $('product-status').textContent = state.span > 4 ? uiText("请先放大到较小区域。") : uiText("可查原始 HiRISE 高程和正射数据。");
   $('products').replaceChildren(); $('product-source').hidden = true;
   state.footprint = null;
   clearTimeout(state.refreshTimer); clearTimeout(state.geoTimer);
@@ -309,16 +312,16 @@ async function refreshCtx() {
   const status = $('ctx-status');
   if (!$('ctx-elevation').checked) { status.textContent = ''; return; }
   const window = ctxWindow(frame());
-  if (!window) { status.textContent = '当前视野超出 Jezero CTX 高程覆盖。'; return; }
+  if (!window) { status.textContent = uiText("当前视野超出 Jezero CTX 高程覆盖。"); return; }
   if (state.span > 0.18 || window.height > 650 || window.width > 650) {
-    status.textContent = '放大到约 10 公里以内，可读取当前视野的 20 米数值高程。'; return;
+    status.textContent = uiText("放大到约 10 公里以内，可读取当前视野的 20 米数值高程。"); return;
   }
   const controller = new AbortController(); state.ctxRequest = controller;
-  status.textContent = '正在从 USGS 读取 20 米高程切片…';
+  status.textContent = uiText("正在从 USGS 读取 20 米高程切片…");
   try {
     const data = await fetchCtxTerrain(window, controller.signal);
     if (state.ctxRequest !== controller) return;
-    if (!data.valid) { status.textContent = '当前视野的 CTX 高程没有有效像元。'; return; }
+    if (!data.valid) { status.textContent = uiText("当前视野的 CTX 高程没有有效像元。"); return; }
     const image = document.createElement('canvas');
     image.width = data.width; image.height = data.height;
     const context = image.getContext('2d'), pixels = context.createImageData(data.width, data.height);
@@ -329,8 +332,8 @@ async function refreshCtx() {
     });
     context.putImageData(pixels, 0, 0);
     state.ctxTerrain = { data, image }; paint();
-    status.replaceChildren(`USGS 20 米 · ${data.valid}/${data.values.length} 个有效像元 · 低处蓝色 ${data.min.toFixed(0)} m，高处金色 ${data.max.toFixed(0)} m。 `,
-      link('原始高程 TIFF ↗', CTX_DEM));
+    status.replaceChildren(uiText("USGS 20 米 · {0}/{1} 个有效像元 · 低处蓝色 {2} m，高处金色 {3} m。 ", [data.valid, data.values.length, data.min.toFixed(0), data.max.toFixed(0)]),
+      link(uiText("原始高程 TIFF ↗"), CTX_DEM));
   } catch (error) {
     controller.abort();
     if (state.ctxRequest === controller) status.textContent = error.message;
@@ -396,9 +399,9 @@ async function pick(point) {
   if (!state.picking || Math.abs(point[0]) > 180 || Math.abs(point[1]) > 90) return;
   state.points.push(point); paint();
   const status = $('profile-status');
-  if (state.points.length < 2) { status.textContent = `起点 ${fmt(point)}。请选择终点。`; return; }
+  if (state.points.length < 2) { status.textContent = uiText("起点 {0}。请选择终点。", [fmt(point)]); return; }
   state.picking = false; canvas.classList.remove('picking');
-  status.textContent = '正在向 NASA 请求 24 个 MOLA 高程样点…';
+  status.textContent = uiText("正在向 NASA 请求 24 个 MOLA 高程样点…");
   const controller = new AbortController(); state.profileRequest = controller;
   try {
     const { url, track } = await molaProfile(...state.points, controller.signal);
@@ -407,8 +410,8 @@ async function pick(point) {
     const count = track.filter(p => Number.isFinite(p.z)).length;
     const metrics = routeMetrics(track);
     status.textContent = count > 1
-      ? `NASA 返回 ${count}/${track.length} 个有效高程 · 长约 ${track.at(-1).km.toFixed(2)} km · 上升 ${metrics.ascent.toFixed(0)} m · 下降 ${metrics.descent.toFixed(0)} m · 最大坡度约 ${metrics.maxGrade.toFixed(1)}%`
-      : '有效 MOLA 样本不足，请重选。';
+      ? uiText("NASA 返回 {0}/{1} 个有效高程 · 长约 {2} km · 上升 {3} m · 下降 {4} m · 最大坡度约 {5}%", [count, track.length, track.at(-1).km.toFixed(2), metrics.ascent.toFixed(0), metrics.descent.toFixed(0), metrics.maxGrade.toFixed(1)])
+      : uiText("有效 MOLA 样本不足，请重选。");
     $('profile-source').href = url; $('profile-source').hidden = false;
     if (count > 1) drawChart(track);
   } catch (error) {
@@ -420,7 +423,7 @@ async function search() {
   if (state.span > 4) return;
   state.productRequest?.abort();
   const controller = new AbortController(); state.productRequest = controller;
-  $('search-products').disabled = true; $('product-status').textContent = '正在查询 USGS HiRISE 目录…';
+  $('search-products').disabled = true; $('product-status').textContent = uiText("正在查询 USGS HiRISE 目录…");
   try {
     const result = await hiRiseProducts(frame(), controller.signal);
     if (controller !== state.productRequest) return;
@@ -428,23 +431,23 @@ async function search() {
       const li = document.createElement('li');
       li.append(item.id, document.createElement('br'));
       if (['Polygon', 'MultiPolygon'].includes(item.geometry?.type)) {
-        const button = document.createElement('button'); button.type = 'button'; button.textContent = '显示覆盖';
+        const button = document.createElement('button'); button.type = 'button'; button.textContent = uiText("显示覆盖");
         button.onclick = () => {
           state.footprint = item.geometry.type === 'Polygon' ? [item.geometry.coordinates] : item.geometry.coordinates;
           paint();
         };
         li.append(button, ' ');
       }
-      for (const [label, asset] of [['高程', item.assets?.dtm], ['正射示例', item.assets?.ortho_2 ?? item.assets?.ortho_0], ['质量图', item.assets?.fom]]) {
+      for (const [label, asset] of [[uiText("高程"), item.assets?.dtm], [uiText("正射示例"), item.assets?.ortho_2 ?? item.assets?.ortho_0], [uiText("质量图"), item.assets?.fom]]) {
         if (asset?.href?.startsWith('https://')) li.append(link(label, asset.href));
       }
       return li;
     });
     $('products').replaceChildren(...items);
-    $('product-status').textContent = items.length ? `USGS 返回 ${items.length} 个产品${result.more ? ' · 可放大缩小搜索范围' : ''}` : '这个视野未找到单幅立体高程产品，可平移或扩大范围重查。';
+    $('product-status').textContent = items.length ? uiText("USGS 返回 {0} 个产品{1}", [items.length, result.more ? uiText(" · 可放大缩小搜索范围") : '']) : uiText("这个视野未找到单幅立体高程产品，可平移或扩大范围重查。");
     $('product-source').href = result.url; $('product-source').hidden = false;
   } catch {
-    if (controller === state.productRequest) $('product-status').textContent = 'USGS 目录暂不可用，请重试。';
+    if (controller === state.productRequest) $('product-status').textContent = uiText("USGS 目录暂不可用，请重试。");
   } finally {
     if (controller === state.productRequest) $('search-products').disabled = false;
   }
@@ -482,12 +485,12 @@ function updateWalkLink(id) {
   const name = craterNames[area] ?? 'Jezero';
   if (['jezero', 'hawksbill', 'neretva'].includes(area)) {
     $('walk-link').href = `./mission.html?area=${area}`;
-    $('walk-action').textContent = '打开任务地图 →';
+    $('walk-action').textContent = uiText("打开任务地图 →");
   } else {
     $('walk-link').href = `./atlas.html?area=${area}`;
-    $('walk-action').textContent = '查看区域资料与剖面 →';
+    $('walk-action').textContent = uiText("查看区域资料与剖面 →");
   }
-  $('walk-region').textContent = `当前区域：${name}`;
+  $('walk-region').textContent = uiText("当前区域：{0}", [name]);
 }
 
 updateWalkLink(initialView);
@@ -519,7 +522,7 @@ $('pick-profile').onclick = () => {
   state.profileRequest?.abort(); state.profileRequest = null;
   state.points = []; state.profileTrack = null; state.picking = true;
   canvas.classList.add('picking'); canvas.focus();
-  $('profile-status').textContent = '在地图上选取剖面起点。';
+  $('profile-status').textContent = uiText("在地图上选取剖面起点。");
   $('height-chart').setAttribute('hidden', ''); $('profile-source').hidden = true; paint();
 };
 $('search-products').onclick = search;
