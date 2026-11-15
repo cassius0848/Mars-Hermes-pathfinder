@@ -18,9 +18,32 @@
 
 ## 三维回放
 
-默认画面以路线为中心，结合数值高程着色、配准光学影像和低角度显示侧光。可切换到光学样式、开启跟随，并选择自动、×1、×2.5、×4 或 ×6 垂直显示。高程、坡度、距离及搜索约束均取原始地形网格。显示灯光服务于坡面阅读，路线光照由太阳几何与地形遮挡另行计算。
+默认画面以路线为中心，结合数值高程着色、配准光学影像和低角度显示侧光。可切换到光学样式、开启跟随并手动设置垂直倍率。高程、坡度、距离及搜索约束均取原始地形网格。显示灯光服务于坡面阅读，路线光照由太阳几何与地形遮挡另行计算。
 
-## 官方环境观测与组合权重
+## 区域多参数规划
+
+`/atlas?area=jezero` 默认进入区域多参数模式。可以点选地图上任意有高程覆盖的两个点，也可以试算 Jezero 从着陆区到 Neretva Vallis 的约 9.5 km 路线。自动高程优先使用 1 米 HiRISE 或 20 米在线 CTX，Jezero 还可使用经验证的 100 米缓存。Jezero 以外可按在线 MOLA 支持的单段距离与纬度范围筛选约 1 公里尺度的走廊。
+
+| 因素 | 数据和代价 |
+| --- | --- |
+| 坡度与时间 | 使用原始 DEM。原有坡度约束适用于每一步以及对角通行。行进时间继续作为底价。 |
+| 阴影 | 由 DEM 和固定太阳几何估算地形遮挡。阴影采样随网格尺寸调整。 |
+| 太阳辐照潜势 | 在 1 AU 的 NASA SORCE 总太阳辐照度约 1361 W/m² 基础上按日火距离平方反比缩放，再投影到 DEM 坡面与地形阴影。数值是大气层顶入射量投影，供路线比较。 |
+| 地表温度 | OpenMARS MY24 的同一气候快照，5°网格重采样到查询位置。对超过所选比较值的温度差按行进时间加权。 |
+| 气压 | 同一 OpenMARS 快照的地表气压 Pa。对低于所选比较值的差额按时间加权。 |
+| TES 热惯量 | Putzig 和 Mellon 2007 的 MGS TES 夜侧热惯量，单位 J m⁻² K⁻¹ s⁻½。Jezero、Gale、Endeavour 与 Eberswalde 四区保留 PDS 原始 0.05°网格，其他区域使用该格网的 0.25°中心抽样。缺测保留，PDS 官方插值掩膜随样本一起保存。偏好权重越高，低于 500 的热惯量样本相对代价越高。 |
+
+固定环境快照用于比较，多小时路线的日照比例和辐照潜势都按快照计算。温度与气压是再分析结果，近邻路线的数值可能接近。太阳辐照潜势未纳入大气衰减，电离辐射需要另有数据。覆盖不足的加权字段会在数据栏标出并跳过。两条计算路线重合时，页面会明确显示这一点。
+
+候选路线卡可按实际网格对比用时、最大坡度和环境读数。选择热惯量、气压、温度、阴影或坡度可对当前路线分段着色。热惯量卡同时显示沿线采用 PDS 官方插值样本的比例。划分色阶时采用最小色域，避免把极小的变化渲染成强梯度。
+
+三维控制区有滑杆、数字输入及真实比例按钮，可以 0.1 为步长设置 1.0–6.0 倍垂直显示。图集默认 1.5 倍。缓存区域裁切时复用原始影像窗口坐标，按裁切位置显示配准影像。
+
+`web/atlas-regional.json` 列出两个 OpenMARS 原时间索引、源产品链接、原始数据 SHA-256 与打包偏移。二进制包保留快照的原始 float32 数值和 PDS 像元整数。可用 `scripts/build_atlas_environment.py` 复现提取。原始 PDS 文件及标签在数据目录，Zarr 元数据与分块位置可从清单复核。
+
+[NASA PDS TES 归档](https://pds-geosciences.wustl.edu/missions/mgs/tes-timap.html) · [开放大学 OpenMARS](https://doi.org/10.21954/ou.rd.7352270) · [ARCO 数据转换](https://doi.org/10.57967/hf/8741) · [NASA Mars24 算法](https://www.giss.nasa.gov/tools/mars24/help/algorithm.html) · [NASA 总太阳辐照度](https://sunclimate.gsfc.nasa.gov/article/solar-irradiance)
+
+## Hawksbill Gap 原位历史观测
 
 在图集展开“官方观测与多参数权重”，选择 Hawksbill Gap 的 Sol 518 场景和各项权重。两个场景来自毅力号 NASA PDS MEDA，取四个数据产品在同一 SCLK 的记录。`web/atlas-meda.json` 记录 CSV、标签、文件哈希和时钟。 [PDS MEDA 数据说明](https://pdsatmospheres.nmsu.edu/data_and_services/atmospheres_data/PERSEVERANCE/meda.html) · [MEDA 仪器与各滤波通道](https://ntrs.nasa.gov/api/citations/20210014064/downloads/Rodriguez-Manfredi_et_al-2021-Space_Science_Reviews.pdf)
 

@@ -11,7 +11,7 @@ export class TerrainView {
     const relief = Math.max(1, site.depth.max - site.depth.min);
     this.atlas = atlas;
     this.mode = atlas ? 'relief' : 'optical';
-    this.autoScale = atlas ? Math.max(1.5, Math.min(6, Math.round(0.35 * size / relief * 2) / 2))
+    this.autoScale = atlas ? Math.max(1, Math.min(2, Math.round(0.22 * size / relief * 10) / 10))
       : site.step <= 2 ? 2.5 : 1;
     this.verticalScale = this.autoScale;
     this.meshScale = this.verticalScale;
@@ -110,12 +110,19 @@ export class TerrainView {
 
   setDisplay(mode, scale) {
     this.mode = mode;
-    this.verticalScale = scale === 'auto' ? this.autoScale : Number(scale);
+    const next = scale === 'auto' ? this.autoScale : Math.max(1, Math.min(6, Number(scale)));
+    const changed = this.verticalScale !== next;
+    this.verticalScale = next;
     this.surface.scale.y = this.verticalScale / this.meshScale;
     this.configureMaterial();
     this.describe();
-    this.setPlan(this.plan);
-    this.update(this.progress, this.light);
+    if (changed) {
+      const distance = this.distance;
+      this.setPlan(this.plan);
+      this.distance = distance;
+    }
+    if (this.progress) this.update(this.progress, this.light);
+    else this.draw();
   }
 
   setTexture(canvas) { this.applyTexture(new THREE.CanvasTexture(canvas)); this.draw(); }
@@ -134,6 +141,7 @@ export class TerrainView {
     const low = new THREE.Color('#a07365'), middle = new THREE.Color('#d8a67b'), high = new THREE.Color('#fff1ce');
     const tint = new THREE.Color();
     const span = Math.max(1, site.depth.max - site.depth.min);
+    const tex = site.textureWindow ?? { col0: 0, row0: 0, cols: site.cols, rows: site.rows };
     let point = 0, offset = 0;
     for (const row of rows) for (const col of cols) {
       const height = site.height[row * site.cols + col];
@@ -141,8 +149,8 @@ export class TerrainView {
       positions[point * 3] = site.left + (col + 0.5) * site.step;
       positions[point * 3 + 1] = valid[point] ? (height - this.mid) * this.meshScale : 0;
       positions[point * 3 + 2] = -site.top + (row + 0.5) * site.step;
-      uv[point * 2] = (col + 0.5) / site.cols;
-      uv[point * 2 + 1] = 1 - (row + 0.5) / site.rows;
+      uv[point * 2] = (col + tex.col0 + 0.5) / tex.cols;
+      uv[point * 2 + 1] = 1 - (row + tex.row0 + 0.5) / tex.rows;
       if (colors && valid[point]) {
         const value = Math.min(1, Math.max(0, (height - site.depth.min) / span));
         tint.copy(value < 0.5 ? low : middle).lerp(value < 0.5 ? middle : high, value < 0.5 ? value * 2 : value * 2 - 1);
@@ -203,7 +211,8 @@ export class TerrainView {
       const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 64;
       const ctx = canvas.getContext('2d'); ctx.fillStyle = '#211b18dd'; ctx.fillRect(0, 0, 512, 64);
       ctx.fillStyle = '#ffe3bd'; ctx.font = '24px system-ui'; ctx.textAlign = 'center';
-      ctx.fillText(`${index === stops.length - 1 ? '目的地' : `经停 ${index + 1}`} · ${stop.name}`, 256, 41, 490);
+      const labelText = index === stops.length - 1 ? '目的地' : `经停 ${index + 1}`;
+      ctx.fillText(stop.name === labelText ? labelText : `${labelText} · ${stop.name}`, 256, 41, 490);
       const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
       const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, depthTest: false }));
       const width = Math.max(34, this.site.cols * this.site.step / 12);

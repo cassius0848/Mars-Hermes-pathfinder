@@ -1,4 +1,5 @@
 import { environmentMetrics, environmentStepCost } from './atlas-environment.js';
+import { regionalMetrics } from './atlas-regional.js';
 
 const DEG = Math.PI / 180;
 const RADIUS = 3396190;
@@ -65,8 +66,7 @@ export function solarPosition(lat, hour, season) {
   return { east, north, up, elevation: Math.asin(up) / DEG, azimuth: (Math.atan2(east, north) / DEG + 360) % 360 };
 }
 
-export function terrainLight(grid, hour, season, sun = solarPosition(grid.center[1], hour, season)) {
-  const stride = SHADOW_STEP;
+export function terrainLight(grid, hour, season, sun = solarPosition(grid.center[1], hour, season), stride = SHADOW_STEP) {
   const cols = Math.ceil(grid.cols / stride), rows = Math.ceil(grid.rows / stride);
   const mask = new Uint8Array(rows * cols);
   if (sun.up <= 0) return { sun, stride, cols, rows, mask };
@@ -154,6 +154,7 @@ export function solveLeg(grid, route, from, to, profile, open, light) {
   if (start === goal) return [start];
   const { step, cols, rows, height, slope, regional } = grid;
   const maxRise = Math.tan(route.limit * DEG);
+  const environment = profile === "environment" ? route.environment : null;
   const prior = new Int32Array(height.length).fill(-1);
   const best = new Float64Array(height.length).fill(Infinity);
   const heap = new MinHeap();
@@ -178,10 +179,13 @@ export function solveLeg(grid, route, from, to, profile, open, light) {
       const steep = (slope[index] + slope[next]) / (2 * route.limit);
       const useShade = profile === "environment" || profile === "light";
       const shade = useShade ? (Number(!isLit(grid, light, index)) + Number(!isLit(grid, light, next))) / 2 : 0;
-      const costOfStep = profile === "environment" ? environmentStepCost(route.environment, minutes, steep, shade)
-        : regional || profile === "terrain" ? minutes * (1 + 5 * steep * steep)
-        : profile === "light" ? minutes * (1 + 6 * shade)
-        : minutes;
+      let costOfStep = minutes;
+      if (environment?.kind === 'regional') {
+        const { weights, costs } = environment;
+        costOfStep *= 1 + weights.terrain * steep ** 2 + weights.light * shade + (costs[index] + costs[next]) / 2;
+      } else if (environment) costOfStep = environmentStepCost(environment, minutes, steep, shade);
+      else if (regional || profile === "terrain") costOfStep *= 1 + 5 * steep * steep;
+      else if (profile === "light") costOfStep *= 1 + 6 * shade;
       const nextCost = cost + costOfStep;
       if (nextCost >= best[next]) continue;
       best[next] = nextCost;
@@ -312,7 +316,10 @@ export function planMission(grid, route, light) {
     diagnostics: [relaxed ? '已检查有效高程、坡度与封路。放宽坡度后仍无完整通路；请移动选点或清空封路。' : '当前坡度与封路约束下没有完整通路；可使用按起终点反算查看参考条件。'] };
   result.candidates = result.candidates.map(candidate => {
     const evaluated = { ...assessCandidate(candidate, route), estimated: relaxed };
-    if (route.environment) evaluated.environment = environmentMetrics(route.environment, evaluated, cell => isLit(grid, light, cell));
+    if (route.environment) {
+      const measure = route.environment.kind === 'regional' ? regionalMetrics : environmentMetrics;
+      evaluated.environment = measure(route.environment, evaluated, cell => isLit(grid, light, cell));
+    }
     return evaluated;
   });
   if (relaxed) result.error = estimating ? '按起终点反算：先求参考路线，再核对当前限制。' : '当前坡度限制下无连通路线，以下为放宽坡度后的参考估算。';

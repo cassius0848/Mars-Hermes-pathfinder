@@ -30,6 +30,26 @@ const initialView = Object.hasOwn(atlasViews, requested) ? requested : 'jezero';
 const state = { ...atlasViews[initialView], center: [...atlasViews[initialView].center], viewId: initialView, epoch: 0, points: [], picking: false };
 const overlays = [...document.querySelectorAll('[data-overlay]')];
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const toolTabs = [...document.querySelectorAll('.atlas-tabs [role="tab"]')];
+function showToolTab(current, focus = false) {
+  for (const tab of toolTabs) {
+    const active = tab === current;
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+    $(tab.getAttribute('aria-controls')).hidden = !active;
+  }
+  if (focus) current.focus();
+}
+toolTabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => showToolTab(tab));
+  tab.addEventListener('keydown', event => {
+    const next = { ArrowLeft: index - 1, ArrowRight: index + 1, Home: 0, End: toolTabs.length - 1 }[event.key];
+    if (next === undefined) return;
+    event.preventDefault();
+    showToolTab(toolTabs[(next + toolTabs.length) % toolTabs.length], true);
+  });
+});
+
 const navigation = attachAtlasNavigation({
   canvas, fmt, paint,
   cancelProfile() {

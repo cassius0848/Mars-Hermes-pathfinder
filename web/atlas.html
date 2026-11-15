@@ -38,20 +38,44 @@
             <label class="atlas-field">地形样式<select id="nav-relief">
               <option value="relief">高程增强与官方影像</option><option value="optical">官方光学影像</option>
             </select></label>
-            <label class="atlas-field">垂直显示<select id="nav-exaggeration">
-              <option value="auto">自动增强</option><option value="1">×1 真实比例</option>
-              <option value="2.5">×2.5</option><option value="4">×4</option><option value="6">×6</option>
-            </select></label>
+            <div class="atlas-field">
+              <label for="nav-exaggeration">垂直倍率 <output id="nav-scale-label" for="nav-exaggeration">×1.5</output></label>
+              <div class="nav-scale-inputs">
+                <input id="nav-exaggeration" type="range" min="1" max="6" step="0.1" value="1.5">
+                <input id="nav-exaggeration-number" type="number" min="1" max="6" step="0.1" value="1.5" aria-label="精确垂直倍率">
+                <button id="nav-true-scale" type="button">真实比例</button>
+              </div>
+            </div>
           </div>
           <label class="atlas-field">导航进度<input id="nav-progress" type="range" min="0" max="1000" value="0"></label>
           <p id="nav-position" class="muted"></p>
           <p id="nav-texture" class="muted"></p>
         </section>
         <div class="atlas-status"><p id="location" class="mono"></p><p id="tile-status" role="status"></p></div>
+        <section id="atlas-results" class="atlas-results" tabindex="-1" aria-labelledby="nav-results-heading" hidden>
+          <div class="atlas-section-heading">
+            <h2 id="nav-results-heading">候选路线</h2>
+            <button id="nav-3d" type="button" hidden>三维导航回放</button>
+          </div>
+          <p id="nav-comparison" class="atlas-comparison" role="status"></p>
+          <label class="nav-route-layer" id="nav-route-layer" hidden>线路着色
+            <select id="nav-route-color">
+              <option value="route">候选路线</option><option value="terrain">坡度</option><option value="light">阴影</option>
+            </select>
+          </label>
+          <p id="nav-route-legend" class="muted" hidden></p>
+          <div id="nav-routes" class="nav-routes"></div>
+        </section>
       </section>
-      <aside class="side" aria-label="图层与数据查询">
+      <aside class="atlas-tools" aria-label="路线、图层与数据">
+        <div class="atlas-tabs" role="tablist" aria-label="地图工具">
+          <button type="button" id="atlas-tab-plan" role="tab" aria-controls="atlas-panel-plan" aria-selected="true">路线规划</button>
+          <button type="button" id="atlas-tab-layers" role="tab" aria-controls="atlas-panel-layers" aria-selected="false" tabindex="-1">地图图层</button>
+          <button type="button" id="atlas-tab-data" role="tab" aria-controls="atlas-panel-data" aria-selected="false" tabindex="-1">数据与剖面</button>
+        </div>
+        <div id="atlas-panel-plan" role="tabpanel" aria-labelledby="atlas-tab-plan">
         <section class="panel atlas-route" aria-labelledby="nav-heading">
-          <div class="panel-heading"><h2 id="nav-heading">路线规划</h2></div>
+          <div class="panel-heading"><h2 id="nav-heading">地图选点</h2><button id="nav-regional-demo" type="button">试算 Jezero 区域路线</button></div>
           <div class="nav-actions">
             <button id="nav-start" type="button" aria-pressed="false">选出发地</button>
             <button id="nav-goal" type="button" aria-pressed="false">选目的地</button>
@@ -63,7 +87,8 @@
           </dl>
           <form id="nav-form">
             <label class="atlas-field">高程来源<select id="nav-source">
-              <option value="auto">自动选择可用高程</option>
+              <option value="auto">自动 · 优先较细的有效高程</option>
+              <option value="jezero">Jezero 区域缓存 · 100 米</option>
               <option value="ctx">在线 USGS CTX · 20 米</option>
               <option value="local">HiRISE · 1 米验证区</option>
               <option value="mola">在线 NASA MOLA · 粗略走廊</option>
@@ -80,36 +105,39 @@
               </div>
               <label class="nav-return"><input type="checkbox" id="nav-return"> 到达后返回出发地</label>
             </details>
-            <details class="nav-settings">
-              <summary>官方观测与多参数权重</summary>
-              <label class="atlas-field">环境场景<select id="nav-meda">
-                <option value="">地形规划 · 自选太阳时</option>
+            <section class="nav-environment" aria-labelledby="nav-environment-title">
+              <h3 id="nav-environment-title">组合寻路</h3>
+              <label class="atlas-field">数据场景<select id="nav-meda">
+                <option value="regional">区域多参数 · 大地图</option>
+                <option value="">地形与自选太阳时</option>
               </select></label>
-              <p class="muted" id="nav-meda-status" role="status">正在加载 NASA PDS 历史观测…</p>
-              <div id="nav-meda-options" hidden>
-                <button id="nav-meda-demo" type="button">选取 Hawksbill Gap 示例点</button>
-                <p id="nav-meda-reading" class="muted"></p>
-                <p id="nav-meda-links" class="nav-meda-links"></p>
-                <p class="muted">权重范围 0–5，设为 0 即忽略该因素。热红外和气压是观测点参考值，按停留时间计入。UV 项只计入光照段的相对暴露。</p>
+              <label class="atlas-field" id="nav-climate-field">气候快照<select id="nav-climate"></select></label>
+              <p class="muted" id="nav-meda-status" role="status"></p>
+              <div id="nav-meda-options">
+                <button id="nav-meda-demo" type="button" hidden>选取 Hawksbill Gap 示例点</button>
+                <p id="nav-meda-reading" class="muted" hidden></p>
+                <p class="muted">权重范围 0–5，设为 0 即忽略该项。</p>
                 <div class="nav-fields">
-                  <label class="atlas-field">减小坡度<input id="weight-terrain" type="number" min="0" max="5" step="0.5" value="1" required></label>
-                  <label class="atlas-field">减少阴影<input id="weight-light" type="number" min="0" max="5" step="0.5" value="1" required></label>
-                  <label class="atlas-field">减少长波辐照<input id="weight-thermal" type="number" min="0" max="5" step="0.5" value="1" required></label>
-                  <label class="atlas-field">减少日照段 UV<input id="weight-uv" type="number" min="0" max="5" step="0.5" value="1" required></label>
-                  <label class="atlas-field">减少低压停留<input id="weight-pressure" type="number" min="0" max="5" step="0.5" value="1" required></label>
+                  <label class="atlas-field">减小坡度<input id="weight-terrain" type="number" min="0" max="5" step="0.5" value="2" required></label>
+                  <label class="atlas-field">减少阴影<input id="weight-light" type="number" min="0" max="5" step="0.5" value="2" required></label>
+                  <label class="atlas-field"><span id="nav-thermal-label">热学</span><input id="weight-thermal" type="number" min="0" max="5" step="0.5" value="3" required></label>
+                  <label class="atlas-field"><span id="nav-radiation-label">辐照</span><input id="weight-uv" type="number" min="0" max="5" step="0.5" value="1" required></label>
+                  <label class="atlas-field" data-regional-weight>偏好高热惯量<input id="weight-inertia" type="number" min="0" max="5" step="0.5" value="3" required></label>
+                  <label class="atlas-field" data-regional-weight>温度比较值（K）<input id="nav-temperature" type="number" min="130" max="340" value="230" required></label>
+                  <label class="atlas-field">减少低压停留<input id="weight-pressure" type="number" min="0" max="5" step="0.5" value="2" required></label>
                   <label class="atlas-field">气压比较值（Pa）<input id="nav-pressure" type="number" min="0" max="1500" value="780" required></label>
                 </div>
               </div>
-            </details>
+            </section>
             <button class="primary" id="nav-plan" type="submit" disabled>计算路线</button>
           </form>
-          <p class="message" id="nav-status" role="status">在地图上依次选择出发地和目的地。首次体验可先定位到 Hawksbill Gap。</p>
-          <a id="nav-data-link" target="_blank" rel="noreferrer" hidden>查看本次规划的高程来源 ↗</a>
-          <div id="nav-routes" class="nav-routes"></div>
-          <button id="nav-3d" type="button" hidden>三维导航回放</button>
+          <p class="message" id="nav-status" role="status">选取起点和终点，或试算 Jezero 区域路线。</p>
+          <a id="nav-view-results" href="#atlas-results" hidden>查看路线比较 ↓</a>
         </section>
+        </div>
+        <div id="atlas-panel-layers" role="tabpanel" aria-labelledby="atlas-tab-layers" hidden>
         <section class="panel">
-          <div class="panel-heading"><h2>在线图层</h2></div>
+          <div class="panel-heading"><h2>底图与叠加层</h2></div>
           <label class="atlas-field">底图<select id="base"><option value="viking">Viking 全球光学</option><option value="mola">MOLA 全球地形着色</option><option value="thermal">THEMIS 日间红外</option></select></label>
           <div class="atlas-checks">
             <label><input type="checkbox" value="ctx" data-overlay checked> Jezero CTX 高分辨率影像</label>
@@ -123,8 +151,17 @@
           <label class="atlas-ctx"><input type="checkbox" id="ctx-elevation"> USGS CTX 20 米数值高程</label>
           <p id="ctx-status" class="muted" role="status"></p>
         </section>
+        </div>
+        <div id="atlas-panel-data" role="tabpanel" aria-labelledby="atlas-tab-data" hidden>
+        <section class="panel atlas-data">
+          <div class="panel-heading"><h2>规划数据与覆盖</h2></div>
+          <p id="nav-coverage" class="muted" role="status">计算后列出实际参与本次路线的参数。</p>
+          <a id="nav-data-link" target="_blank" rel="noreferrer" hidden>本次高程数据 ↗</a>
+          <ul id="nav-regional-links" class="product-list"></ul>
+          <p id="nav-meda-links" class="nav-meda-links"></p>
+        </section>
         <section class="panel">
-          <div class="panel-heading"><h2>经典陨石坑数据源</h2></div>
+          <div class="panel-heading"><h2>当前区域资料</h2></div>
           <p id="crater-source-status" class="message" role="status"></p>
           <ul id="crater-sources" class="product-list"></ul>
         </section>
@@ -144,6 +181,7 @@
           <ul id="products" class="product-list"></ul>
           <a id="product-source" target="_blank" rel="noreferrer" hidden>查看 USGS 原始目录结果 ↗</a>
         </section>
+        </div>
       </aside>
     </div>
     <p class="atlas-credits">地图使用火星中心纬度、东经为正。导航为地形模拟，分辨率以下的岩块和小陡坎无法从高程网格中识别。</p>

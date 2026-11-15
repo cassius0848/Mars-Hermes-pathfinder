@@ -5,6 +5,17 @@ import test from 'node:test';
 import { environmentSettings, medaSun } from '../web/atlas-environment.js';
 import { cellOf, cellXY, decodeTerrain, geographic, indexOf, isLit, planMission, progressAt, project, solarPosition, terrainLight } from '../web/planner.js';
 
+import { gunzipSync } from 'node:zlib';
+import { atlasCell, cropAtlasGrid } from '../web/atlas-terrain.js';
+import { buildRegionalEnvironment, readClimate, readThermal, regionalSolarTime } from '../web/atlas-regional.js';
+
+function regionalArchive() {
+  const catalog = JSON.parse(fs.readFileSync(new URL('../web/atlas-regional.json', import.meta.url), 'utf8'));
+  const content = Uint8Array.from(gunzipSync(fs.readFileSync(new URL('../web/atlas-regional.bin.gz', import.meta.url))));
+  assert.equal(content.length, catalog.bytes);
+  return { catalog, payload: new DataView(content.buffer) };
+}
+
 const assets = path.join(process.env.MARS_WEB_DIST ?? 'dist', 'assets');
 const metadata = JSON.parse(fs.readFileSync(path.join(assets, 'sites.json'), 'utf8'));
 const terrain = id => {
@@ -119,4 +130,50 @@ test('the real 1 m Hawksbill route yields MEDA metrics for both observations', (
     assert.ok(candidates[0].environment.thermalKJm2 > 0);
     assert.ok(candidates[0].environment.sunlitMinutes <= candidates[0].minutes + 1e-9);
   }
+});
+
+test('regional archive retains TES measurement flags and original OpenMARS cells', () => {
+  const { catalog, payload } = regionalArchive();
+  const jezero = readThermal(catalog, payload, 77.74, 18.44);
+  assert.deepEqual(jezero, { value: 293, interpolated: false, degrees: 0.05 });
+  const eberswalde = readThermal(catalog, payload, -33.3, -23.8);
+  assert.deepEqual(eberswalde, { value: 380, interpolated: true, degrees: 0.05 });
+  assert.equal(readThermal(catalog, payload, 0, 89.9), null);
+  const location = [catalog.climate.westCenter, catalog.climate.northCenter];
+  const frame = catalog.climate.snapshots[0];
+  assert.equal(readClimate(catalog, payload, frame, 'ps', ...location), payload.getFloat32(frame.ps, true));
+  assert.equal(readClimate(catalog, payload, frame, 'tsurf', location[0] + 360, location[1]), payload.getFloat32(frame.tsurf, true));
+});
+
+test('Jezero regional route truly uses weighted profiles and pressure, temperature, and inertia samples', () => {
+  const original = terrain('jezero');
+  const picks = [original.base, original.targets[1].cell].map(cell => geographic(original, cellXY(original, cell)));
+  const grid = cropAtlasGrid(original, picks);
+  const [start, goal] = picks.map(point => atlasCell(grid, point));
+  assert.equal(grid.step, 100);
+  assert.ok(grid.rows < original.rows && grid.cols < original.cols);
+  const { catalog, payload } = regionalArchive();
+  const snapshot = catalog.climate.snapshots[0];
+  const solar = regionalSolarTime(snapshot, grid.center[0]);
+  const light = terrainLight(grid, solar.hour, snapshot.ls, undefined, 1);
+  const route = { ...routeDefaults, start, stops: [{ cell: goal, name: 'Neretva Vallis' }] };
+  const weights = { terrain: 2, light: 2, thermal: 3, pressure: 2, inertia: 3, uv: 1 };
+  const run = weights => {
+    const request = { catalog, buffer: payload.buffer, snapshot, weights, temperatureTarget: 230, pressureTarget: 780 };
+    const environment = buildRegionalEnvironment(grid, request, light, (row, col) => geographic(grid, cellXY(grid, [row, col])),
+      index => isLit(grid, light, index), solar.peakWm2);
+    assert.deepEqual(environment.disabled, []);
+    return planMission(grid, { ...route, environment }, light).candidates;
+  };
+  const candidates = run(weights);
+  const combined = candidates.find(item => item.profiles.includes('environment'));
+  const baseline = candidates.find(item => item.profiles.includes('time'));
+  assert.notDeepEqual(combined.path, baseline.path);
+  assert.ok(combined.maxSlope < baseline.maxSlope);
+  assert.ok(combined.environment.meanInertia >= 5);
+  assert.ok(combined.environment.meanPressurePa > 0 && combined.environment.meanTemperatureK > 100);
+  assert.ok(combined.environment.meanSolarWm2 >= 0 && combined.environment.values.inertia.length === combined.path.length);
+  const zeros = Object.fromEntries(Object.keys(weights).map(key => [key, 0]));
+  const timeOnly = run(zeros).find(item => item.profiles.includes('environment'));
+  assert.deepEqual(timeOnly.path, baseline.path);
 });

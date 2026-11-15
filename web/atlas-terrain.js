@@ -65,20 +65,74 @@ function finiteSlopes(grid, height) {
 }
 
 let catalog;
-export async function loadAtlasTerrain(mode, points, signal, status) {
-  if (mode === 'auto' || mode === 'local') {
-    catalog ??= fetchOfficial('assets/sites.json', 'json').catch(error => { catalog = null; throw error; });
-    const { sites } = await catalog;
-    signal.throwIfAborted();
-    const site = sites.find(s => !s.regional && points.every(point => atlasCell(s, point)));
-    if (site) {
-      status(`正在读取 ${site.name} 的 HiRISE 验证区高程…`);
-      const folder = `assets/${site.id}`;
-      const [height, slope] = await Promise.all(['elevation', 'slope'].map(name => fetchOfficial(`${folder}/${name}.bin`, 'arrayBuffer', signal)));
-      return { grid: decodeTerrain(site, height, slope), label: `${site.name} · HiRISE ${site.step} 米网格`, source: Object.values(site.sources)[0] };
-    }
-    if (mode === 'local') throw Error('请把两点设在同一个米级验证区内（Hawksbill Gap 或 Neretva Vallis），或改用在线 CTX。');
+const terrainCache = new Map();
+export function atlasSites() {
+  catalog ??= fetchOfficial('assets/sites.json', 'json').then(data => data.sites).catch(error => { catalog = null; throw error; });
+  return catalog;
+}
+
+async function bundledTerrain(site, signal) {
+  if (!terrainCache.has(site.id)) {
+    const folder = `assets/${site.id}`;
+    terrainCache.set(site.id, Promise.all(['elevation', 'slope'].map(name =>
+      fetchOfficial(`${folder}/${name}.bin`, 'arrayBuffer'))).then(([height, slope]) => decodeTerrain(site, height, slope))
+      .catch(error => { terrainCache.delete(site.id); throw error; }));
   }
+  const grid = await terrainCache.get(site.id);
+  signal.throwIfAborted();
+  return grid;
+}
+
+export function cropAtlasGrid(site, points) {
+  const cells = points.map(point => atlasCell(site, point));
+  const margin = Math.max(12, Math.min(60, Math.ceil(Math.hypot(cells[0][0] - cells[1][0], cells[0][1] - cells[1][1]) * 0.3)));
+  const row0 = Math.max(0, Math.min(...cells.map(cell => cell[0])) - margin);
+  const col0 = Math.max(0, Math.min(...cells.map(cell => cell[1])) - margin);
+  const row1 = Math.min(site.rows, Math.max(...cells.map(cell => cell[0])) + margin + 1);
+  const col1 = Math.min(site.cols, Math.max(...cells.map(cell => cell[1])) + margin + 1);
+  const rows = row1 - row0, cols = col1 - col0;
+  const height = new Float32Array(rows * cols), slope = new Float32Array(rows * cols);
+  let min = Infinity, max = -Infinity;
+  for (let row = 0; row < rows; row++) {
+    const start = (row + row0) * site.cols + col0;
+    height.set(site.height.subarray(start, start + cols), row * cols);
+    slope.set(site.slope.subarray(start, start + cols), row * cols);
+  }
+  for (const z of height) if (Number.isFinite(z)) { min = Math.min(min, z); max = Math.max(max, z); }
+  if (!Number.isFinite(min)) throw Error('Jezero 缓存这一段缺少有效高程。');
+  return { ...site, regional: false, rows, cols, height, slope, depth: { min, max },
+    left: site.left + col0 * site.step, top: site.top - row0 * site.step,
+    textureWindow: { col0, row0, cols: site.cols, rows: site.rows } };
+}
+
+export async function loadAtlasTerrain(mode, points, signal, status) {
+  const sites = ['auto', 'local', 'jezero'].includes(mode) ? await atlasSites() : [];
+  signal.throwIfAborted();
+  const covers = site => points.every(point => atlasCell(site, point));
+  const local = mode !== 'jezero' && sites.find(site => !site.regional && covers(site));
+  if (local) {
+    status(`正在读取 ${local.name} 的 HiRISE 验证区高程…`);
+    return { grid: await bundledTerrain(local, signal), label: `${local.name} · HiRISE ${local.step} 米网格`, source: Object.values(local.sources)[0] };
+  }
+  if (mode === 'local') throw Error('请把两点设在同一个米级验证区内，或选择区域高程。');
+  const cached = sites.find(site => site.regional && covers(site));
+  const cachedRoute = async () => {
+    if (!cached) throw Error('两点需要落在 Jezero 100 米缓存范围内。');
+    status('正在读取 Jezero 区域实测高程缓存…');
+    return { grid: cropAtlasGrid(await bundledTerrain(cached, signal), points),
+      label: 'Jezero · USGS CTX 100 米区域缓存', source: cached.sources['USGS/JPL CTX 地形'] };
+  };
+  if (mode === 'jezero' || (mode === 'auto' && cached && !points.every(inCtx))) return cachedRoute();
+  try {
+    return await loadOnlineTerrain(mode, points, signal, status);
+  } catch (error) {
+    signal.throwIfAborted();
+    if (mode === 'auto' && cached) return cachedRoute();
+    throw error;
+  }
+}
+
+async function loadOnlineTerrain(mode, points, signal, status) {
   const covered = points.every(inCtx);
   if (mode === 'ctx' && !covered) throw Error('至少一个选点在 Jezero CTX 高程覆盖之外。可改用 MOLA 粗略地形走廊。');
   const coarse = mode === 'mola' || !covered;

@@ -1,0 +1,128 @@
+{
+  "encoding": "gzip",
+  "bytes": 2262272,
+  "sha256": "dc54e669d49e9bff8e753cca6f3275d5ab8b6b973729a2218ee812b810f29715",
+  "tes": {
+    "title": "NASA PDS · MGS TES 夜侧热惯量",
+    "source": "https://pds-geosciences.wustl.edu/missions/mgs/tes-timap.html",
+    "data": "https://pds-geosciences.wustl.edu/mgs/mgs-m-tes-5-timap-v1/mgst_9001/data/global_ti_night_2007.img",
+    "label": "https://pds-geosciences.wustl.edu/mgs/mgs-m-tes-5-timap-v1/mgst_9001/data/global_ti_night_2007.lbl",
+    "mask": "https://pds-geosciences.wustl.edu/mgs/mgs-m-tes-5-timap-v1/mgst_9001/data/global_ti_msk_night_2007.img",
+    "dataSha256": "faee32838da40045ee7ebd21bed156cc649620312c01165b556d77a2128258f4",
+    "maskSha256": "fca7ec6fab8b3e81226e1d14dbb3a22509ad111bda4e03bf2b64f050bd550d0b",
+    "unit": "J m⁻² K⁻¹ s⁻½",
+    "tiles": [
+      {
+        "id": "jezero",
+        "west": 75,
+        "north": 21,
+        "degrees": 0.05,
+        "rows": 100,
+        "cols": 120,
+        "offset": 0
+      },
+      {
+        "id": "gale",
+        "west": 134,
+        "north": -2,
+        "degrees": 0.05,
+        "rows": 120,
+        "cols": 140,
+        "offset": 24000
+      },
+      {
+        "id": "endeavour",
+        "west": -9,
+        "north": 2,
+        "degrees": 0.05,
+        "rows": 160,
+        "cols": 140,
+        "offset": 57600
+      },
+      {
+        "id": "eberswalde",
+        "west": -37,
+        "north": -20,
+        "degrees": 0.05,
+        "rows": 160,
+        "cols": 140,
+        "offset": 102400
+      },
+      {
+        "id": "global",
+        "west": -180,
+        "north": 90,
+        "degrees": 0.25,
+        "rows": 720,
+        "cols": 1440,
+        "offset": 147200
+      }
+    ]
+  },
+  "climate": {
+    "title": "OpenMARS · 地表气压和地表温度（再分析）",
+    "source": "https://doi.org/10.21954/ou.rd.7352270",
+    "conversion": "https://doi.org/10.57967/hf/8741",
+    "gridDegrees": 5,
+    "rows": 36,
+    "cols": 72,
+    "northCenter": 87.49999237060547,
+    "westCenter": -180.0,
+    "snapshots": [
+      {
+        "id": "my24-4",
+        "year": 24,
+        "sourceSol": 211.4166717529297,
+        "ls": 98.25454711914062,
+        "primeHour": 10.0,
+        "index": 4,
+        "ps": 2220800,
+        "tsurf": 2231168
+      },
+      {
+        "id": "my24-7",
+        "year": 24,
+        "sourceSol": 211.6666717529297,
+        "ls": 98.3692855834961,
+        "primeHour": 16.0,
+        "index": 7,
+        "ps": 2241536,
+        "tsurf": 2251904
+      }
+    ],
+    "products": {
+      "lat": {
+        "url": "https://huggingface.co/datasets/ananyo01/ARCO-OpenMars/resolve/main/openmars_MY24-27.zarr/lat/c/0",
+        "sha256": "57880e7859ed89dad5fbee7911651cd590cdfad6a80c39030a652fcdbf5f7032"
+      },
+      "lon": {
+        "url": "https://huggingface.co/datasets/ananyo01/ARCO-OpenMars/resolve/main/openmars_MY24-27.zarr/lon/c/0",
+        "sha256": "d0032eb773f8f7ea1130eded1dbbbe099f66f23a30ceb8b7a2aa068f0ca98e59"
+      },
+      "time": {
+        "url": "https://huggingface.co/datasets/ananyo01/ARCO-OpenMars/resolve/main/openmars_MY24-27.zarr/time/c/0",
+        "sha256": "947a3946abe0822521c634b43c382e3264449c763e74066675c46cac54138d0d"
+      },
+      "Ls": {
+        "url": "https://huggingface.co/datasets/ananyo01/ARCO-OpenMars/resolve/main/openmars_MY24-27.zarr/Ls/c/0",
+        "sha256": "e0cc81e5c327dce0fec78b02e71991306dbcabeb499d7758a98412c0a45b992c"
+      },
+      "MY": {
+        "url": "https://huggingface.co/datasets/ananyo01/ARCO-OpenMars/resolve/main/openmars_MY24-27.zarr/MY/c/0",
+        "sha256": "00aabdd592d481cb91cdde0f25ca91c15d10a8f1d07875024ea3a7d51c417799"
+      },
+      "ps": {
+        "url": "https://huggingface.co/datasets/ananyo01/ARCO-OpenMars/resolve/main/openmars_MY24-27.zarr/ps/c/0/0/0",
+        "sha256": "68f458712085bd406b15a40628117fba3e171ee6e608609f84072ce09cf1a9d4"
+      },
+      "tsurf": {
+        "url": "https://huggingface.co/datasets/ananyo01/ARCO-OpenMars/resolve/main/openmars_MY24-27.zarr/tsurf/c/0/0/0",
+        "sha256": "83a31fe92087790f399e4cc944a7e9c2f2e510963cf6d6ac5f84788c0d304c47"
+      }
+    }
+  },
+  "solar": {
+    "title": "NASA GISS · Mars24 太阳几何参考",
+    "source": "https://www.giss.nasa.gov/tools/mars24/help/algorithm.html"
+  }
+}

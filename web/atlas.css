@@ -1,6 +1,6 @@
 .live-atlas {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(250px, 345px);
+  grid-template-columns: minmax(0, 1fr) minmax(330px, 400px);
   align-items: start;
   gap: 14px;
 }
@@ -63,3 +63,24 @@
 #nav-meda-reading { font-variant-numeric: tabular-nums; }
 .nav-meda-links { display: flex; flex-wrap: wrap; gap: 3px 10px; font-size: 12px; }
 #atlas-3d .terrain-quality { max-width: calc(100% - 20px); }
+
+.atlas-tools { display: grid; gap: 10px; min-width: 0; }
+.atlas-tools [role="tabpanel"] { display: grid; gap: 10px; }
+.atlas-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: #211b18; }
+.atlas-tabs button { padding-inline: 4px; border-color: transparent; background: transparent; font-size: 13px; }
+.atlas-tabs [aria-selected="true"] { border-color: #81b79a; background: #2b3930; color: #cbf6df; }
+.atlas-section-heading, .atlas-route .panel-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.atlas-results { display: grid; gap: 8px; border-top: 1px solid var(--line); padding: 14px; }
+.atlas-results h2, .nav-environment h3 { font-size: 15px; }
+.atlas-results .nav-routes { grid-template-columns: repeat(auto-fit, minmax(min(100%, 215px), 1fr)); margin-block: 3px; }
+.atlas-results #nav-3d { width: auto; }
+.atlas-comparison { font-size: 13px; color: #d5ecdf; }
+.nav-route-layer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; width: fit-content; }
+.nav-route-layer select { width: auto; }
+.nav-environment { display: grid; gap: 7px; border-block: 1px solid var(--line); padding-block: 12px; }
+.nav-display { max-width: none; grid-template-columns: minmax(135px, 1fr) minmax(230px, 2fr); }
+.nav-scale-inputs { display: grid; grid-template-columns: minmax(60px, 1fr) 4.25rem auto; align-items: center; gap: 7px; }
+#nav-scale-label { color: #c6e9d8; font-variant-numeric: tabular-nums; }
+.atlas-data a { overflow-wrap: anywhere; }
+@media (max-width: 960px) { .live-atlas { grid-template-columns: 1fr; } }
+@media (max-width: 510px) { .nav-display { grid-template-columns: 1fr; } .atlas-toolbar, .atlas-results { padding: 10px; } }

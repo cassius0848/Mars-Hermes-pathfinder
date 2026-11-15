@@ -1,4 +1,5 @@
-import { decodeTerrain, planMission, terrainLight } from './planner.js';
+import { cellXY, decodeTerrain, geographic, isLit, planMission, terrainLight } from './planner.js';
+import { buildRegionalEnvironment, regionalSolarTime } from './atlas-regional.js';
 
 let grid;
 const lightCache = new Map();
@@ -10,14 +11,30 @@ self.onmessage = ({ data }) => {
       lightCache.clear();
       return;
     }
-    const { id, route, hour, season } = data;
-    const key = route.environment ? `meda:${route.environment.observation.sclk}` : `${hour}:${season}`;
+    const { id, route } = data;
+    let { hour, season } = data;
+    const regional = route.environment?.kind === 'regional' ? route.environment : null;
+    const solar = regional && regionalSolarTime(regional.snapshot, grid.center[0]);
+    if (solar) {
+      hour = solar.hour;
+      season = regional.snapshot.ls;
+    }
+    const key = route.environment?.observation ? `meda:${route.environment.observation.sclk}` : `${hour}:${season}`;
     if (!grid.regional && !lightCache.has(key)) {
       if (lightCache.size === 6) lightCache.delete(lightCache.keys().next().value);
-      lightCache.set(key, terrainLight(grid, hour, season, route.environment?.sun));
+      lightCache.set(key, terrainLight(grid, hour, season, route.environment?.sun,
+        regional ? Math.max(1, Math.ceil(Math.max(grid.rows, grid.cols) / 280)) : undefined));
     }
     const light = lightCache.get(key);
+    if (regional) {
+      route.environment = buildRegionalEnvironment(grid, regional, light, (r, c) => geographic(grid, cellXY(grid, [r, c])),
+        index => isLit(grid, light, index), solar.peakWm2);
+    }
     const result = planMission(grid, route, light);
+    if (regional) {
+      const { active, disabled, thermalSpacing } = route.environment;
+      result.coverage = { active, disabled, thermalSpacing, hour, ls: season, year: regional.snapshot.year };
+    }
     if (route.mode !== 'estimate' && route.allowSingleStop && !result.candidates.some(candidate => candidate.feasible)) {
       const alternatives = route.stops.flatMap(stop => {
         const single = planMission(grid, { ...route, stops: [stop], diagnose: false }, light);
